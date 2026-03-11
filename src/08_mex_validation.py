@@ -210,6 +210,31 @@ def main():
     df["real_age"] = df["real_age"].apply(parse_age_to_months)
     df["bone_age"] = df["bone_age"].apply(parse_age_to_months)
 
+    # Histograma de edades
+    plt.figure(figsize=(7, 4))
+    df["bone_age"].hist(bins=20, color="#5b8ff9", edgecolor="k", alpha=0.8)
+    plt.xlabel("Edad (meses)", fontsize=14); plt.ylabel("Frecuencia", fontsize=14)
+    plt.title("Distribución de Edad (Dataset de Validación)", fontsize=16)
+    plt.grid(alpha=0.3); plt.tight_layout()
+    plt.savefig(os.path.join(OUTPUT_FOLDER, "histograma_edad_validacion.png")); plt.close()
+
+    # Pastel de distribución de sexo
+    if "gender" in df.columns:
+        gender_map = {"M": "Masculino", "F": "Femenino"}
+        gender_labels = df["gender"].map(gender_map)
+        gender_counts = gender_labels.value_counts()
+        colors = [cm.tab10(0), cm.tab10(1)]
+        plt.figure(figsize=(5, 5))
+        patches, texts, autotexts = plt.pie(
+            gender_counts.values, labels=gender_counts.index,
+            autopct="%1.1f%%", startangle=90, colors=colors, textprops={"fontsize": 14}
+        )
+        for t in texts: t.set_fontsize(16)
+        for at in autotexts: at.set_fontsize(15); at.set_color("white"); at.set_weight("bold")
+        plt.title("Distribución de Sexo (Validación)", fontsize=16, weight="bold")
+        plt.tight_layout()
+        plt.savefig(os.path.join(OUTPUT_FOLDER, "sexo_pastel_validacion.png")); plt.close()
+
     rows, preds, trues, failed = [], [], [], []
 
     with timer("Inferencia sobre dataset mexicano"):

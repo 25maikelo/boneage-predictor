@@ -53,15 +53,15 @@ boneage-predictor/
 | # | Script | Entrada | Genera | Destino |
 |---|--------|---------|--------|---------|
 | 00 | `src/preprocessing/00_download_dataset.py` | Kaggle (RSNA Bone Age) | Imágenes PNG del dataset | `data/images/raw/` |
-| 01 | `src/preprocessing/01_train_hand_detector.py` | `data/hand-detector/images/` + `annotations/` | Modelo segmentador (U-Net) | `models/modelo_segmentacion.h5` |
+| 01 | `src/preprocessing/01_train_hand_detector.py` | `data/hand-detector/images/` + `annotations/` | Modelo segmentador U-Net (×2), curvas de entrenamiento, tabla de métricas (Loss/Accuracy/IoU/Dice), predicción de prueba con overlay, visualizaciones de muestras | `models/modelo_segmentacion.h5`, `models/hand-detector/models/segmentation_model.h5`, `models/hand-detector/training_history/training_history.png`, `models/hand-detector/evaluation/performance_table.png`, `models/hand-detector/evaluation/test_prediction.png`, `models/hand-detector/evaluation/samples/` |
 | 02 | `src/preprocessing/02_frame_and_zoom.py` | `data/images/raw/` | Imágenes rotadas y recortadas | `data/images/cropped/` |
 | 03 | `src/preprocessing/03_histogram_equalization.py` | `data/images/cropped/` | Imágenes con CLAHE aplicado | `data/images/equalized/` |
 | 04 | `src/preprocessing/04_segment_images.py` | `data/images/equalized/` + `models/modelo_segmentacion.h5` | Segmentos: pinky, middle, thumb, wrist | `data/images/segmented/{pinky,middle,thumb,wrist}/` |
-| 05 | `src/05_dataset_analysis.py --experiment N` | `data/training/*.csv` + `data/images/segmented/` | CSV balanceado | `data/training/dataset_analysis/balanced_dataset.csv` |
-| 06 | `src/06_training.py --experiment N` | `data/images/segmented/` + `experiments/N/config.py` | Modelos de segmentos + modelo de fusión | `experiments/N/models/` |
-| 07 | `src/07_validation.py --experiment N` | `data/validation/` + `experiments/N/models/` | Métricas de validación (MAE, R²) | `experiments/N/evaluation/` |
-| 08 | `src/08_mex_validation.py --experiment N` | `data/mex-validation/` + `experiments/N/models/` | Métricas sobre dataset mexicano | `experiments/N/mex-validation/` |
-| 09 | `src/09_performance_analysis.py --experiment N` | `experiments/N/` + `data/images/` | Tablas de desempeño + saliencias | `experiments/N/evaluation/` |
+| 05 | `src/05_dataset_analysis.py --experiment N` | `data/training/*.csv` + `data/images/segmented/` | CSV balanceado, estadísticas JSON, histogramas de distribución de edad (original/filtrado/balanceado), gráfico de proporción | `data/training/dataset_analysis/` |
+| 06 | `src/06_training.py --experiment N` | `data/images/segmented/` + `experiments/N/config.py` | Modelos de segmentos + modelo de fusión, curvas de entrenamiento | `experiments/N/models/`, `experiments/N/training_history/` |
+| 07 | `src/07_validation.py --experiment N` | `data/validation/` + `experiments/N/models/` | Histograma de edades, pastel de sexo, tabla resumen MAE/tiempos, saliencias sobre muestras, dispersión real vs predicción | `experiments/N/validation/` |
+| 08 | `src/08_mex_validation.py --experiment N` | `data/mex-validation/` + `experiments/N/models/` | Histograma de edades, pastel de sexo, tabla resumen MAE, saliencias sobre muestras, dispersión real vs predicción | `experiments/N/mex-validation/` |
+| 09 | `src/09_performance_analysis.py --experiment N` | `experiments/N/models/` + `data/images/segmented/` | Saliencias sobre muestras del dataset, tabla comparativa (Loss/MAE train-val por modelo) | `experiments/N/evaluation/` |
 
 ---
 

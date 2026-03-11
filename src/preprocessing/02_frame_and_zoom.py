@@ -20,7 +20,7 @@ import cv2
 import numpy as np
 
 from config.paths import RAW_IMAGES_DIR, CROPPED_IMAGES_DIR
-from src.utils.timing import report_timing
+from src.utils.timing import report_timing, setup_logging
 
 START_TIME = time.time()
 
@@ -106,5 +106,6 @@ def procesar_todas():
 
 
 if __name__ == "__main__":
+    setup_logging("02_frame_and_zoom.py")
     procesar_todas()
     report_timing(START_TIME, "02_frame_and_zoom.py")

@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 
 from config.paths import TRAINING_CSV, SEGMENTED_IMAGES_DIR, DATASET_ANALYSIS_DIR
 from config.experiment import load_experiment_config
-from src.utils.timing import report_timing
+from src.utils.timing import report_timing, setup_logging
 
 START_TIME = time.time()
 
@@ -111,5 +111,6 @@ def main():
 
 
 if __name__ == "__main__":
+    setup_logging("dataset_analysis.py")
     main()
     report_timing(START_TIME, "dataset_analysis.py")

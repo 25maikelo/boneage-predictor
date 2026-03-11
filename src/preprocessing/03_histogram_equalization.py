@@ -19,7 +19,7 @@ sys.path.insert(0, PROJECT_ROOT)
 import cv2
 
 from config.paths import CROPPED_IMAGES_DIR, EQUALIZED_IMAGES_DIR
-from src.utils.timing import report_timing
+from src.utils.timing import report_timing, setup_logging
 
 START_TIME = time.time()
 
@@ -54,5 +54,6 @@ def procesar_todas():
 
 
 if __name__ == "__main__":
+    setup_logging("03_histogram_equalization.py")
     procesar_todas()
     report_timing(START_TIME, "03_histogram_equalization.py")

@@ -31,7 +31,7 @@ from config.paths import (
     EQUALIZED_IMAGES_DIR, MASKS_DIR, SEGMENTS_DIR,
     SEGMENTED_IMAGES_DIR, SEGMENTATION_MODEL_PATH
 )
-from src.utils.timing import report_timing
+from src.utils.timing import report_timing, setup_logging
 
 START_TIME = time.time()
 
@@ -116,6 +116,7 @@ def procesar_todas(model):
 
 
 if __name__ == "__main__":
+    setup_logging("04_segment_images.py")
     setup_gpu()
     setup_output_dirs()
 

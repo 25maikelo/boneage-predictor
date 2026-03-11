@@ -33,7 +33,7 @@ from tensorflow.keras.models import load_model
 from config.paths import VALIDATION_CSV, VALIDATION_IMAGES_DIR, EXPERIMENTS_DIR
 from config.experiment import load_experiment_config, get_experiment_output_dir
 from src.models.losses import LOSS_MAP, dynamic_attention_loss
-from src.utils.timing import report_timing, timer
+from src.utils.timing import report_timing, setup_logging, timer
 
 START_TIME = time.time()
 NUM_SAMPLE_RESULTS = 3
@@ -334,5 +334,6 @@ def main():
 
 
 if __name__ == "__main__":
+    setup_logging("validation.py")
     main()
     report_timing(START_TIME, "validation.py")

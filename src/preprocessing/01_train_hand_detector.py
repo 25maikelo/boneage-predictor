@@ -31,7 +31,7 @@ from config.paths import PRETRAINED_MODELS_DIR
 from config.segmentation import (
     IMAGE_SIZE, NUM_CLASSES, BATCH_SIZE, EPOCHS, LEARNING_RATE, ENCODER_WEIGHTS
 )
-from src.utils.timing import report_timing
+from src.utils.timing import report_timing, setup_logging
 
 START_TIME = time.time()
 
@@ -86,6 +86,7 @@ def build_unet_mobilenetv2(input_shape=(224, 224, 3), num_classes=5):
 
 
 if __name__ == "__main__":
+    setup_logging("01_train_hand_detector.py")
     setup_gpu()
 
     if not os.path.exists(ANNOTATIONS):

@@ -16,7 +16,7 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(_
 sys.path.insert(0, PROJECT_ROOT)
 
 from config.paths import RAW_IMAGES_DIR
-from src.utils.timing import report_timing
+from src.utils.timing import report_timing, setup_logging
 
 START_TIME = time.time()
 
@@ -63,6 +63,7 @@ def copy_images(kaggle_path: str, dest_dir: str):
 
 
 if __name__ == "__main__":
+    setup_logging("00_download_dataset.py")
     kaggle_path = download_dataset()
     copy_images(kaggle_path, RAW_IMAGES_DIR)
     report_timing(START_TIME, "00_download_dataset.py")

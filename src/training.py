@@ -30,7 +30,7 @@ from sklearn.model_selection import train_test_split
 from config.paths import SEGMENTED_IMAGES_DIR, EXPERIMENTS_DIR
 from config.experiment import load_experiment_config, get_experiment_output_dir
 from src.models.losses import LOSS_MAP, dynamic_attention_loss
-from src.utils.timing import report_timing, timer
+from src.utils.timing import report_timing, setup_logging, timer
 
 START_TIME = time.time()
 
@@ -423,5 +423,6 @@ def main():
 
 
 if __name__ == "__main__":
+    setup_logging("training.py")
     main()
     report_timing(START_TIME, "training.py")

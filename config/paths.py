@@ -46,9 +46,10 @@ MEX_IMAGES_DIR = os.path.join(MEX_DIR, "images")
 # ============================================================
 # MODELOS PRE-ENTRENADOS
 # ============================================================
-PRETRAINED_MODELS_DIR   = os.path.join(PROJECT_ROOT, "models")
-SEGMENTATION_MODEL_PATH = os.path.join(PRETRAINED_MODELS_DIR, "modelo_segmentacion.h5")
-BASE_MODEL_PATH         = os.path.join(PRETRAINED_MODELS_DIR, "base_model.keras")
+PRETRAINED_MODELS_DIR    = os.path.join(PROJECT_ROOT, "models")
+SEGMENTATION_MODEL_PATH  = os.path.join(PRETRAINED_MODELS_DIR, "modelo_segmentacion.h5")
+BASE_MODEL_PATH          = os.path.join(PRETRAINED_MODELS_DIR, "base_model.keras")
+HAND_DETECTOR_OUTPUT_DIR = os.path.join(PRETRAINED_MODELS_DIR, "hand-detector")
 
 # ============================================================
 # EXPERIMENTOS

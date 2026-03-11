@@ -15,11 +15,11 @@ NUM_CLASSES = 5
 
 # Entrenamiento
 BATCH_SIZE = 8
-EPOCHS = 30
+EPOCHS = 2
 LEARNING_RATE = 1e-4
 
 # Backbone del encoder (actualmente solo MobileNetV2 soportado)
 ENCODER = "mobilenetv2"
 
 # Pesos del encoder
-ENCODER_WEIGHTS = "imagenet"   # None | "imagenet"
+ENCODER_WEIGHTS = "None"   # None | "imagenet"

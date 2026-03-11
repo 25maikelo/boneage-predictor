@@ -67,17 +67,61 @@ boneage-predictor/
 
 ## Instalación
 
+> Todos los comandos se ejecutan desde el **root del proyecto** (`boneage-predictor/`).
+
+### 1. Requisitos previos
+
+- Python 3.10–3.12 (recomendado; 3.14 puede tener incompatibilidades con TensorFlow)
+- Git
+
+### 2. Crear y activar el entorno virtual
+
+**Windows:**
 ```bash
+python -m venv venv
+venv\Scripts\activate
+```
+
+**Linux / macOS / SLURM:**
+```bash
+python -m venv venv
+source venv/bin/activate
+```
+
+El prompt cambiará a `(venv)` cuando esté activo. Todos los comandos siguientes deben ejecutarse con el entorno activo.
+
+### 3. Instalar dependencias
+
+**Windows:**
+```bash
+python.exe -m pip install --upgrade pip
+python.exe -m pip install -r requirements.txt
+```
+
+**Linux / macOS / SLURM:**
+```bash
+pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-Para usar GPU, instala los drivers CUDA correspondientes a tu versión de TensorFlow.
+### 4. GPU (opcional)
+
+TensorFlow 2.18 requiere **CUDA 11.8** y **cuDNN 8.6**.
+Si no tienes GPU compatible, el pipeline corre en CPU (más lento).
+
+### 5. Verificar instalación
+
+```bash
+python -c "import tensorflow as tf; print(tf.__version__); print(tf.config.list_physical_devices('GPU'))"
+```
+
+Debe imprimir `2.18.0` y la lista de GPUs (vacía si solo hay CPU).
 
 ---
 
 ## Pipeline Completo
 
-Todos los scripts se ejecutan desde el **root del proyecto**.
+Todos los scripts se ejecutan desde el **root del proyecto** con el entorno virtual activo.
 
 ### Ejecución Local
 

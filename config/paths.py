@@ -22,6 +22,11 @@ MASKS_DIR            = os.path.join(IMAGES_DIR, "masks")
 SEGMENTS_DIR         = os.path.join(IMAGES_DIR, "segments")
 SEGMENTED_IMAGES_DIR = os.path.join(IMAGES_DIR, "segmented")
 
+# Datos de entrenamiento del detector de mano (LabelMe format)
+HAND_DETECTOR_DIR             = os.path.join(DATA_DIR, "hand-detector")
+HAND_DETECTOR_IMAGES_DIR      = os.path.join(HAND_DETECTOR_DIR, "images")
+HAND_DETECTOR_ANNOTATIONS_DIR = os.path.join(HAND_DETECTOR_DIR, "annotations")
+
 # Entrenamiento
 TRAINING_DIR         = os.path.join(DATA_DIR, "training")
 TRAINING_CSV         = os.path.join(TRAINING_DIR, "boneage-training-dataset.csv")

@@ -1,7 +1,11 @@
 # ============================================================
 # Datos (demasiado grandes para versionar)
 # ============================================================
-data/
+data/images/
+data/training/
+data/validation/
+data/mex-validation/
+data/hand-detector/
 
 # Modelos entrenados
 models/

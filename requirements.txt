@@ -1,0 +1,27 @@
+# Core
+tensorflow==2.18.0
+keras==3.8.0
+
+# Data
+numpy==2.0.2
+pandas==2.2.3
+scikit-learn==1.6.1
+scipy==1.15.1
+h5py==3.12.1
+
+# Vision
+opencv-python==4.11.0.86
+Pillow==11.1.0
+scikit-image==0.25.1
+
+# Visualization
+matplotlib==3.10.0
+seaborn==0.13.2
+dataframe_image==0.2.7
+
+# Dataset download
+kagglehub
+
+# Utilities
+joblib==1.4.2
+tqdm

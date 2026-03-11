@@ -1,10 +1,7 @@
 # ============================================================
 # Datos (demasiado grandes para versionar)
 # ============================================================
-images/
-training-data/
-validation-data/
-mex-validation-data/
+data/
 
 # Modelos entrenados
 models/

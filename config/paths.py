@@ -8,34 +8,42 @@ import os
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ============================================================
-# IMÁGENES (no versionadas en git)
+# DATOS
 # ============================================================
-RAW_IMAGES_DIR       = os.path.join(PROJECT_ROOT, "images", "boneage-training-dataset")
-CROPPED_IMAGES_DIR   = os.path.join(PROJECT_ROOT, "images", "imagenes_recortadas")
-EQUALIZED_IMAGES_DIR = os.path.join(PROJECT_ROOT, "images", "imagenes_ecualizadas")
-MASKS_DIR            = os.path.join(PROJECT_ROOT, "images", "mascaras_predichas")
-SEGMENTS_DIR         = os.path.join(PROJECT_ROOT, "images", "segmentos")
-SEGMENTED_IMAGES_DIR = os.path.join(PROJECT_ROOT, "images", "segmentos_spatial")
+DATA_DIR = os.path.join(PROJECT_ROOT, "data")
 
-# ============================================================
-# DATOS CSV (no versionados en git, excepto mex_dataset.csv)
-# ============================================================
-TRAINING_CSV         = os.path.join(PROJECT_ROOT, "training-data", "boneage-training-dataset.csv")
-BALANCED_DATASET_CSV = os.path.join(PROJECT_ROOT, "training-data", "dataset_analysis", "balanced_dataset.csv")
-DATASET_ANALYSIS_DIR = os.path.join(PROJECT_ROOT, "training-data", "dataset_analysis")
+# Imágenes (pipeline de preprocesamiento)
+IMAGES_DIR           = os.path.join(DATA_DIR, "images")
+RAW_IMAGES_DIR       = os.path.join(IMAGES_DIR, "raw")
+LABELED_IMAGES_DIR   = os.path.join(IMAGES_DIR, "labeled")
+CROPPED_IMAGES_DIR   = os.path.join(IMAGES_DIR, "cropped")
+EQUALIZED_IMAGES_DIR = os.path.join(IMAGES_DIR, "equalized")
+MASKS_DIR            = os.path.join(IMAGES_DIR, "masks")
+SEGMENTS_DIR         = os.path.join(IMAGES_DIR, "segments")
+SEGMENTED_IMAGES_DIR = os.path.join(IMAGES_DIR, "segmented")
 
-VALIDATION_CSV       = os.path.join(PROJECT_ROOT, "validation-data", "validation_dataset.csv")
-VALIDATION_IMAGES_DIR= os.path.join(PROJECT_ROOT, "validation-data", "images")
+# Entrenamiento
+TRAINING_DIR         = os.path.join(DATA_DIR, "training")
+TRAINING_CSV         = os.path.join(TRAINING_DIR, "boneage-training-dataset.csv")
+DATASET_ANALYSIS_DIR = os.path.join(TRAINING_DIR, "dataset_analysis")
+BALANCED_DATASET_CSV = os.path.join(DATASET_ANALYSIS_DIR, "balanced_dataset.csv")
 
-MEX_CSV              = os.path.join(PROJECT_ROOT, "mex-validation-data", "mex_dataset.csv")
-MEX_IMAGES_DIR       = os.path.join(PROJECT_ROOT, "mex-validation-data", "images")
+# Validación estándar
+VALIDATION_DIR        = os.path.join(DATA_DIR, "validation")
+VALIDATION_CSV        = os.path.join(VALIDATION_DIR, "validation_dataset.csv")
+VALIDATION_IMAGES_DIR = os.path.join(VALIDATION_DIR, "images")
+
+# Validación mexicana
+MEX_DIR        = os.path.join(DATA_DIR, "mex-validation")
+MEX_CSV        = os.path.join(MEX_DIR, "mex_dataset.csv")
+MEX_IMAGES_DIR = os.path.join(MEX_DIR, "images")
 
 # ============================================================
 # MODELOS PRE-ENTRENADOS
 # ============================================================
-PRETRAINED_MODELS_DIR    = os.path.join(PROJECT_ROOT, "models")
-SEGMENTATION_MODEL_PATH  = os.path.join(PRETRAINED_MODELS_DIR, "modelo_segmentacion.h5")
-BASE_MODEL_PATH          = os.path.join(PRETRAINED_MODELS_DIR, "base_model.keras")
+PRETRAINED_MODELS_DIR   = os.path.join(PROJECT_ROOT, "models")
+SEGMENTATION_MODEL_PATH = os.path.join(PRETRAINED_MODELS_DIR, "modelo_segmentacion.h5")
+BASE_MODEL_PATH         = os.path.join(PRETRAINED_MODELS_DIR, "base_model.keras")
 
 # ============================================================
 # EXPERIMENTOS

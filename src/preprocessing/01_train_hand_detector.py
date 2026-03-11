@@ -28,12 +28,15 @@ from tensorflow.keras.layers import (
 )
 from tensorflow.keras.models import Model
 from config.paths import PRETRAINED_MODELS_DIR
+from config.segmentation import (
+    IMAGE_SIZE, NUM_CLASSES, BATCH_SIZE, EPOCHS, LEARNING_RATE, ENCODER_WEIGHTS
+)
 from src.utils.timing import report_timing
 
 START_TIME = time.time()
 
 # ============================================================
-# CONFIGURACIÓN
+# RUTAS (desde config/paths.py)
 # ============================================================
 TRAINING_DATA_DIR = os.path.join(
     PROJECT_ROOT, "scripts", "preprocessing", "hand-detector-training"
@@ -42,11 +45,6 @@ IMAGES_DIR   = os.path.join(TRAINING_DATA_DIR, "images")
 MASKS_DIR    = os.path.join(TRAINING_DATA_DIR, "masks")
 ANNOTATIONS  = os.path.join(TRAINING_DATA_DIR, "annotations.json")
 OUTPUT_MODEL = os.path.join(PRETRAINED_MODELS_DIR, "modelo_segmentacion.h5")
-
-IMAGE_SIZE   = (224, 224)
-NUM_CLASSES  = 5
-BATCH_SIZE   = 8
-EPOCHS       = 30
 
 
 def setup_gpu():
@@ -62,7 +60,7 @@ def setup_gpu():
 def build_unet_mobilenetv2(input_shape=(224, 224, 3), num_classes=5):
     """U-Net con MobileNetV2 como encoder."""
     inputs = Input(shape=input_shape)
-    encoder = MobileNetV2(input_tensor=inputs, include_top=False, weights="imagenet")
+    encoder = MobileNetV2(input_tensor=inputs, include_top=False, weights=ENCODER_WEIGHTS)
 
     s1 = encoder.get_layer("input_1").output           # 224x224
     s2 = encoder.get_layer("block_1_expand_relu").output  # 112x112
@@ -98,7 +96,7 @@ if __name__ == "__main__":
     print("Cargando modelo U-Net con MobileNetV2...")
     model = build_unet_mobilenetv2((*IMAGE_SIZE, 3), NUM_CLASSES)
     model.compile(
-        optimizer=tf.keras.optimizers.Adam(1e-4),
+        optimizer=tf.keras.optimizers.Adam(LEARNING_RATE),
         loss="sparse_categorical_crossentropy",
         metrics=["accuracy"]
     )

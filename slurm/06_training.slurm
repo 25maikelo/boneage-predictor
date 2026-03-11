@@ -18,4 +18,4 @@ echo "Directorio de trabajo: $(pwd)"
 
 EXPERIMENT=${1:-26}
 echo "Experimento: $EXPERIMENT"
-python src/training.py --experiment $EXPERIMENT
+python src/06_training.py --experiment $EXPERIMENT

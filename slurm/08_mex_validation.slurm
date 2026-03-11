@@ -17,4 +17,4 @@ cd "$(dirname "$0")/.."
 echo "Directorio de trabajo: $(pwd)"
 
 EXPERIMENT=${1:-26}
-python src/mex_validation.py --experiment $EXPERIMENT
+python src/08_mex_validation.py --experiment $EXPERIMENT

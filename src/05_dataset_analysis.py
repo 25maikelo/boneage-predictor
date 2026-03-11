@@ -111,6 +111,6 @@ def main():
 
 
 if __name__ == "__main__":
-    setup_logging("dataset_analysis.py")
+    setup_logging("05_dataset_analysis.py")
     main()
-    report_timing(START_TIME, "dataset_analysis.py")
+    report_timing(START_TIME, "05_dataset_analysis.py")

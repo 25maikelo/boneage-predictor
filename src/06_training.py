@@ -423,6 +423,6 @@ def main():
 
 
 if __name__ == "__main__":
-    setup_logging("training.py")
+    setup_logging("06_training.py")
     main()
-    report_timing(START_TIME, "training.py")
+    report_timing(START_TIME, "06_training.py")

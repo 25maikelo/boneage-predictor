@@ -232,6 +232,6 @@ def main():
 
 
 if __name__ == "__main__":
-    setup_logging("performance_analysis.py")
+    setup_logging("09_performance_analysis.py")
     main()
-    report_timing(START_TIME, "performance_analysis.py")
+    report_timing(START_TIME, "09_performance_analysis.py")

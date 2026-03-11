@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-Validación del modelo sobre el dataset de validación mexicano.
+Validación del modelo sobre el dataset de validación estándar.
+Genera mapas de saliencia, gráficos y tabla resumen.
 
 Uso:
-    python src/mex_validation.py --experiment 26
+    python src/validation.py --experiment 26
 """
 import os
 import sys
@@ -25,10 +26,11 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 tf.get_logger().setLevel("ERROR")
 
+from collections import defaultdict
 from matplotlib import cm
 from tensorflow.keras.models import load_model
 
-from config.paths import MEX_CSV, MEX_IMAGES_DIR, EXPERIMENTS_DIR
+from config.paths import VALIDATION_CSV, VALIDATION_IMAGES_DIR, EXPERIMENTS_DIR
 from config.experiment import load_experiment_config, get_experiment_output_dir
 from src.models.losses import LOSS_MAP, dynamic_attention_loss
 from src.utils.timing import report_timing, setup_logging, timer
@@ -88,7 +90,8 @@ def frame_and_zoom(img):
 def clahe_equalize(img):
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
     eq = clahe.apply(img)
-    return cv2.convertScaleAbs(cv2.addWeighted(img, 0.6, eq, 0.4, 0), alpha=0.9, beta=-10)
+    blended = cv2.addWeighted(img, 0.6, eq, 0.4, 0)
+    return cv2.convertScaleAbs(blended, alpha=0.9, beta=-10)
 
 
 def segment_spatial(img, model, segments_order):
@@ -185,7 +188,7 @@ def load_all_models(cfg, exp_dir):
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Validación dataset mexicano")
+    parser = argparse.ArgumentParser(description="Validación bone age predictor")
     parser.add_argument("--experiment", type=int, required=True)
     return parser.parse_args()
 
@@ -198,64 +201,110 @@ def main():
 
     cfg = load_experiment_config(args.experiment)
     exp_dir = get_experiment_output_dir(args.experiment)
-    OUTPUT_FOLDER = os.path.join(exp_dir, "mex-validation")
+    OUTPUT_FOLDER = os.path.join(exp_dir, "validation")
     os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
     print(f"Cargando modelos del experimento {args.experiment}...")
     with timer("Carga de modelos"):
         seg_model, segment_models, fusion_model = load_all_models(cfg, exp_dir)
 
-    df = pd.read_csv(MEX_CSV)
+    df = pd.read_csv(VALIDATION_CSV)
     df.reset_index(drop=True, inplace=True)
-    df["real_age"] = df["real_age"].apply(parse_age_to_months)
-    df["bone_age"] = df["bone_age"].apply(parse_age_to_months)
+    if "boneage" in df.columns:
+        df["boneage"] = df["boneage"].apply(parse_age_to_months)
+
+    # Histograma de edades
+    plt.figure(figsize=(7, 4))
+    df["boneage"].hist(bins=20, color="#5b8ff9", edgecolor="k", alpha=0.8)
+    plt.xlabel("Edad (meses)"); plt.ylabel("Frecuencia")
+    plt.title("Distribución de Edad (Validación)")
+    plt.tight_layout()
+    plt.savefig(os.path.join(OUTPUT_FOLDER, "histograma_edad_validacion.png")); plt.close()
 
     rows, preds, trues, failed = [], [], [], []
+    times_log = defaultdict(list)
+    candidates = []
 
-    with timer("Inferencia sobre dataset mexicano"):
+    with timer("Inferencia sobre dataset de validación"):
         for _, row in df.iterrows():
-            sid = str(row["ID"])
-            real_age = float(row["real_age"])
-            img_path = os.path.join(MEX_IMAGES_DIR, f"{sid}.png")
+            sid = str(row["id"])
+            real_age = float(row["boneage"])
+            t0 = time.time()
+            img_path = os.path.join(VALIDATION_IMAGES_DIR, f"{sid}.png")
             gray = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
             if gray is None:
                 failed.append((sid, "not_found")); continue
+            t1 = time.time()
             try:
                 zoomed = frame_and_zoom(gray)
                 eq = clahe_equalize(zoomed)
+            except Exception as e:
+                failed.append((sid, f"preprocess: {e}")); continue
+            t2 = time.time()
+            try:
                 segments = segment_spatial(eq, seg_model, cfg.SEGMENTS_ORDER)
                 if any(np.sum(s) == 0 for s in segments.values()):
                     failed.append((sid, "empty_segment")); continue
             except Exception as e:
-                failed.append((sid, f"preprocess: {e}")); continue
+                failed.append((sid, f"segment: {e}")); continue
+            t3 = time.time()
             try:
                 fusion_inputs = [
-                    tf.expand_dims(normalize_image(
-                        cv2.resize(segments[seg], cfg.IMAGE_SIZE, interpolation=cv2.INTER_CUBIC)), 0)
+                    tf.expand_dims(normalize_image(cv2.resize(segments[seg], cfg.IMAGE_SIZE,
+                                                               interpolation=cv2.INTER_CUBIC)), 0)
                     for seg in cfg.SEGMENTS_ORDER
                 ]
-                if cfg.USE_GENDER and "gender" in row:
-                    fusion_inputs.append(
-                        tf.constant([[1.0 if row["gender"] == "M" else 0.0]], tf.float32))
+                if cfg.USE_GENDER:
+                    fusion_inputs.append(tf.constant([[float(row.get("male", 0))]], tf.float32))
                 pred_age = float(fusion_model.predict(fusion_inputs, verbose=0).flatten()[0])
             except Exception as e:
                 failed.append((sid, f"predict: {e}")); continue
+            t4 = time.time()
 
-            if not np.isnan(pred_age) and not np.isnan(real_age):
-                preds.append(pred_age); trues.append(real_age)
-                rows.append({"id": sid, "real_age": real_age, "pred_age": pred_age,
-                             "diff_months": abs(pred_age - real_age),
-                             "segments": segments, "eq": eq, "row": row})
-            else:
-                failed.append((sid, "nan"))
+            preds.append(pred_age); trues.append(real_age)
+            times_log["preprocess"].append(t2 - t1)
+            times_log["segment"].append(t3 - t2)
+            times_log["predict"].append(t4 - t3)
+            rows.append({"id": sid, "real_age": real_age, "pred_age": pred_age,
+                         "diff_months": abs(pred_age - real_age), "status": "ok"})
+            candidates.append({"sid": sid, "eq": eq, "segments": segments,
+                                "row": row, "real_age": real_age, "pred_age": pred_age})
+
+    # Muestras con saliencia
+    chosen = random.sample(candidates, min(NUM_SAMPLE_RESULTS, len(candidates)))
+    for item in chosen:
+        sid, eq, segments, row = item["sid"], item["eq"], item["segments"], item["row"]
+        base = cv2.cvtColor(eq, cv2.COLOR_GRAY2BGR)
+        result = base.copy()
+        for seg, model in segment_models.items():
+            seg_r = cv2.resize(segments[seg], cfg.IMAGE_SIZE, interpolation=cv2.INTER_CUBIC)
+            tensor = tf.expand_dims(normalize_image(seg_r), 0)
+            inp = [tensor]
+            if cfg.USE_GENDER:
+                inp.append(tf.constant([[float(row.get("male", 0))]], dtype=tf.float32))
+            heat = compute_saliency_map(model, inp)
+            heat = cv2.resize(heat, (result.shape[1], result.shape[0]), interpolation=cv2.INTER_CUBIC)
+            result = overlay_masked(result, heat)
+        text = (f"ID: {sid}\nReal: {item['real_age']:.1f} m\n"
+                f"Predicción: {item['pred_age']:.1f} m\n"
+                f"Diferencia: {abs(item['pred_age'] - item['real_age']):.1f} m")
+        create_sample_table(text, result, os.path.join(OUTPUT_FOLDER, f"sample_result_{sid}.png"))
 
     mae = np.mean(np.abs(np.array(preds) - np.array(trues))) if preds else np.nan
 
     # Tabla resumen
-    summary_data = [["Métrica", "Valor"],
-                    ["Imágenes procesadas", str(len(rows))],
-                    ["Imágenes fallidas", str(len(failed))],
-                    ["MAE (meses)", f"{mae:.2f}"]]
+    summary_data = [
+        ["Métrica", "Valor"],
+        ["Imágenes procesadas", str(len(rows))],
+        ["Imágenes fallidas", str(len(failed))],
+        ["MAE (meses)", f"{mae:.2f}"],
+        ["Tiempo medio preprocess (s)",
+         f"{np.mean(times_log['preprocess']):.2f}" if times_log["preprocess"] else "N/A"],
+        ["Tiempo medio segmentación (s)",
+         f"{np.mean(times_log['segment']):.2f}" if times_log["segment"] else "N/A"],
+        ["Tiempo medio predicción (s)",
+         f"{np.mean(times_log['predict']):.2f}" if times_log["predict"] else "N/A"],
+    ]
     fig, ax = plt.subplots(figsize=(9, 3)); ax.axis("off")
     tbl = ax.table(cellText=summary_data, cellLoc="center", loc="center",
                    colWidths=[0.36, 0.24])
@@ -268,36 +317,16 @@ def main():
                 cell.set_text_props(weight="bold", color="white")
             cell.set_edgecolor("#112d4e")
     tbl.scale(1.3, 1.7)
-    plt.title("Resumen de Validación (MEX)", fontsize=19, weight="bold", color="#112d4e", pad=18)
+    plt.title("Resumen de Validación", fontsize=19, weight="bold", color="#112d4e", pad=18)
     plt.tight_layout()
     plt.savefig(os.path.join(OUTPUT_FOLDER, "validation_summary.png"), bbox_inches="tight")
     plt.close(fig)
-
-    # Muestras con saliencia
-    chosen = random.sample(rows, min(NUM_SAMPLE_RESULTS, len(rows)))
-    for item in chosen:
-        sid, eq, segments, df_row = item["id"], item["eq"], item["segments"], item["row"]
-        base = cv2.cvtColor(eq, cv2.COLOR_GRAY2BGR)
-        result = base.copy()
-        for seg, model in segment_models.items():
-            seg_r = cv2.resize(segments[seg], cfg.IMAGE_SIZE, interpolation=cv2.INTER_CUBIC)
-            tensor = tf.expand_dims(normalize_image(seg_r), 0)
-            inp = [tensor]
-            if cfg.USE_GENDER and "gender" in df_row:
-                inp.append(tf.constant([[1.0 if df_row["gender"] == "M" else 0.0]], tf.float32))
-            heat = compute_saliency_map(model, inp)
-            heat = cv2.resize(heat, (result.shape[1], result.shape[0]), interpolation=cv2.INTER_CUBIC)
-            result = overlay_masked(result, heat)
-        text = (f"ID: {sid}\nReal: {item['real_age']:.1f} m\n"
-                f"Predicción: {item['pred_age']:.1f} m\n"
-                f"Diferencia: {item['diff_months']:.1f} m")
-        create_sample_table(text, result, os.path.join(OUTPUT_FOLDER, f"sample_result_{sid}.png"))
 
     if preds:
         plt.figure(figsize=(7, 5))
         plt.scatter(trues, preds, c="#325288", alpha=0.7, edgecolors="k", s=80)
         plt.xlabel("Edad real (meses)"); plt.ylabel("Predicción (meses)")
-        plt.title("Dispersión: Edad Real vs Predicción (MEX)")
+        plt.title("Dispersión: Edad Real vs Predicción")
         plt.grid(alpha=0.3); plt.tight_layout()
         plt.savefig(os.path.join(OUTPUT_FOLDER, "scatter_pred_vs_real.png")); plt.close()
 
@@ -305,6 +334,6 @@ def main():
 
 
 if __name__ == "__main__":
-    setup_logging("mex_validation.py")
+    setup_logging("07_validation.py")
     main()
-    report_timing(START_TIME, "mex_validation.py")
+    report_timing(START_TIME, "07_validation.py")

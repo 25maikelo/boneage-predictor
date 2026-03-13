@@ -22,4 +22,4 @@ LEARNING_RATE = 1e-4
 ENCODER = "mobilenetv2"
 
 # Pesos del encoder
-ENCODER_WEIGHTS = "None"   # None | "imagenet"
+ENCODER_WEIGHTS = "imagenet"   # None | "imagenet"

@@ -44,16 +44,44 @@ from config.paths import (
     HAND_DETECTOR_OUTPUT_DIR,
     SEGMENTATION_MODEL_PATH,
 )
-from config.segmentation import IMAGE_SIZE, NUM_CLASSES, BATCH_SIZE, EPOCHS
+from config.segmentation import IMAGE_SIZE, NUM_CLASSES, BATCH_SIZE, EPOCHS, ENCODER, ENCODER_WEIGHTS
 from src.utils.timing import report_timing, setup_logging, timer
 
 START_TIME = time.time()
 
-# Subdirectorios de salida
-MODELS_DIR       = os.path.join(HAND_DETECTOR_OUTPUT_DIR, "models")
-HISTORY_DIR      = os.path.join(HAND_DETECTOR_OUTPUT_DIR, "training_history")
-EVALUATION_DIR   = os.path.join(HAND_DETECTOR_OUTPUT_DIR, "evaluation")
-SAMPLES_DIR      = os.path.join(EVALUATION_DIR, "samples")
+
+# ============================================================
+# CARPETA DE RUN SECUENCIAL
+# ============================================================
+def get_run_dir():
+    existing = glob.glob(os.path.join(HAND_DETECTOR_OUTPUT_DIR, "hand-detector_[0-9][0-9]"))
+    n = max((int(os.path.basename(d).split("_")[-1]) for d in existing), default=-1) + 1
+    run_dir = os.path.join(HAND_DETECTOR_OUTPUT_DIR, f"hand-detector_{n:02d}")
+    os.makedirs(run_dir, exist_ok=True)
+    return run_dir
+
+
+def save_run_config(run_dir, base_model_trainable):
+    config = {
+        "IMAGE_SIZE": IMAGE_SIZE,
+        "NUM_CLASSES": NUM_CLASSES,
+        "BATCH_SIZE": BATCH_SIZE,
+        "EPOCHS": EPOCHS,
+        "ENCODER": ENCODER,
+        "ENCODER_WEIGHTS": ENCODER_WEIGHTS,
+        "base_model_trainable": base_model_trainable,
+        "data_augmentation": False,
+        "optimizer": "adam",
+        "loss": "categorical_crossentropy",
+        "early_stopping_patience": 5,
+        "reduce_lr_factor": 0.5,
+        "reduce_lr_patience": 1,
+        "reduce_lr_min_lr": 1e-6,
+        "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+    }
+    with open(os.path.join(run_dir, "config.json"), "w", encoding="utf-8") as f:
+        json.dump(config, f, indent=2)
+    print(f"Configuración guardada en: {run_dir}/config.json")
 
 
 # ============================================================
@@ -117,9 +145,13 @@ def load_data(image_size=IMAGE_SIZE):
 # ============================================================
 # ARQUITECTURA U-Net + MobileNetV2
 # ============================================================
+BASE_MODEL_TRAINABLE = True
+
+
 def unet_mobilenetv2(input_size=(*IMAGE_SIZE, 3), num_classes=NUM_CLASSES):
-    base_model = MobileNetV2(input_shape=input_size, include_top=False, weights="imagenet")
-    base_model.trainable = False
+    weights = None if ENCODER_WEIGHTS in (None, "None") else ENCODER_WEIGHTS
+    base_model = MobileNetV2(input_shape=input_size, include_top=False, weights=weights)
+    base_model.trainable = BASE_MODEL_TRAINABLE
 
     s1 = base_model.get_layer("block_1_expand_relu").output   # 112x112
     s2 = base_model.get_layer("block_3_expand_relu").output   # 56x56
@@ -234,15 +266,29 @@ def visualize_samples(images, masks, num_samples=5, save_folder=None):
 
 
 def plot_training_history(history, save_path):
-    plt.figure(figsize=(8, 6))
-    for key in ("loss", "val_loss", "accuracy", "val_accuracy"):
-        if key in history.history:
-            plt.plot(history.history[key], marker="o", label=key)
-    plt.title("Histórico de Entrenamiento")
-    plt.xlabel("Época"); plt.ylabel("Valor de la Métrica")
-    plt.legend(); plt.grid(True)
-    plt.savefig(save_path)
-    plt.close()
+    h = history.history
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+
+    for key in ("loss", "val_loss"):
+        if key in h:
+            ax1.plot(h[key], marker="o", label=key)
+    ax1.set_title("Loss")
+    ax1.set_xlabel("Época"); ax1.set_ylabel("Loss")
+    ax1.set_ylim(bottom=0)
+    ax1.legend(); ax1.grid(True)
+
+    for key in ("accuracy", "val_accuracy", "iou_metric", "val_iou_metric",
+                "dice_metric", "val_dice_metric"):
+        if key in h:
+            ax2.plot(h[key], marker="o", label=key)
+    ax2.set_title("Métricas")
+    ax2.set_xlabel("Época"); ax2.set_ylabel("Valor")
+    ax2.set_ylim(0, 1)
+    ax2.legend(); ax2.grid(True)
+
+    fig.tight_layout()
+    fig.savefig(save_path)
+    plt.close(fig)
     print(f"Historial guardado: {save_path}")
 
 
@@ -271,8 +317,14 @@ def predict_and_save(model, image_path, save_path):
 # MAIN
 # ============================================================
 def main():
-    for d in [MODELS_DIR, HISTORY_DIR, EVALUATION_DIR, SAMPLES_DIR]:
+    run_dir      = get_run_dir()
+    models_dir   = os.path.join(run_dir, "models")
+    history_dir  = os.path.join(run_dir, "training_history")
+    eval_dir     = os.path.join(run_dir, "evaluation")
+    samples_dir  = os.path.join(eval_dir, "samples")
+    for d in [models_dir, history_dir, eval_dir, samples_dir]:
         os.makedirs(d, exist_ok=True)
+    save_run_config(run_dir, BASE_MODEL_TRAINABLE)
 
     with timer("Carga de datos"):
         print(f"Imágenes: {HAND_DETECTOR_IMAGES_DIR}")
@@ -283,7 +335,7 @@ def main():
     unique, counts = np.unique(masks, return_counts=True)
     print(f"Distribución de clases (antes del split): {dict(zip(unique.tolist(), counts.tolist()))}")
 
-    visualize_samples(images, masks, num_samples=5, save_folder=SAMPLES_DIR)
+    visualize_samples(images, masks, num_samples=5, save_folder=samples_dir)
 
     num_classes = NUM_CLASSES
     x_train, x_val, y_train, y_val = train_test_split(
@@ -319,15 +371,10 @@ def main():
     steps_per_epoch  = max(1, len(x_train) // batch_size)
     validation_steps = max(1, len(x_val)   // batch_size)
 
-    aug_args = dict(rotation_range=10, width_shift_range=0.05, height_shift_range=0.05,
-                    shear_range=0.05, zoom_range=0.15, horizontal_flip=True,
-                    vertical_flip=False, fill_mode="nearest")
-
-    train_img_gen  = ImageDataGenerator(**aug_args).flow(x_train, batch_size=batch_size, seed=seed, shuffle=True)
-    train_mask_gen = ImageDataGenerator(**{**aug_args, "fill_mode": "constant"}).flow(
-        y_train_cat, batch_size=batch_size, seed=seed, shuffle=True)
-    val_img_gen    = ImageDataGenerator().flow(x_val, batch_size=batch_size, seed=seed, shuffle=False)
-    val_mask_gen   = ImageDataGenerator().flow(y_val_cat, batch_size=batch_size, seed=seed, shuffle=False)
+    train_img_gen  = ImageDataGenerator().flow(x_train,     batch_size=batch_size, seed=seed, shuffle=True)
+    train_mask_gen = ImageDataGenerator().flow(y_train_cat, batch_size=batch_size, seed=seed, shuffle=True)
+    val_img_gen    = ImageDataGenerator().flow(x_val,       batch_size=batch_size, seed=seed, shuffle=False)
+    val_mask_gen   = ImageDataGenerator().flow(y_val_cat,   batch_size=batch_size, seed=seed, shuffle=False)
 
     def _gen(ig, mg):
         while True:
@@ -348,7 +395,7 @@ def main():
             callbacks=callbacks,
         )
 
-    plot_training_history(history, os.path.join(HISTORY_DIR, "training_history.png"))
+    plot_training_history(history, os.path.join(history_dir, "training_history.png"))
 
     with timer("Evaluación"):
         results = model.evaluate(x_val, y_val_cat, verbose=0)
@@ -361,7 +408,7 @@ def main():
             "Métrica": ["Loss", "Accuracy", "IoU", "Dice Score"],
             "Valor":   [round(r, 4) for r in results],
         })
-        perf_table_path = os.path.join(EVALUATION_DIR, "performance_table.png")
+        perf_table_path = os.path.join(eval_dir, "performance_table.png")
         dfi.export(perf_df.style, perf_table_path)
         print(f"Tabla de performance guardada: {perf_table_path}")
 
@@ -369,10 +416,10 @@ def main():
     sample_imgs = glob.glob(os.path.join(HAND_DETECTOR_IMAGES_DIR, "*.png"))
     if sample_imgs:
         predict_and_save(model, sample_imgs[0],
-                         os.path.join(EVALUATION_DIR, "test_prediction.png"))
+                         os.path.join(eval_dir, "test_prediction.png"))
 
     # Guardar modelo
-    model_path = os.path.join(MODELS_DIR, "segmentation_model.h5")
+    model_path = os.path.join(models_dir, "segmentation_model.h5")
     model.save(model_path)
     model.save(SEGMENTATION_MODEL_PATH)
     print(f"Modelo guardado en: {model_path}")

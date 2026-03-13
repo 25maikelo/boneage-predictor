@@ -15,7 +15,7 @@ NUM_CLASSES = 5
 
 # Entrenamiento
 BATCH_SIZE = 8
-EPOCHS = 2
+EPOCHS = 30
 LEARNING_RATE = 1e-4
 
 # Backbone del encoder (actualmente solo MobileNetV2 soportado)

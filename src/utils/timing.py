@@ -36,22 +36,24 @@ class _Tee:
         return getattr(self._stream, name)
 
 
-def setup_logging(script_name: str) -> str:
+def setup_logging(script_name: str, log_dir: str = None) -> str:
     """
     Redirige stdout y stderr a un archivo de log además de la consola.
-    Crea logs/<script_name>_YYYYMMDD_HHMMSS.log
 
-    Llama a esta función al inicio de cada script:
-        setup_logging("training.py")
+    Si log_dir es None guarda en logs/<script_name>_YYYYMMDD_HHMMSS.log.
+    Si log_dir se especifica, guarda el log dentro de ese directorio
+    (útil para asociar el log al run_dir del experimento).
 
     Retorna la ruta del archivo de log creado.
     """
-    from config.paths import LOGS_DIR
-    os.makedirs(LOGS_DIR, exist_ok=True)
+    if log_dir is None:
+        from config.paths import LOGS_DIR
+        log_dir = LOGS_DIR
+    os.makedirs(log_dir, exist_ok=True)
 
     name = os.path.splitext(script_name)[0]
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    log_path = os.path.join(LOGS_DIR, f"{name}_{timestamp}.log")
+    log_path = os.path.join(log_dir, f"{name}_{timestamp}.log")
 
     sys.stdout = _Tee(sys.stdout, log_path)
     sys.stderr = _Tee(sys.stderr, log_path)

@@ -32,21 +32,36 @@ PYTHON = str(_venv_python) if _venv_python.exists() else sys.executable
 
 # ─── Matriz de experimentos ───────────────────────────────────────────────────
 EXPERIMENTS = [
-    # (arquitectura,          encoder_weights, base_model_trainable, canales)
-    ("unet_mobilenetv2",      "imagenet",      False,                3),
-    ("unet_mobilenetv2",      "imagenet",      True,                 3),
-    ("unet_mobilenetv2",      None,            True,                 3),
-    ("unet_mobilenetv2",      None,            False,                3),
-    ("unet_mobilenetv2",      "imagenet",      True,                 1),
-    ("unet",                  None,            None,                 3),
-    ("unet",                  None,            None,                 1),
+    # (arquitectura,          encoder_weights, base_model_trainable, canales, data_aug)
+    ("unet_mobilenetv2",      "imagenet",      False,                3,       False),  # 01
+    ("unet_mobilenetv2",      "imagenet",      False,                3,       True),   # 02
+    ("unet_mobilenetv2",      "imagenet",      True,                 3,       False),  # 03
+    ("unet_mobilenetv2",      "imagenet",      True,                 3,       True),   # 04
+    ("unet_mobilenetv2",      None,            True,                 3,       False),  # 05
+    ("unet_mobilenetv2",      None,            True,                 3,       True),   # 06
+    ("unet_mobilenetv2",      None,            False,                3,       False),  # 07
+    ("unet_mobilenetv2",      None,            False,                3,       True),   # 08
+    ("unet_mobilenetv2",      "imagenet",      True,                 1,       False),  # 09
+    ("unet_mobilenetv2",      "imagenet",      True,                 1,       True),   # 10
+    ("unet",                  None,            None,                 3,       False),  # 11
+    ("unet",                  None,            None,                 3,       True),   # 12
+    ("unet",                  None,            None,                 1,       False),  # 13
+    ("unet",                  None,            None,                 1,       True),   # 14
+    ("mobilenetv2_sym",       "imagenet",      False,                3,       False),  # 15
+    ("mobilenetv2_sym",       "imagenet",      False,                3,       True),   # 16
+    ("mobilenetv2_sym",       "imagenet",      True,                 3,       False),  # 17
+    ("mobilenetv2_sym",       "imagenet",      True,                 3,       True),   # 18
+    ("mobilenetv2_sym",       None,            True,                 3,       False),  # 19
+    ("mobilenetv2_sym",       None,            True,                 3,       True),   # 20
+    ("mobilenetv2_sym",       "imagenet",      True,                 1,       False),  # 21
+    ("mobilenetv2_sym",       "imagenet",      True,                 1,       True),   # 22
 ]
 
 # ─── Plantilla de config/segmentation.py ─────────────────────────────────────
-def render_config(arch, enc_weights, base_trainable, channels, epochs, batch_size):
+def render_config(arch, enc_weights, base_trainable, channels, data_aug, epochs, batch_size):
     enc_weights_str   = f'"{enc_weights}"' if enc_weights else "None"
     base_train_str    = str(base_trainable) if base_trainable is not None else "True"
-    uses_backbone     = arch in ("unet_mobilenetv2", "mobilenetv2")
+    uses_backbone     = arch in ("unet_mobilenetv2", "mobilenetv2_sym")
     backbone_comment  = "" if uses_backbone else "  # ignorado para esta arquitectura"
 
     return dedent(f"""\
@@ -105,7 +120,7 @@ def render_config(arch, enc_weights, base_trainable, channels, epochs, batch_siz
 
         # ─── Data Augmentation ────────────────────────────────────────────────────────
         # Activa o desactiva el data augmentation en el conjunto de entrenamiento.
-        DATA_AUGMENTATION = False
+        DATA_AUGMENTATION = {data_aug}
 
         # Transformaciones geométricas — se aplican igual a imagen Y máscara.
         AUG_ROTATION_RANGE     = 15
@@ -121,18 +136,19 @@ def render_config(arch, enc_weights, base_trainable, channels, epochs, batch_siz
     """)
 
 
-def run_experiment(idx, arch, enc_weights, base_trainable, channels, epochs, batch_size):
+def run_experiment(idx, arch, enc_weights, base_trainable, channels, data_aug, epochs, batch_size):
     label = (
         f"[{idx:02d}/{len(EXPERIMENTS)}] {arch} | "
         f"weights={enc_weights or 'None'} | "
         f"trainable={base_trainable} | "
-        f"ch={channels}"
+        f"ch={channels} | "
+        f"aug={data_aug}"
     )
     print(f"\n{'='*70}")
     print(f"  {label}")
     print(f"{'='*70}")
 
-    config_content = render_config(arch, enc_weights, base_trainable, channels, epochs, batch_size)
+    config_content = render_config(arch, enc_weights, base_trainable, channels, data_aug, epochs, batch_size)
     CONFIG_PATH.write_text(config_content, encoding="utf-8")
 
     t0 = time.time()
@@ -184,12 +200,12 @@ def main():
 
     results = {}
     try:
-        for idx, (arch, enc_weights, base_trainable, channels) in zip(indices, selected):
+        for idx, (arch, enc_weights, base_trainable, channels, data_aug) in zip(indices, selected):
             ok = run_experiment(
-                idx, arch, enc_weights, base_trainable, channels,
+                idx, arch, enc_weights, base_trainable, channels, data_aug,
                 epochs, args.batch_size,
             )
-            results[idx] = ("OK" if ok else "ERROR", arch, enc_weights, base_trainable, channels)
+            results[idx] = ("OK" if ok else "ERROR", arch, enc_weights, base_trainable, channels, data_aug)
     finally:
         CONFIG_PATH.write_text(original_config, encoding="utf-8")
         print("\nConfig original restaurada.")
@@ -197,8 +213,8 @@ def main():
     print(f"\n{'='*70}")
     print("  RESUMEN")
     print(f"{'='*70}")
-    for idx, (status, arch, enc_w, trainable, ch) in results.items():
-        print(f"  [{idx:02d}] {status:5s}  {arch:20s}  weights={str(enc_w):8s}  trainable={trainable}  ch={ch}")
+    for idx, (status, arch, enc_w, trainable, ch, aug) in results.items():
+        print(f"  [{idx:02d}] {status:5s}  {arch:20s}  weights={str(enc_w):8s}  trainable={trainable}  ch={ch}  aug={aug}")
 
     failed = [i for i, r in results.items() if r[0] == "ERROR"]
     if failed:

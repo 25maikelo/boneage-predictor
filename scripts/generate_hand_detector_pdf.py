@@ -24,7 +24,7 @@ import matplotlib.patches as mpatches
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.patches import FancyBboxPatch
 
-PROJECT_ROOT   = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT   = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RUNS_DIR       = os.path.join(PROJECT_ROOT, "models", "hand-detector")
 DEFAULT_OUTPUT = os.path.join(RUNS_DIR, "hand_detector_experiments.pdf")
 

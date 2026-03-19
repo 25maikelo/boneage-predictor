@@ -22,7 +22,7 @@ import time
 from pathlib import Path
 from textwrap import dedent
 
-PROJECT_ROOT = Path(__file__).parent
+PROJECT_ROOT = Path(__file__).parent.parent
 CONFIG_PATH  = PROJECT_ROOT / "config" / "segmentation.py"
 SCRIPT_PATH  = PROJECT_ROOT / "src" / "preprocessing" / "01_train_hand_detector.py"
 
@@ -33,28 +33,28 @@ PYTHON = str(_venv_python) if _venv_python.exists() else sys.executable
 # ─── Matriz de experimentos ───────────────────────────────────────────────────
 EXPERIMENTS = [
     # (arquitectura,          encoder_weights, base_model_trainable, canales, data_aug)
-    ("unet_mobilenetv2",      "imagenet",      False,                3,       False),  # 01
-    ("unet_mobilenetv2",      "imagenet",      False,                3,       True),   # 02
-    ("unet_mobilenetv2",      "imagenet",      True,                 3,       False),  # 03
-    ("unet_mobilenetv2",      "imagenet",      True,                 3,       True),   # 04
-    ("unet_mobilenetv2",      None,            True,                 3,       False),  # 05
-    ("unet_mobilenetv2",      None,            True,                 3,       True),   # 06
-    ("unet_mobilenetv2",      None,            False,                3,       False),  # 07
-    ("unet_mobilenetv2",      None,            False,                3,       True),   # 08
-    ("unet_mobilenetv2",      "imagenet",      True,                 1,       False),  # 09
-    ("unet_mobilenetv2",      "imagenet",      True,                 1,       True),   # 10
-    ("unet",                  None,            None,                 3,       False),  # 11
-    ("unet",                  None,            None,                 3,       True),   # 12
-    ("unet",                  None,            None,                 1,       False),  # 13
-    ("unet",                  None,            None,                 1,       True),   # 14
-    ("mobilenetv2_sym",       "imagenet",      False,                3,       False),  # 15
-    ("mobilenetv2_sym",       "imagenet",      False,                3,       True),   # 16
-    ("mobilenetv2_sym",       "imagenet",      True,                 3,       False),  # 17
-    ("mobilenetv2_sym",       "imagenet",      True,                 3,       True),   # 18
-    ("mobilenetv2_sym",       None,            True,                 3,       False),  # 19
-    ("mobilenetv2_sym",       None,            True,                 3,       True),   # 20
-    ("mobilenetv2_sym",       "imagenet",      True,                 1,       False),  # 21
-    ("mobilenetv2_sym",       "imagenet",      True,                 1,       True),   # 22
+    ("unet_mobilenetv2",      "imagenet",      False,                3,       False),  # 00
+    ("unet_mobilenetv2",      "imagenet",      False,                3,       True),   # 01
+    ("unet_mobilenetv2",      "imagenet",      True,                 3,       False),  # 02
+    ("unet_mobilenetv2",      "imagenet",      True,                 3,       True),   # 03
+    ("unet_mobilenetv2",      None,            True,                 3,       False),  # 04
+    ("unet_mobilenetv2",      None,            True,                 3,       True),   # 05
+    ("unet_mobilenetv2",      None,            False,                3,       False),  # 06
+    ("unet_mobilenetv2",      None,            False,                3,       True),   # 07
+    ("unet_mobilenetv2",      "imagenet",      True,                 1,       False),  # 08
+    ("unet_mobilenetv2",      "imagenet",      True,                 1,       True),   # 09
+    ("unet",                  None,            None,                 3,       False),  # 10
+    ("unet",                  None,            None,                 3,       True),   # 11
+    ("unet",                  None,            None,                 1,       False),  # 12
+    ("unet",                  None,            None,                 1,       True),   # 13
+    ("mobilenetv2_sym",       "imagenet",      False,                3,       False),  # 14
+    ("mobilenetv2_sym",       "imagenet",      False,                3,       True),   # 15
+    ("mobilenetv2_sym",       "imagenet",      True,                 3,       False),  # 16
+    ("mobilenetv2_sym",       "imagenet",      True,                 3,       True),   # 17
+    ("mobilenetv2_sym",       None,            True,                 3,       False),  # 18
+    ("mobilenetv2_sym",       None,            True,                 3,       True),   # 19
+    ("mobilenetv2_sym",       "imagenet",      True,                 1,       False),  # 20
+    ("mobilenetv2_sym",       "imagenet",      True,                 1,       True),   # 21
 ]
 
 # ─── Plantilla de config/segmentation.py ─────────────────────────────────────
@@ -171,7 +171,7 @@ def main():
     )
     parser.add_argument(
         "--only", nargs="+", type=int, metavar="N",
-        help="Ejecutar solo los experimentos indicados (índices 1-based)."
+        help="Ejecutar solo los experimentos indicados (índices 0-based, igual que hand-detector_NN)."
     )
     parser.add_argument(
         "--epochs", type=int, default=None,
@@ -188,11 +188,11 @@ def main():
     original_config = CONFIG_PATH.read_text(encoding="utf-8")
 
     selected = (
-        [EXPERIMENTS[i - 1] for i in args.only]
+        [EXPERIMENTS[i] for i in args.only]
         if args.only
         else EXPERIMENTS
     )
-    indices = args.only if args.only else list(range(1, len(EXPERIMENTS) + 1))
+    indices = args.only if args.only else list(range(len(EXPERIMENTS)))
 
     print(f"\nExperimentos a ejecutar: {len(selected)}")
     print(f"Épocas por experimento:  {epochs}")

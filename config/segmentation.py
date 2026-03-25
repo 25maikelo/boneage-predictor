@@ -38,16 +38,32 @@ EPOCHS     = 30
 #                          con el mismo schedule de canales invertido (320→160→96→64→32→16).
 #                          ENCODER_WEIGHTS y BASE_MODEL_TRAINABLE aplican.
 #
+#   "unet_resnet50"      → U-Net con encoder ResNet50 y skip connections.
+#                          ENCODER_WEIGHTS y BASE_MODEL_TRAINABLE aplican.
+#                          Soporta ENCODER_WEIGHTS = "imagenet" | "radimagenet" | None.
+#                          Para "radimagenet": requiere models/pretrained/radimagenet_resnet50.h5
+#
+#   "unet_densenet121"   → U-Net con encoder DenseNet121 y skip connections.
+#                          ENCODER_WEIGHTS y BASE_MODEL_TRAINABLE aplican.
+#                          Soporta ENCODER_WEIGHTS = "imagenet" | "radimagenet" | None.
+#                          Para "radimagenet": requiere models/pretrained/radimagenet_densenet121.h5
+#
 ARCHITECTURE = "unet_mobilenetv2"
 
 # Pesos del encoder.
-# Solo aplica si ARCHITECTURE es "unet_mobilenetv2" o "mobilenetv2".
-# Para "unet" y "mobilenetv2_blocks" siempre se entrena desde cero.
-ENCODER_WEIGHTS = "imagenet"   # None | "imagenet"
+# Aplica a todas las arquitecturas con backbone (unet_mobilenetv2, mobilenetv2_sym,
+# unet_resnet50, unet_densenet121). Para "unet" siempre se entrena desde cero.
+#
+#   "imagenet"      → Pesos preentrenados en ImageNet (descarga automática de Keras).
+#   "radimagenet"   → Pesos preentrenados en RadImageNet (Mei et al. 2022).
+#                     Requiere el archivo .h5 en models/pretrained/.
+#                     Descarga: https://github.com/BMEII-AI/RadImageNet
+#   None            → Entrenamiento desde cero.
+#
+ENCODER_WEIGHTS = "imagenet"   # None | "imagenet" | "radimagenet"
 
 # Permite ajuste fino del backbone durante el entrenamiento.
-# Solo aplica si ARCHITECTURE es "unet_mobilenetv2" o "mobilenetv2".
-# Para "unet" y "mobilenetv2_blocks" este parámetro no tiene efecto.
+# Solo aplica a arquitecturas con backbone. Para "unet" no tiene efecto.
 BASE_MODEL_TRAINABLE = True
 
 # ─── Data Augmentation ────────────────────────────────────────────────────────
@@ -59,7 +75,7 @@ AUG_ROTATION_RANGE     = 15      # grados máximos de rotación
 AUG_WIDTH_SHIFT_RANGE  = 0.1     # fracción del ancho para desplazamiento horizontal
 AUG_HEIGHT_SHIFT_RANGE = 0.1     # fracción de la altura para desplazamiento vertical
 AUG_ZOOM_RANGE         = 0.1     # factor de zoom (0.1 → ±10 %)
-AUG_HORIZONTAL_FLIP    = True
+AUG_HORIZONTAL_FLIP    = False
 AUG_VERTICAL_FLIP      = False
 AUG_SHEAR_RANGE        = 0.05    # ángulo de corte en radianes
 

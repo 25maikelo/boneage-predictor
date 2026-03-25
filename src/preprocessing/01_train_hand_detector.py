@@ -34,7 +34,7 @@ import tensorflow.keras.backend as K
 tf.get_logger().setLevel("ERROR")
 
 from sklearn.model_selection import train_test_split
-from tensorflow.keras.applications import MobileNetV2
+from tensorflow.keras.applications import MobileNetV2, ResNet50, DenseNet121
 from tensorflow.keras import layers, models
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
@@ -63,6 +63,10 @@ START_TIME = time.time()
 # CARPETA DE RUN SECUENCIAL
 # ============================================================
 def get_run_dir():
+    fixed = os.environ.get("HAND_DETECTOR_RUN_DIR")
+    if fixed:
+        os.makedirs(fixed, exist_ok=True)
+        return fixed
     existing = glob.glob(os.path.join(HAND_DETECTOR_OUTPUT_DIR, "hand-detector_[0-9][0-9]"))
     n = max((int(os.path.basename(d).split("_")[-1]) for d in existing), default=-1) + 1
     run_dir = os.path.join(HAND_DETECTOR_OUTPUT_DIR, f"hand-detector_{n:02d}")
@@ -70,8 +74,11 @@ def get_run_dir():
     return run_dir
 
 
+_BACKBONE_ARCHITECTURES = {"unet_mobilenetv2", "mobilenetv2_sym", "unet_resnet50", "unet_densenet121"}
+
+
 def save_run_config(run_dir):
-    uses_backbone = ARCHITECTURE in ("unet_mobilenetv2", "mobilenetv2")
+    uses_backbone = ARCHITECTURE in _BACKBONE_ARCHITECTURES
     config = {
         "IMAGE_SIZE": IMAGE_SIZE,
         "INPUT_CHANNELS": INPUT_CHANNELS,
@@ -377,11 +384,196 @@ def build_mobilenetv2_sym(input_size=(*IMAGE_SIZE, INPUT_CHANNELS), num_classes=
     return models.Model(inputs=model_input, outputs=outputs)
 
 
+# ── RadImageNet weight loader ─────────────────────────────────────────────────
+def _load_radimagenet_weights(backbone, backbone_name):
+    """Carga pesos RadImageNet en el backbone Keras.
+
+    Los pesos deben estar en:
+        models/pretrained/radimagenet_{backbone_name}.h5
+
+    Se cargan por nombre (by_name=True) ignorando capas sin coincidencia
+    (skip_mismatch=True), por lo que la capa de clasificación no causa error.
+    """
+    weights_path = os.path.join(
+        PROJECT_ROOT, "models", "pretrained", f"radimagenet_{backbone_name}.h5"
+    )
+    if not os.path.exists(weights_path):
+        raise FileNotFoundError(
+            f"Pesos RadImageNet no encontrados: {weights_path}\n"
+            "Descarga los pesos desde https://github.com/BMEII-AI/RadImageNet "
+            f"y guárdalos como models/pretrained/radimagenet_{backbone_name}.h5"
+        )
+    backbone.load_weights(weights_path, by_name=True, skip_mismatch=True)
+    print(f"Pesos RadImageNet cargados desde: {weights_path}")
+
+
+# ── U-Net + ResNet50 encoder ──────────────────────────────────────────────────
+def build_unet_resnet50(input_size=(*IMAGE_SIZE, INPUT_CHANNELS), num_classes=NUM_CLASSES):
+    """U-Net con encoder ResNet50 y skip connections.
+
+    Soporta ENCODER_WEIGHTS = "imagenet" | "radimagenet" | None.
+    Si INPUT_CHANNELS=1, el canal se replica ×3 antes del backbone.
+
+    Skip connections:
+        s1: conv1_relu        112×112 × 64
+        s2: conv2_block3_out   56×56  × 256
+        s3: conv3_block4_out   28×28  × 512
+        s4: conv4_block6_out   14×14  × 1024
+        bottleneck: conv5_block3_out  7×7 × 2048
+    """
+    h, w, channels = input_size
+
+    if ENCODER_WEIGHTS == "radimagenet":
+        keras_weights = None
+    elif ENCODER_WEIGHTS in (None, "None"):
+        keras_weights = None
+    else:
+        keras_weights = ENCODER_WEIGHTS  # "imagenet"
+
+    model_input = layers.Input((h, w, channels))
+    if channels == 1:
+        backbone_in = layers.Lambda(lambda t: tf.repeat(t, 3, axis=-1))(model_input)
+    else:
+        backbone_in = model_input
+
+    base_model = ResNet50(input_shape=(h, w, 3), include_top=False, weights=keras_weights)
+
+    if ENCODER_WEIGHTS == "radimagenet":
+        _load_radimagenet_weights(base_model, "resnet50")
+
+    base_model.trainable = BASE_MODEL_TRAINABLE
+
+    skip_model = models.Model(
+        inputs=base_model.input,
+        outputs=[
+            base_model.get_layer("conv1_relu").output,        # 112×112 × 64
+            base_model.get_layer("conv2_block3_out").output,  # 56×56  × 256
+            base_model.get_layer("conv3_block4_out").output,  # 28×28  × 512
+            base_model.get_layer("conv4_block6_out").output,  # 14×14  × 1024
+            base_model.get_layer("conv5_block3_out").output,  # 7×7    × 2048
+        ],
+    )
+    s1, s2, s3, s4, bottleneck = skip_model(backbone_in)
+
+    x = layers.Conv2DTranspose(512, (3, 3), strides=(2, 2), padding="same")(bottleneck)
+    x = layers.concatenate([x, s4])
+    x = layers.Conv2D(512, (3, 3), activation="relu", padding="same")(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Dropout(0.5)(x)
+
+    x = layers.Conv2DTranspose(256, (3, 3), strides=(2, 2), padding="same")(x)
+    x = layers.concatenate([x, s3])
+    x = layers.Conv2D(256, (3, 3), activation="relu", padding="same")(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Dropout(0.5)(x)
+
+    x = layers.Conv2DTranspose(128, (3, 3), strides=(2, 2), padding="same")(x)
+    x = layers.concatenate([x, s2])
+    x = layers.Conv2D(128, (3, 3), activation="relu", padding="same")(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Dropout(0.5)(x)
+
+    x = layers.Conv2DTranspose(64, (3, 3), strides=(2, 2), padding="same")(x)
+    x = layers.concatenate([x, s1])
+    x = layers.Conv2D(64, (3, 3), activation="relu", padding="same")(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Dropout(0.5)(x)
+
+    x = layers.Conv2DTranspose(32, (3, 3), strides=(2, 2), padding="same")(x)
+    x = layers.Conv2D(32, (3, 3), activation="relu", padding="same")(x)
+    x = layers.BatchNormalization()(x)
+
+    outputs = layers.Conv2D(num_classes, (1, 1), activation="softmax")(x)
+    return models.Model(inputs=model_input, outputs=outputs)
+
+
+# ── U-Net + DenseNet121 encoder ───────────────────────────────────────────────
+def build_unet_densenet121(input_size=(*IMAGE_SIZE, INPUT_CHANNELS), num_classes=NUM_CLASSES):
+    """U-Net con encoder DenseNet121 y skip connections.
+
+    Soporta ENCODER_WEIGHTS = "imagenet" | "radimagenet" | None.
+    Si INPUT_CHANNELS=1, el canal se replica ×3 antes del backbone.
+
+    Skip connections:
+        s1: conv1_relu              112×112 × 64
+        s2: conv2_block6_concat      56×56  × 256  (fin dense block 1)
+        s3: pool2_pool               28×28  × 128  (tras transition 1)
+        s4: pool3_pool               14×14  × 256  (tras transition 2)
+        bottleneck: relu              7×7   × 1024
+    """
+    h, w, channels = input_size
+
+    if ENCODER_WEIGHTS == "radimagenet":
+        keras_weights = None
+    elif ENCODER_WEIGHTS in (None, "None"):
+        keras_weights = None
+    else:
+        keras_weights = ENCODER_WEIGHTS  # "imagenet"
+
+    model_input = layers.Input((h, w, channels))
+    if channels == 1:
+        backbone_in = layers.Lambda(lambda t: tf.repeat(t, 3, axis=-1))(model_input)
+    else:
+        backbone_in = model_input
+
+    base_model = DenseNet121(input_shape=(h, w, 3), include_top=False, weights=keras_weights)
+
+    if ENCODER_WEIGHTS == "radimagenet":
+        _load_radimagenet_weights(base_model, "densenet121")
+
+    base_model.trainable = BASE_MODEL_TRAINABLE
+
+    skip_model = models.Model(
+        inputs=base_model.input,
+        outputs=[
+            base_model.get_layer("conv1_relu").output,            # 112×112 × 64
+            base_model.get_layer("conv2_block6_concat").output,   # 56×56   × 256
+            base_model.get_layer("pool2_pool").output,            # 28×28   × 128
+            base_model.get_layer("pool3_pool").output,            # 14×14   × 256
+            base_model.get_layer("relu").output,                  # 7×7     × 1024
+        ],
+    )
+    s1, s2, s3, s4, bottleneck = skip_model(backbone_in)
+
+    x = layers.Conv2DTranspose(512, (3, 3), strides=(2, 2), padding="same")(bottleneck)
+    x = layers.concatenate([x, s4])
+    x = layers.Conv2D(512, (3, 3), activation="relu", padding="same")(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Dropout(0.5)(x)
+
+    x = layers.Conv2DTranspose(256, (3, 3), strides=(2, 2), padding="same")(x)
+    x = layers.concatenate([x, s3])
+    x = layers.Conv2D(256, (3, 3), activation="relu", padding="same")(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Dropout(0.5)(x)
+
+    x = layers.Conv2DTranspose(128, (3, 3), strides=(2, 2), padding="same")(x)
+    x = layers.concatenate([x, s2])
+    x = layers.Conv2D(128, (3, 3), activation="relu", padding="same")(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Dropout(0.5)(x)
+
+    x = layers.Conv2DTranspose(64, (3, 3), strides=(2, 2), padding="same")(x)
+    x = layers.concatenate([x, s1])
+    x = layers.Conv2D(64, (3, 3), activation="relu", padding="same")(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Dropout(0.5)(x)
+
+    x = layers.Conv2DTranspose(32, (3, 3), strides=(2, 2), padding="same")(x)
+    x = layers.Conv2D(32, (3, 3), activation="relu", padding="same")(x)
+    x = layers.BatchNormalization()(x)
+
+    outputs = layers.Conv2D(num_classes, (1, 1), activation="softmax")(x)
+    return models.Model(inputs=model_input, outputs=outputs)
+
+
 # ── Factory ───────────────────────────────────────────────────────────────────
 _BUILDERS = {
-    "unet":             build_unet,
-    "unet_mobilenetv2": build_unet_mobilenetv2,
-    "mobilenetv2_sym":  build_mobilenetv2_sym,
+    "unet":              build_unet,
+    "unet_mobilenetv2":  build_unet_mobilenetv2,
+    "mobilenetv2_sym":   build_mobilenetv2_sym,
+    "unet_resnet50":     build_unet_resnet50,
+    "unet_densenet121":  build_unet_densenet121,
 }
 
 
@@ -391,7 +583,7 @@ def build_model(input_size=(*IMAGE_SIZE, INPUT_CHANNELS), num_classes=NUM_CLASSE
             f"Arquitectura desconocida: '{ARCHITECTURE}'. "
             f"Opciones válidas: {list(_BUILDERS)}"
         )
-    uses_backbone = ARCHITECTURE in ("unet_mobilenetv2", "mobilenetv2")
+    uses_backbone = ARCHITECTURE in _BACKBONE_ARCHITECTURES
     if not uses_backbone and ENCODER_WEIGHTS not in (None, "None"):
         print(
             f"AVISO: ARCHITECTURE='{ARCHITECTURE}' no usa backbone preentrenado. "
@@ -655,6 +847,15 @@ def main():
         perf_table_path = os.path.join(eval_dir, "performance_table.png")
         dfi.export(perf_df.style, perf_table_path)
         print(f"Tabla de performance guardada: {perf_table_path}")
+
+        metrics = {
+            "val_loss":     round(results[0], 4),
+            "val_accuracy": round(results[1], 4),
+            "val_iou":      round(results[2], 4),
+            "val_dice":     round(results[3], 4),
+        }
+        with open(os.path.join(eval_dir, "metrics.json"), "w", encoding="utf-8") as f:
+            json.dump(metrics, f, indent=2)
 
     # Predicción de prueba con la primera imagen de validación
     sample_imgs = glob.glob(os.path.join(HAND_DETECTOR_IMAGES_DIR, "*.png"))

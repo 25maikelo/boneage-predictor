@@ -17,7 +17,10 @@ class _Tee:
     """Escribe simultáneamente en la consola y en un archivo de log."""
 
     def __init__(self, stream, filepath: str):
-        self._stream = stream
+        import io
+        self._stream = io.TextIOWrapper(
+            stream.buffer, encoding="utf-8", errors="replace", line_buffering=True
+        ) if hasattr(stream, "buffer") else stream
         self._file = open(filepath, "w", encoding="utf-8", buffering=1)
 
     def write(self, data):

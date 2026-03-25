@@ -8,6 +8,7 @@ Uso:
 import os
 import sys
 import argparse
+import gc
 import logging
 import random
 import time
@@ -53,33 +54,36 @@ def get_optimizer(choice, lr):
     return tf.keras.optimizers.Adam(learning_rate=lr)
 
 
-def frame_and_zoom(img):
+def frame_and_zoom(img, kernel_size=(9, 9), dilation_iters=4):
+    """Rotación y recorte — lógica de src/preprocessing/02_frame_and_zoom.py."""
     blur = cv2.GaussianBlur(img, (5, 5), 0)
     _, thresh = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     h, w = thresh.shape
-    if (np.any(thresh[0] == 255) or np.any(thresh[-1] == 255) or
+    if (np.any(thresh[0, :] == 255) or np.any(thresh[-1, :] == 255) or
             np.any(thresh[:, 0] == 255) or np.any(thresh[:, -1] == 255)):
         thresh = cv2.bitwise_not(thresh)
-    kernel = np.ones((7, 7), np.uint8)
-    dil = cv2.dilate(thresh, kernel, iterations=3)
+    kernel = np.ones(kernel_size, np.uint8)
+    dil = cv2.dilate(thresh, kernel, iterations=dilation_iters)
     cnts, _ = cv2.findContours(dil, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     if not cnts:
         return img
     rect = cv2.minAreaRect(max(cnts, key=cv2.contourArea))
     box = np.intp(cv2.boxPoints(rect))
     angle = rect[-1]
-    if rect[1][0] < rect[1][1]:
+    w_rect, h_rect = rect[1]
+    if w_rect < h_rect:
         angle += 90
     if angle > 45:
         angle -= 90
     M = cv2.getRotationMatrix2D((w // 2, h // 2), angle, 1.0)
     rot = cv2.warpAffine(img, M, (w, h), flags=cv2.INTER_CUBIC,
-                          borderMode=cv2.BORDER_REPLICATE)
-    pts = np.hstack([box, np.ones((4, 1))])
-    pts2 = np.dot(M, pts.T).T.astype(int)
-    x0, y0 = pts2[:, 0].min(), pts2[:, 1].min()
-    x1, y1 = pts2[:, 0].max(), pts2[:, 1].max()
-    if x1 <= x0 or y1 <= y0:
+                         borderMode=cv2.BORDER_REPLICATE)
+    ones = np.ones((len(box), 1))
+    box_h = np.hstack([box, ones])
+    box_r = np.dot(M, box_h.T).T.astype(int)
+    x0, y0 = box_r[:, 0].min(), box_r[:, 1].min()
+    x1, y1 = box_r[:, 0].max(), box_r[:, 1].max()
+    if x0 >= x1 or y0 >= y1:
         return img
     crop = rot[y0:y1, x0:x1]
     return crop if crop.size >= 0.2 * img.size else img
@@ -161,12 +165,17 @@ def parse_age_to_months(age_str):
 
 def load_all_models(cfg, exp_dir):
     models_dir = os.path.join(exp_dir, "models")
-    seg_path = os.path.join(models_dir, "modelo_segmentacion.h5")
     from config.paths import SEGMENTATION_MODEL_PATH
-    seg_model = load_model(
-        seg_path if os.path.exists(seg_path) else SEGMENTATION_MODEL_PATH,
-        compile=False
-    )
+    cfg_seg = getattr(cfg, "SEGMENTATION_MODEL", None)
+    if cfg_seg:
+        seg_path = cfg_seg if os.path.isabs(cfg_seg) else os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))), cfg_seg
+        )
+    else:
+        local = os.path.join(models_dir, "modelo_segmentacion.h5")
+        seg_path = local if os.path.exists(local) else SEGMENTATION_MODEL_PATH
+    print(f"Modelo de segmentación: {seg_path}")
+    seg_model = load_model(seg_path, compile=False)
     segment_models = {}
     for seg in cfg.SEGMENTS_ORDER:
         path = os.path.join(models_dir, f"{seg}_model.keras")
@@ -236,9 +245,11 @@ def main():
         plt.savefig(os.path.join(OUTPUT_FOLDER, "sexo_pastel_validacion.png")); plt.close()
 
     rows, preds, trues, failed = [], [], [], []
+    candidates = []
+    n_seen = 0
 
     with timer("Inferencia sobre dataset mexicano"):
-        for _, row in df.iterrows():
+        for i, (_, row) in enumerate(df.iterrows()):
             sid = str(row["ID"])
             real_age = float(row["real_age"])
             img_path = os.path.join(MEX_IMAGES_DIR, f"{sid}.png")
@@ -269,10 +280,22 @@ def main():
             if not np.isnan(pred_age) and not np.isnan(real_age):
                 preds.append(pred_age); trues.append(real_age)
                 rows.append({"id": sid, "real_age": real_age, "pred_age": pred_age,
-                             "diff_months": abs(pred_age - real_age),
-                             "segments": segments, "eq": eq, "row": row})
+                             "diff_months": abs(pred_age - real_age)})
+                n_seen += 1
+                candidate = {"id": sid, "eq": eq, "segments": segments,
+                             "row": row, "real_age": real_age, "pred_age": pred_age,
+                             "diff_months": abs(pred_age - real_age)}
+                if len(candidates) < NUM_SAMPLE_RESULTS:
+                    candidates.append(candidate)
+                else:
+                    j = random.randint(0, n_seen - 1)
+                    if j < NUM_SAMPLE_RESULTS:
+                        candidates[j] = candidate
             else:
                 failed.append((sid, "nan"))
+
+            if i % 50 == 0:
+                gc.collect()
 
     mae = np.mean(np.abs(np.array(preds) - np.array(trues))) if preds else np.nan
 
@@ -299,8 +322,7 @@ def main():
     plt.close(fig)
 
     # Muestras con saliencia
-    chosen = random.sample(rows, min(NUM_SAMPLE_RESULTS, len(rows)))
-    for item in chosen:
+    for item in candidates:
         sid, eq, segments, df_row = item["id"], item["eq"], item["segments"], item["row"]
         base = cv2.cvtColor(eq, cv2.COLOR_GRAY2BGR)
         result = base.copy()
@@ -308,7 +330,7 @@ def main():
             seg_r = cv2.resize(segments[seg], cfg.IMAGE_SIZE, interpolation=cv2.INTER_CUBIC)
             tensor = tf.expand_dims(normalize_image(seg_r), 0)
             inp = [tensor]
-            if cfg.USE_GENDER and "gender" in df_row:
+            if cfg.USE_GENDER and "gender" in df_row and len(model.inputs) > 1:
                 inp.append(tf.constant([[1.0 if df_row["gender"] == "M" else 0.0]], tf.float32))
             heat = compute_saliency_map(model, inp)
             heat = cv2.resize(heat, (result.shape[1], result.shape[0]), interpolation=cv2.INTER_CUBIC)

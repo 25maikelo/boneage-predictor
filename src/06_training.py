@@ -27,7 +27,7 @@ from concurrent.futures import ProcessPoolExecutor
 from tensorflow.keras.models import load_model
 from sklearn.model_selection import train_test_split
 
-from config.paths import SEGMENTED_IMAGES_DIR, EXPERIMENTS_DIR
+from config.paths import SEGMENTED_IMAGES_DIR, EXPERIMENTS_DIR, TRAINING_CSV
 from config.experiment import load_experiment_config, get_experiment_output_dir
 from src.utils.losses import LOSS_MAP, dynamic_attention_loss
 from src.utils.timing import report_timing, setup_logging, timer
@@ -327,7 +327,7 @@ def train_one_segment(segment: str):
         print(f"Modelo '{segment}' ya existe, omitiendo.")
         return
 
-    df = pd.read_csv(cfg.DATASET_PATH)
+    df = pd.read_csv(getattr(cfg, "DATASET_PATH", TRAINING_CSV))
     df = df[(df["boneage"] >= cfg.AGE_RANGE[0]) & (df["boneage"] <= cfg.AGE_RANGE[1])]
     if cfg.USE_GENDER:
         df["gender"] = df["male"].astype(float)
@@ -384,10 +384,8 @@ def train_fusion(cfg, exp_dir):
     model_type = getattr(cfg, "MODEL_TYPE", "backbone")
 
     if os.path.exists(fusion_path):
-        print("Fusión ya entrenada, cargando modelo existente.")
-        fusion = load_model(fusion_path, custom_objects=LOSS_MAP)
-        fusion.compile(optimizer=get_optimizer(cfg.OPTIMIZER_CHOICE, cfg.LEARNING_RATE),
-                       loss=loss_fn, metrics=["mae"])
+        print("Fusión ya entrenada, omitiendo.")
+        return
     else:
         seg_paths = {seg: os.path.join(models_dir, f"{seg}_model")
                      for seg in cfg.SEGMENTS_ORDER}
@@ -396,7 +394,7 @@ def train_fusion(cfg, exp_dir):
         else:
             fusion = create_fusion_model(seg_paths, cfg, loss_fn)
 
-    df = pd.read_csv(cfg.DATASET_PATH)
+    df = pd.read_csv(getattr(cfg, "DATASET_PATH", TRAINING_CSV))
     df = df[(df["boneage"] >= cfg.AGE_RANGE[0]) & (df["boneage"] <= cfg.AGE_RANGE[1])]
     train_f, val_f = train_test_split(df, test_size=cfg.TEST_SPLIT, random_state=42)
 

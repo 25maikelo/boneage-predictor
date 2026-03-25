@@ -126,8 +126,9 @@ def generate_comparative_table(fusion_model, segment_models, cfg, evaluation_pat
 
     for seg, model in segment_models.items():
         idx = cfg.SEGMENTS_ORDER.index(seg)
-        inp_tr = [tr_in[idx]] + ([tr_in[-1]] if cfg.USE_GENDER else [])
-        inp_va = [va_in[idx]] + ([va_in[-1]] if cfg.USE_GENDER else [])
+        use_gender_seg = cfg.USE_GENDER and len(model.inputs) > 1
+        inp_tr = [tr_in[idx]] + ([tr_in[-1]] if use_gender_seg else [])
+        inp_va = [va_in[idx]] + ([va_in[-1]] if use_gender_seg else [])
         tr_loss, tr_mae = model.evaluate(inp_tr, tr_t, verbose=0)
         va_loss, va_mae = model.evaluate(inp_va, va_t, verbose=0)
         rows.append([SEGMENTS_TRANSLATION.get(seg, seg), f"{model.count_params():,}",
@@ -213,12 +214,12 @@ def main():
                                         cfg.IMAGE_SIZE)
             result = base_img.copy()
             for seg, model in segment_models.items():
-                heat = compute_saliency_map(
-                    model,
-                    [tf.expand_dims(normalize_image(safe_load_image(
-                        os.path.join(SEGMENTED_IMAGES_DIR, seg, f"{sid}.png"), cfg.IMAGE_SIZE)), 0)]
-                    + ([tf.constant([[float(row.get("male", 0))]], tf.float32)] if cfg.USE_GENDER else [])
-                )
+                seg_tensor = tf.expand_dims(normalize_image(safe_load_image(
+                    os.path.join(SEGMENTED_IMAGES_DIR, seg, f"{sid}.png"), cfg.IMAGE_SIZE)), 0)
+                sal_inputs = [seg_tensor]
+                if cfg.USE_GENDER and len(model.inputs) > 1:
+                    sal_inputs.append(tf.constant([[float(row.get("male", 0))]], tf.float32))
+                heat = compute_saliency_map(model, sal_inputs)
                 result = overlay_masked(result, heat)
 
             text = f"ID: {sid}\nReal: {real_age:.1f} m\nPredicción: {pred_age:.1f} m\nDiferencia: {diff:.1f} m"

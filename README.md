@@ -246,6 +246,18 @@ Finalizado: 2026-03-11 15:42:00
 
 ---
 
+## Sincronización con Drive
+
+Al sincronizar la carpeta del proyecto, las siguientes carpetas **no son necesarias** para ejecutar el pipeline y pueden excluirse para ahorrar espacio:
+
+| Carpeta | Motivo |
+|---|---|
+| `venv/` | Entorno virtual de Python — se recrea con `pip install -r requirements.txt` |
+| `**/__pycache__/` | Caché de bytecode de Python — se regenera automáticamente |
+| `.git/` | Historial de Git — no necesario para solo ejecutar el código |
+
+---
+
 ## Dataset
 
 El proyecto usa el dataset [RSNA Pediatric Bone Age Challenge](https://www.kaggle.com/datasets/kmader/rsna-bone-age) de Kaggle.

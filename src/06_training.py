@@ -137,6 +137,65 @@ def create_segment_model(cfg):
     return tf.keras.models.Model(inputs=inputs, outputs=out)
 
 
+def create_simple_cnn_segment_model(cfg):
+    """CNN simple sin backbone. Flatten preserva info espacial para fusión."""
+    filters     = getattr(cfg, "CNN_FILTERS", [32, 64, 128, 256])
+    kernel_size = getattr(cfg, "CNN_KERNEL_SIZE", 3)
+    dropout     = getattr(cfg, "CNN_DROPOUT", 0.3)
+
+    inp = tf.keras.layers.Input(shape=(*cfg.IMAGE_SIZE, 3), name="image_input")
+    x = inp
+    for f in filters:
+        x = tf.keras.layers.Conv2D(f, kernel_size, padding="same")(x)
+        x = tf.keras.layers.BatchNormalization()(x)
+        x = tf.keras.layers.Activation("relu")(x)
+        x = tf.keras.layers.MaxPooling2D(2, 2)(x)
+
+    x = tf.keras.layers.Flatten(name="flatten_features")(x)
+    x = tf.keras.layers.Dense(512, activation="relu")(x)
+    x = tf.keras.layers.Dropout(dropout)(x)
+    out = tf.keras.layers.Dense(1, activation="linear", name="boneage_output")(x)
+    return tf.keras.models.Model(inp, out)
+
+
+def create_fusion_model_cnn(segment_paths, cfg, loss_fn):
+    """Fusión basada en vectores Flatten de cada CNN de segmento."""
+    inputs, feature_outputs = [], []
+
+    for seg in cfg.SEGMENTS_ORDER:
+        seg_model = load_model(f"{segment_paths[seg]}.keras", custom_objects=LOSS_MAP)
+        feature_extractor = tf.keras.models.Model(
+            inputs=seg_model.input,
+            outputs=seg_model.get_layer("flatten_features").output,
+            name=f"feature_extractor_{seg}",
+        )
+        feature_extractor.trainable = False
+
+        inp = tf.keras.layers.Input(shape=(*cfg.IMAGE_SIZE, 3), name=f"input_{seg}")
+        inputs.append(inp)
+        feature_outputs.append(feature_extractor(inp))
+
+    x = tf.keras.layers.Concatenate()(feature_outputs)
+
+    if cfg.USE_GENDER:
+        gender_in = tf.keras.layers.Input(shape=(1,), name="gender_input")
+        inputs.append(gender_in)
+        x = tf.keras.layers.Concatenate()([x, gender_in])
+
+    x = tf.keras.layers.Dense(512, activation="relu")(x)
+    x = tf.keras.layers.Dropout(0.5)(x)
+    x = tf.keras.layers.Dense(256, activation="relu")(x)
+    x = tf.keras.layers.Dropout(0.3)(x)
+    out = tf.keras.layers.Dense(1, activation="linear", name="boneage_output")(x)
+
+    fusion = tf.keras.models.Model(inputs=inputs, outputs=out, name="fusion_model_cnn")
+    fusion.compile(
+        optimizer=tf.keras.optimizers.Adam(learning_rate=cfg.LEARNING_RATE),
+        loss=loss_fn, metrics=["mae"],
+    )
+    return fusion
+
+
 def clone_and_rename(model, prefix):
     def clone_fn(layer):
         c = layer.get_config()
@@ -277,7 +336,16 @@ def train_one_segment(segment: str):
     train_df, val_df = train_test_split(df, test_size=cfg.TEST_SPLIT, random_state=42)
 
     loss_fn = LOSS_MAP.get(cfg.LOSS_FUNCTION_NAME, dynamic_attention_loss)
-    model = create_segment_model(cfg)
+    model_type = getattr(cfg, "MODEL_TYPE", "backbone")
+
+    if model_type == "simple_cnn":
+        # Los modelos CNN de segmento no usan género; éste se aplica en la fusión.
+        # Estamos en un subprocess, por lo que modificar cfg es seguro.
+        cfg.USE_GENDER = False
+        model = create_simple_cnn_segment_model(cfg)
+    else:
+        model = create_segment_model(cfg)
+
     model.compile(optimizer=get_optimizer(cfg.OPTIMIZER_CHOICE, cfg.LEARNING_RATE),
                   loss=loss_fn, metrics=["mae"])
 
@@ -313,6 +381,8 @@ def train_fusion(cfg, exp_dir):
     fusion_path = os.path.join(models_dir, "fusion_model.keras")
     loss_fn = LOSS_MAP.get(cfg.LOSS_FUNCTION_NAME, dynamic_attention_loss)
 
+    model_type = getattr(cfg, "MODEL_TYPE", "backbone")
+
     if os.path.exists(fusion_path):
         print("Fusión ya entrenada, cargando modelo existente.")
         fusion = load_model(fusion_path, custom_objects=LOSS_MAP)
@@ -321,7 +391,10 @@ def train_fusion(cfg, exp_dir):
     else:
         seg_paths = {seg: os.path.join(models_dir, f"{seg}_model")
                      for seg in cfg.SEGMENTS_ORDER}
-        fusion = create_fusion_model(seg_paths, cfg, loss_fn)
+        if model_type == "simple_cnn":
+            fusion = create_fusion_model_cnn(seg_paths, cfg, loss_fn)
+        else:
+            fusion = create_fusion_model(seg_paths, cfg, loss_fn)
 
     df = pd.read_csv(cfg.DATASET_PATH)
     df = df[(df["boneage"] >= cfg.AGE_RANGE[0]) & (df["boneage"] <= cfg.AGE_RANGE[1])]
@@ -364,6 +437,10 @@ def train_fusion(cfg, exp_dir):
                  os.path.join(exp_dir, "training_history", "fusion_history.png"))
 
     if cfg.FINE_TUNING_EPOCHS > 0:
+        if model_type == "simple_cnn":
+            for layer in fusion.layers:
+                if layer.name.startswith("feature_extractor_"):
+                    layer.trainable = True
         fusion.compile(optimizer=get_optimizer(cfg.OPTIMIZER_CHOICE, cfg.LEARNING_RATE / 10),
                        loss=loss_fn, metrics=["mae"])
         print("Fine-tuning fusión...")

@@ -298,7 +298,10 @@ def fusion_data_generator(df, cfg, augment=False):
                 arr = []
                 for pid in batch["id"]:
                     img = cv2.imread(os.path.join(cfg.SEGMENTS_FOLDER, seg, f"{pid}.png"))
-                    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                    if img is None:
+                        img = np.zeros((*cfg.IMAGE_SIZE, 3), dtype=np.uint8)
+                    else:
+                        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
                     img = cv2.resize(img, cfg.IMAGE_SIZE)
                     if datagen:
                         img = datagen.random_transform(img)
@@ -312,14 +315,14 @@ def fusion_data_generator(df, cfg, augment=False):
 # ============================================================
 # ENTRENAMIENTO DE SEGMENTOS
 # ============================================================
-_cfg_global = None  # necesario para ProcessPoolExecutor
+def train_one_segment(args_tuple):
+    segment, experiment_idx = args_tuple
+    cfg = load_experiment_config(experiment_idx)
+    cfg._experiment_idx = experiment_idx
+    if not hasattr(cfg, "SEGMENTS_FOLDER") or not os.path.isabs(cfg.SEGMENTS_FOLDER):
+        cfg.SEGMENTS_FOLDER = SEGMENTED_IMAGES_DIR
 
-
-def train_one_segment(segment: str):
-    global _cfg_global
-    cfg = _cfg_global
-
-    exp_dir = get_experiment_output_dir(cfg._experiment_idx)
+    exp_dir = get_experiment_output_dir(experiment_idx)
     models_dir = os.path.join(exp_dir, "models")
     model_path = os.path.join(models_dir, f"{segment}_model.keras")
 
@@ -467,13 +470,13 @@ def parse_args():
 
 
 def main():
-    global _cfg_global
+    global _experiment_idx_global
     args = parse_args()
     setup_gpu()
 
     cfg = load_experiment_config(args.experiment)
     cfg._experiment_idx = args.experiment
-    _cfg_global = cfg
+    _experiment_idx_global = args.experiment
 
     # Usar SEGMENTS_FOLDER del config; si no tiene ruta absoluta, usar paths.py
     if not hasattr(cfg, "SEGMENTS_FOLDER") or not os.path.isabs(cfg.SEGMENTS_FOLDER):
@@ -489,7 +492,7 @@ def main():
     if pendientes:
         with timer("Entrenamiento de segmentos"):
             with ProcessPoolExecutor(max_workers=len(pendientes)) as ex:
-                ex.map(train_one_segment, pendientes)
+                ex.map(train_one_segment, [(seg, args.experiment) for seg in pendientes])
     else:
         print("Todos los modelos de segmento ya existen.")
 
@@ -498,6 +501,8 @@ def main():
 
 
 if __name__ == "__main__":
-    setup_logging("06_training.py")
+    _args = parse_args()
+    _exp_dir = get_experiment_output_dir(_args.experiment)
+    setup_logging("06_training.py", log_dir=_exp_dir)
     main()
     report_timing(START_TIME, "06_training.py")

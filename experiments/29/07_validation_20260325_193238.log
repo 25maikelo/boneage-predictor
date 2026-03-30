@@ -1,0 +1,14 @@
+D:\Miguelonches\Projects\boneage-predictor\venv\Lib\site-packages\keras\src\models\functional.py:237: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: image_input
+Received: inputs=['Tensor(shape=(1, 112, 112, 3))']
+  warnings.warn(msg)
+or/hand-detector_00/models/segmentation_model.h5
+[TIMING] Carga de modelos: 0:00:12
+[TIMING] Inferencia sobre dataset de validación: 0:09:33
+MAE: 48.13 meses | Procesadas: 1420 | Fallidas: 5
+
+=======================================================
+[TIMING REPORT] 07_validation.py
+Tiempo total de ejecución: 0:09:55
+Finalizado: 2026-03-25 19:42:34
+=======================================================

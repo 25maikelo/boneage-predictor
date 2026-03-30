@@ -352,6 +352,8 @@ def main():
 
 
 if __name__ == "__main__":
-    setup_logging("08_mex_validation.py")
+    _args = parse_args()
+    _exp_dir = get_experiment_output_dir(_args.experiment)
+    setup_logging("08_mex_validation.py", log_dir=_exp_dir)
     main()
     report_timing(START_TIME, "08_mex_validation.py")

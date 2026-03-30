@@ -1,0 +1,61 @@
+[LOG] D:\Miguelonches\Projects\boneage-predictor\experiments\29\06_training_20260325_200920.log
+ADVERTENCIA: No se detectó GPU. Ejecutando en CPU.
+Experimento: 29 → D:\Miguelonches\Projects\boneage-predictor\experiments\29
+[TIMING] Entrenamiento de segmentos: 2:23:14
+Entrenando modelo de fusión...
+Epoch 1/20
+Modelo guardado en D:\Miguelonches\Projects\boneage-predictor\experiments\29\models\fusion_model.keras (época 1)
+312/312 - 1275s - 4s/step - loss: 9.7132 - mae: 26.7842 - val_loss: 13.7789 - val_mae: 38.7778 - learning_rate: 1.0000e-03
+Epoch 2/20
+Modelo guardado en D:\Miguelonches\Projects\boneage-predictor\experiments\29\models\fusion_model.keras (época 2)
+312/312 - 892s - 3s/step - loss: 7.5347 - mae: 24.2509 - val_loss: 14.3724 - val_mae: 39.9571 - learning_rate: 1.0000e-03
+Epoch 3/20
+Modelo guardado en D:\Miguelonches\Projects\boneage-predictor\experiments\29\models\fusion_model.keras (época 3)
+312/312 - 893s - 3s/step - loss: 7.0858 - mae: 23.1106 - val_loss: 41.4267 - val_mae: 71.8912 - learning_rate: 1.0000e-03
+Epoch 4/20
+Modelo guardado en D:\Miguelonches\Projects\boneage-predictor\experiments\29\models\fusion_model.keras (época 4)
+312/312 - 917s - 3s/step - loss: 6.7817 - mae: 22.7743 - val_loss: 28.4188 - val_mae: 58.8224 - learning_rate: 1.0000e-03
+Epoch 5/20
+Modelo guardado en D:\Miguelonches\Projects\boneage-predictor\experiments\29\models\fusion_model.keras (época 5)
+312/312 - 985s - 3s/step - loss: 6.0559 - mae: 21.4224 - val_loss: 30.4334 - val_mae: 61.0236 - learning_rate: 5.0000e-04
+[TIMING] Fusión: 1:22:41
+Fine-tuning fusión...
+Epoch 1/10
+Modelo guardado en D:\Miguelonches\Projects\boneage-predictor\experiments\29\models\fusion_model.keras (época 1)
+312/312 - 1241s - 4s/step - loss: 6.7852 - mae: 22.6865 - val_loss: 16.7891 - val_mae: 43.9150 - learning_rate: 1.0000e-04
+Epoch 2/10
+Modelo guardado en D:\Miguelonches\Projects\boneage-predictor\experiments\29\models\fusion_model.keras (época 2)
+312/312 - 1199s - 4s/step - loss: 6.0378 - mae: 21.4547 - val_loss: 16.6802 - val_mae: 43.7539 - learning_rate: 1.0000e-04
+Epoch 3/10
+Modelo guardado en D:\Miguelonches\Projects\boneage-predictor\experiments\29\models\fusion_model.keras (época 3)
+312/312 - 1309s - 4s/step - loss: 5.6287 - mae: 20.8222 - val_loss: 16.0326 - val_mae: 42.8787 - learning_rate: 1.0000e-04
+Epoch 4/10
+Modelo guardado en D:\Miguelonches\Projects\boneage-predictor\experiments\29\models\fusion_model.keras (época 4)
+312/312 - 1239s - 4s/step - loss: 5.4277 - mae: 20.3508 - val_loss: 9.2286 - val_mae: 30.7008 - learning_rate: 1.0000e-04
+Epoch 5/10
+Modelo guardado en D:\Miguelonches\Projects\boneage-predictor\experiments\29\models\fusion_model.keras (época 5)
+312/312 - 1188s - 4s/step - loss: 5.3328 - mae: 20.2663 - val_loss: 15.7562 - val_mae: 42.5150 - learning_rate: 1.0000e-04
+Epoch 6/10
+Modelo guardado en D:\Miguelonches\Projects\boneage-predictor\experiments\29\models\fusion_model.keras (época 6)
+312/312 - 1257s - 4s/step - loss: 5.2205 - mae: 20.0907 - val_loss: 7.9117 - val_mae: 27.9404 - learning_rate: 1.0000e-04
+Epoch 7/10
+Modelo guardado en D:\Miguelonches\Projects\boneage-predictor\experiments\29\models\fusion_model.keras (época 7)
+312/312 - 1473s - 5s/step - loss: 4.9051 - mae: 19.4760 - val_loss: 14.4101 - val_mae: 40.5216 - learning_rate: 1.0000e-04
+Epoch 8/10
+Modelo guardado en D:\Miguelonches\Projects\boneage-predictor\experiments\29\models\fusion_model.keras (época 8)
+312/312 - 1175s - 4s/step - loss: 4.7934 - mae: 19.2287 - val_loss: 17.7104 - val_mae: 45.5800 - learning_rate: 1.0000e-04
+Epoch 9/10
+Modelo guardado en D:\Miguelonches\Projects\boneage-predictor\experiments\29\models\fusion_model.keras (época 9)
+312/312 - 1110s - 4s/step - loss: 4.7087 - mae: 19.1227 - val_loss: 15.3139 - val_mae: 42.0233 - learning_rate: 1.0000e-04
+Epoch 10/10
+Modelo guardado en D:\Miguelonches\Projects\boneage-predictor\experiments\29\models\fusion_model.keras (época 10)
+312/312 - 1206s - 4s/step - loss: 4.3836 - mae: 18.5353 - val_loss: 17.4360 - val_mae: 45.1937 - learning_rate: 5.0000e-05
+[TIMING] Fine-tuning: 3:26:38
+Fusión completada.
+===== PROCESO COMPLETO FINALIZADO =====
+
+=======================================================
+[TIMING REPORT] 06_training.py
+Tiempo total de ejecución: 7:12:37
+Finalizado: 2026-03-26 03:21:58
+=======================================================

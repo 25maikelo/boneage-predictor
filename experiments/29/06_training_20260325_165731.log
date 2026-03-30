@@ -1,0 +1,28 @@
+[LOG] D:\Miguelonches\Projects\boneage-predictor\experiments\29\06_training_20260325_165731.log
+ADVERTENCIA: No se detectó GPU. Ejecutando en CPU.
+Experimento: 29 → D:\Miguelonches\Projects\boneage-predictor\experiments\29
+Todos los modelos de segmento ya existen.
+Entrenando modelo de fusión...
+Epoch 1/2
+Modelo guardado en D:\Miguelonches\Projects\boneage-predictor\experiments\29\models\fusion_model.keras (época 1)
+312/312 - 1441s - 5s/step - loss: 14.9772 - mae: 33.0179 - val_loss: 11.9720 - val_mae: 34.5558 - learning_rate: 1.0000e-03
+Epoch 2/2
+Modelo guardado en D:\Miguelonches\Projects\boneage-predictor\experiments\29\models\fusion_model.keras (época 2)
+312/312 - 2649s - 8s/step - loss: 10.5470 - mae: 28.3043 - val_loss: 23.2485 - val_mae: 52.1300 - learning_rate: 1.0000e-03
+[TIMING] Fusión: 1:08:09
+Fine-tuning fusión...
+Epoch 1/2
+Modelo guardado en D:\Miguelonches\Projects\boneage-predictor\experiments\29\models\fusion_model.keras (época 1)
+312/312 - 1877s - 6s/step - loss: 9.9595 - mae: 27.5044 - val_loss: 24.1443 - val_mae: 53.3772 - learning_rate: 1.0000e-04
+Epoch 2/2
+Modelo guardado en D:\Miguelonches\Projects\boneage-predictor\experiments\29\models\fusion_model.keras (época 2)
+312/312 - 1223s - 4s/step - loss: 8.5997 - mae: 25.4754 - val_loss: 19.7543 - val_mae: 47.6490 - learning_rate: 1.0000e-04
+[TIMING] Fine-tuning: 0:51:39
+Fusión completada.
+===== PROCESO COMPLETO FINALIZADO =====
+
+=======================================================
+[TIMING REPORT] 06_training.py
+Tiempo total de ejecución: 1:59:54
+Finalizado: 2026-03-25 18:57:26
+=======================================================

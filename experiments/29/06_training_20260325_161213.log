@@ -1,0 +1,43 @@
+Traceback (most recent call last):
+  File "D:\Miguelonches\Projects\boneage-predictor\src\06_training.py", line 504, in <module>
+    main()
+  File "D:\Miguelonches\Projects\boneage-predictor\src\06_training.py", line 496, in main
+    train_fusion(cfg, exp_dir)
+  File "D:\Miguelonches\Projects\boneage-predictor\src\06_training.py", line 427, in train_fusion
+    hist_f = fusion.fit(
+             ^^^^^^^^^^^
+  File "D:\Miguelonches\Projects\boneage-predictor\venv\Lib\site-packages\keras\src\utils\traceback_utils.py", line 122, in error_handler
+    raise e.with_traceback(filtered_tb) from None
+  File "D:\Miguelonches\Projects\boneage-predictor\venv\Lib\site-packages\tensorflow\python\eager\execute.py", line 53, in quick_execute
+    tensors = pywrap_tfe.TFE_Py_Execute(ctx._handle, device_name, op_name,
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tensorflow.python.framework.errors_impl.UnknownError: Graph execution error:
+
+Detected at node PyFunc defined at (most recent call last):
+<stack traces unavailable>
+error: OpenCV(4.11.0) D:\a\opencv-python\opencv-python\opencv\modules\imgproc\src\color.cpp:199: error: (-215:Assertion failed) !_src.empty() in function 'cv::cvtColor'
+
+Traceback (most recent call last):
+
+  File "D:\Miguelonches\Projects\boneage-predictor\venv\Lib\site-packages\tensorflow\python\ops\script_ops.py", line 269, in __call__
+    ret = func(*args)
+          ^^^^^^^^^^^
+
+  File "D:\Miguelonches\Projects\boneage-predictor\venv\Lib\site-packages\tensorflow\python\autograph\impl\api.py", line 643, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+
+  File "D:\Miguelonches\Projects\boneage-predictor\venv\Lib\site-packages\tensorflow\python\data\ops\from_generator_op.py", line 198, in generator_py_func
+    values = next(generator_state.get_iterator(iterator_id))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  File "D:\Miguelonches\Projects\boneage-predictor\src\06_training.py", line 301, in fusion_data_generator
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+cv2.error: OpenCV(4.11.0) D:\a\opencv-python\opencv-python\opencv\modules\imgproc\src\color.cpp:199: error: (-215:Assertion failed) !_src.empty() in function 'cv::cvtColor'
+
+
+
+	 [[{{node PyFunc}}]]
+	 [[IteratorGetNext]] [Op:__inference_multi_step_on_iterator_5630]

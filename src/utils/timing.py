@@ -55,8 +55,7 @@ def setup_logging(script_name: str, log_dir: str = None) -> str:
     os.makedirs(log_dir, exist_ok=True)
 
     name = os.path.splitext(script_name)[0]
-    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    log_path = os.path.join(log_dir, f"{name}_{timestamp}.log")
+    log_path = os.path.join(log_dir, f"{name}.log")
 
     sys.stdout = _Tee(sys.stdout, log_path)
     sys.stderr = _Tee(sys.stderr, log_path)

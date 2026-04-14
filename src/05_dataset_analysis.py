@@ -86,6 +86,18 @@ def main():
     with open(os.path.join(DATASET_ANALYSIS_DIR, "dataset_statistics.json"), "w") as f:
         json.dump(stats, f, indent=4)
 
+    # Guardar datos de gráficos para regeneración multiidioma
+    plot_data = {
+        "histograms": [
+            {"key": "original",   "ages": df["boneage"].tolist(),         "color": "#66b3ff", "fname": "age_distribution.png"},
+            {"key": "filtered",   "ages": completas["boneage"].tolist(),   "color": "#99cc99", "fname": "filtered_age_distribution.png"},
+            {"key": "balanced",   "ages": balanceado["boneage"].tolist(),  "color": "#ffcc66", "fname": "balanced_age_distribution.png"},
+        ],
+        "proportion": {"complete": int(len(completas)), "missing": int(len(faltantes))},
+    }
+    with open(os.path.join(DATASET_ANALYSIS_DIR, "plot_data.json"), "w") as f:
+        json.dump(plot_data, f, indent=2)
+
     # Gráficos
     for data, title, fname, color in [
         (df["boneage"], "Dataset Original", "age_distribution.png", "#66b3ff"),

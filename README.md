@@ -58,7 +58,7 @@ boneage-predictor/
 | 03 | `src/preprocessing/03_histogram_equalization.py` | `data/images/cropped/` | Imágenes con CLAHE aplicado | `data/images/equalized/` |
 | 04 | `src/preprocessing/04_segment_images.py` | `data/images/equalized/` + `models/modelo_segmentacion.h5` | Segmentos: pinky, middle, thumb, wrist | `data/images/segmented/{pinky,middle,thumb,wrist}/` |
 | 05 | `src/05_dataset_analysis.py --experiment N` | `data/training/*.csv` + `data/images/segmented/` | CSV balanceado, estadísticas JSON, histogramas de distribución de edad (original/filtrado/balanceado), gráfico de proporción | `data/training/dataset_analysis/` |
-| 06 | `src/06_training.py --experiment N` | `data/images/segmented/` + `experiments/N/config.py` | Modelos de segmentos + modelo de fusión, curvas de entrenamiento | `experiments/N/models/`, `experiments/N/training_history/` |
+| 06 | `src/06_training.py --experiment N` | `data/images/segmented/` + `experiments/N/config.py` | Modelos de segmentos (con K-Fold CV opcional) + modelo de fusión, curvas de entrenamiento, métricas CV en JSON | `experiments/N/models/`, `experiments/N/training_history/` |
 | 07 | `src/07_validation.py --experiment N` | `data/validation/` + `experiments/N/models/` | Histograma de edades, pastel de sexo, tabla resumen MAE/tiempos, saliencias sobre muestras, dispersión real vs predicción | `experiments/N/validation/` |
 | 08 | `src/08_mex_validation.py --experiment N` | `data/mex-validation/` + `experiments/N/models/` | Histograma de edades, pastel de sexo, tabla resumen MAE, saliencias sobre muestras, dispersión real vs predicción | `experiments/N/mex-validation/` |
 | 09 | `src/09_performance_analysis.py --experiment N` | `experiments/N/models/` + `data/images/segmented/` | Saliencias sobre muestras del dataset, tabla comparativa (Loss/MAE train-val por modelo) | `experiments/N/evaluation/` |
@@ -106,8 +106,28 @@ pip install -r requirements.txt
 
 ### 4. GPU (opcional)
 
-TensorFlow 2.18 requiere **CUDA 11.8** y **cuDNN 8.6**.
-Si no tienes GPU compatible, el pipeline corre en CPU (más lento).
+**Local:** TensorFlow 2.18 requiere **CUDA 11.8+** y **cuDNN 8.6+**.
+
+**Clúster HPC (Leo Átrox, CADS):** CUDA 11.4 no es compatible con TF 2.18.
+Usar el entorno conda `boneage_gpu` preconfigurado con TF 2.10 + cuDNN 8.1:
+
+```bash
+module load anaconda3/2024.02
+conda activate boneage_gpu
+```
+
+Si necesitas recrear el entorno desde cero:
+```bash
+conda create --name boneage_gpu python=3.9 -y
+conda activate boneage_gpu
+mkdir -p $CONDA_PREFIX/etc/conda/activate.d
+echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CONDA_PREFIX/lib/' \
+     > $CONDA_PREFIX/etc/conda/activate.d/env_vars.sh
+conda install -c conda-forge cudatoolkit=11.2 cudnn=8.1 -y
+pip install tensorflow==2.10
+pip install pandas scikit-learn scipy "opencv-python<4.10" Pillow \
+    scikit-image matplotlib seaborn joblib tqdm kagglehub
+```
 
 ### 5. Verificar instalación
 
@@ -115,7 +135,7 @@ Si no tienes GPU compatible, el pipeline corre en CPU (más lento).
 python -c "import tensorflow as tf; print(tf.__version__); print(tf.config.list_physical_devices('GPU'))"
 ```
 
-Debe imprimir `2.18.0` y la lista de GPUs (vacía si solo hay CPU).
+Debe imprimir la versión de TF y la lista de GPUs (vacía si solo hay CPU).
 
 ---
 
@@ -210,8 +230,82 @@ Variables clave:
 | `LOSS_FUNCTION_NAME` | Pérdida: `attention_loss`, `dynamic_attention_loss`, `custom_mse_loss`, `custom_huber_loss` |
 | `EPOCHS_SEGMENT` | Épocas de entrenamiento por segmento |
 | `FUSION_EPOCHS` | Épocas del modelo de fusión |
+| `FINE_TUNING_EPOCHS` | Épocas de fine-tuning del modelo de fusión |
 | `USE_GENDER` | Incluir género como feature |
 | `SEGMENTS_ORDER` | Orden de segmentos para el modelo de fusión |
+| `USE_CROSS_VALIDATION` | Activar K-Fold CV en el entrenamiento de segmentos (`True`/`False`) |
+| `N_FOLDS` | Número de folds para cross-validation (por defecto `5`) |
+
+---
+
+## Cross-Validation
+
+El script `06_training.py` soporta **K-Fold Cross-Validation** sobre los modelos de segmento.
+Se activa en el `config.py` del experimento:
+
+```python
+USE_CROSS_VALIDATION = True
+N_FOLDS = 5
+```
+
+### Comportamiento
+
+- Cada segmento (pinky, middle, thumb, wrist) se entrena `N_FOLDS` veces con distintas particiones del dataset.
+- El fold con menor `val_loss` se guarda como `{segmento}_model.keras` (modelo definitivo).
+- Los modelos intermedios se guardan como `{segmento}_fold{k}.keras`.
+- El modelo de **fusión** se entrena una sola vez con los mejores modelos de segmento (Opción B estándar en papers).
+
+### Salidas generadas en `experiments/N/training_history/`
+
+| Archivo | Descripción |
+|---|---|
+| `{seg}_cv_metrics.json` | Métricas y historial completo de cada fold por segmento |
+| `{seg}_fold{k}_history.png` | Curvas loss/MAE por época de cada fold |
+| `cv_summary_table.png` | Tabla resumen: MAE por fold, media ± std, mejor fold |
+| `cv_boxplot.png` | Boxplot de distribución del val MAE entre folds por segmento |
+| `cv_heatmap.png` | Heatmap val MAE — Fold × Segmento |
+| `{seg}_cv_bars.png` | Barras de val MAE y val Loss por fold |
+| `cv_summary.json` | Resumen global con media, std y mejor fold por segmento |
+
+---
+
+## Regeneración de Gráficos en Otro Idioma
+
+Todos los scripts guardan los datos subyacentes de sus gráficos en archivos JSON.
+El script `scripts/generate_plots.py` lee esos JSONs y regenera los gráficos en el idioma elegido **sin necesidad de reentrenar ni de tener los modelos cargados**.
+
+```bash
+# Español (por defecto)
+python scripts/generate_plots.py --experiment 30 --lang es
+
+# Inglés
+python scripts/generate_plots.py --experiment 30 --lang en
+```
+
+Los gráficos generados se guardan con sufijo `_es.png` o `_en.png` junto a los originales.
+
+### Cobertura por script
+
+| Script origen | Gráficos regenerados |
+|---|---|
+| `05_dataset_analysis` | Histogramas de distribución de edad, pastel original vs usables |
+| `06_training` | Curvas loss/MAE por fold, histogramas de fusión y fine-tuning, todos los gráficos CV |
+| `07_validation` | Histograma de edades, pastel de sexo, tabla resumen, scatter real vs predicción |
+| `08_mex_validation` | Igual que 07 para el dataset mexicano |
+| `09_performance_analysis` | Tabla comparativa de modelos |
+
+### Datos guardados por script
+
+Cada script guarda un archivo JSON con los datos de sus gráficos al ejecutarse:
+
+| Script | Archivo JSON |
+|---|---|
+| `05` | `data/training/dataset_analysis/plot_data.json` |
+| `06` (segmentos) | `experiments/N/training_history/{seg}_cv_metrics.json`, `{seg}_history.json` |
+| `06` (fusión) | `experiments/N/training_history/fusion_history.json`, `fusion_ft.json` |
+| `07` | `experiments/N/validation/plot_data.json` |
+| `08` | `experiments/N/mex-validation/plot_data.json` |
+| `09` | `experiments/N/evaluation/comparative_table_data.json` |
 
 ---
 

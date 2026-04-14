@@ -9,7 +9,7 @@
 
 module load anaconda3/2024.02
 eval "$(conda shell.bash hook)"
-conda activate master_env
+conda activate boneage_gpu
 mkdir -p logs
 cd /lustre/home/mlozano/boneage-predictor
 echo "Directorio de trabajo: $(pwd)"

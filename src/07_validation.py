@@ -223,6 +223,13 @@ def main():
     df.reset_index(drop=True, inplace=True)
     if "boneage" in df.columns:
         df["boneage"] = df["boneage"].apply(parse_age_to_months)
+    max_samples = getattr(cfg, "MAX_SAMPLES", None)
+    if max_samples:
+        df = df.sample(n=min(max_samples, len(df)), random_state=42).reset_index(drop=True)
+        print(f"[Quick test] Limitando validación a {len(df)} muestras.")
+
+    # Guardar edades para regeneración multiidioma
+    _plot_data = {"ages": df["boneage"].dropna().tolist()}
 
     # Histograma de edades
     plt.figure(figsize=(7, 4))
@@ -237,6 +244,7 @@ def main():
         gender_map = {"TRUE": "Masculino", "FALSE": "Femenino", True: "Masculino", False: "Femenino"}
         gender_labels = df["male"].map(gender_map)
         gender_counts = gender_labels.value_counts()
+        _plot_data["gender"] = gender_counts.to_dict()
         colors = [cm.tab10(0), cm.tab10(1)]
         plt.figure(figsize=(5, 5))
         patches, texts, autotexts = plt.pie(
@@ -332,6 +340,18 @@ def main():
         create_sample_table(text, result, os.path.join(OUTPUT_FOLDER, f"sample_result_{sid}.png"))
 
     mae = np.mean(np.abs(np.array(preds) - np.array(trues))) if preds else np.nan
+
+    # Guardar datos de scatter y resumen para regeneración multiidioma
+    _plot_data["scatter"] = {"trues": [float(v) for v in trues], "preds": [float(v) for v in preds]}
+    _plot_data["summary"] = {
+        "processed": len(rows), "failed": len(failed), "mae": float(mae) if preds else None,
+        "time_preprocess": float(np.mean(times_log["preprocess"])) if times_log["preprocess"] else None,
+        "time_segment":    float(np.mean(times_log["segment"]))    if times_log["segment"]    else None,
+        "time_predict":    float(np.mean(times_log["predict"]))    if times_log["predict"]    else None,
+    }
+    import json as _json
+    with open(os.path.join(OUTPUT_FOLDER, "plot_data.json"), "w") as _f:
+        _json.dump(_plot_data, _f, indent=2)
 
     # Tabla resumen
     summary_data = [

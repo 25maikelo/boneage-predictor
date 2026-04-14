@@ -137,6 +137,11 @@ def generate_comparative_table(fusion_model, segment_models, cfg, evaluation_pat
     cols = ["Modelo", "Parámetros", "Loss Train", "MAE Train", "Loss Val", "MAE Val"]
     df_res = pd.DataFrame(rows, columns=cols)
 
+    # Guardar datos para regeneración multiidioma
+    import json as _json
+    with open(os.path.join(evaluation_path, "comparative_table_data.json"), "w") as _f:
+        _json.dump({"rows": rows, "cols": cols}, _f, indent=2)
+
     fig, ax = plt.subplots(figsize=(12, 0.5 + 0.4 * len(df_res)))
     fig.patch.set_visible(False); ax.axis("off")
     tbl = ax.table(cellText=df_res.values, colLabels=cols, cellLoc="center", loc="center")

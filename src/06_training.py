@@ -25,7 +25,9 @@ tf.get_logger().setLevel("ERROR")
 import matplotlib.pyplot as plt
 from concurrent.futures import ProcessPoolExecutor
 from tensorflow.keras.models import load_model
-from sklearn.model_selection import train_test_split
+import json
+import shutil
+from sklearn.model_selection import train_test_split, KFold
 
 from config.paths import SEGMENTED_IMAGES_DIR, EXPERIMENTS_DIR, TRAINING_CSV
 from config.experiment import load_experiment_config, get_experiment_output_dir
@@ -93,14 +95,45 @@ def get_optimizer(choice, lr):
     return tf.keras.optimizers.Adam(learning_rate=lr)
 
 
-def plot_history(history, title, save_path):
-    plt.figure(figsize=(8, 6))
-    for key in ("loss", "val_loss", "mae", "val_mae"):
+def plot_history(history, title, save_path, total_epochs=None):
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+    actual = len(history.history.get("loss", []))
+    epochs = range(1, actual + 1)
+    x_max = total_epochs if total_epochs and total_epochs >= actual else actual
+    step = max(1, x_max // 10)
+    x_ticks = list(range(1, x_max + 1, step))
+    if x_max not in x_ticks:
+        x_ticks.append(x_max)
+
+    # Panel izquierdo: Loss
+    for key, label, style in [("loss", "Train Loss", "-"), ("val_loss", "Val Loss", "--")]:
         if key in history.history:
-            plt.plot(history.history[key], marker="o", label=key)
-    plt.title(title); plt.xlabel("Época"); plt.ylabel("Valor")
-    plt.legend(); plt.grid(True)
-    plt.savefig(save_path); plt.close()
+            values = [max(v, 0) for v in history.history[key]]
+            axes[0].plot(epochs, values, marker="o", linestyle=style, label=label)
+    axes[0].set_title("Loss"); axes[0].set_xlabel("Época"); axes[0].set_ylabel("Loss")
+    axes[0].set_xlim(0.5, x_max + 0.5)
+    axes[0].set_xticks(x_ticks); axes[0].set_ylim(bottom=0)
+    axes[0].legend(); axes[0].grid(True, linestyle="--", alpha=0.5)
+
+    # Panel derecho: MAE
+    for key, label, style in [("mae", "Train MAE", "-"), ("val_mae", "Val MAE", "--")]:
+        if key in history.history:
+            values = [max(v, 0) for v in history.history[key]]
+            axes[1].plot(epochs, values, marker="o", linestyle=style, label=label)
+    axes[1].set_title("MAE"); axes[1].set_xlabel("Época"); axes[1].set_ylabel("MAE (meses)")
+    axes[1].set_xlim(0.5, x_max + 0.5)
+    axes[1].set_xticks(x_ticks); axes[1].set_ylim(bottom=0)
+    axes[1].legend(); axes[1].grid(True, linestyle="--", alpha=0.5)
+
+    if actual < x_max:
+        for ax in axes:
+            ax.axvline(actual, color="gray", linestyle=":", alpha=0.6,
+                       label=f"Early stop (época {actual})")
+        axes[0].legend(fontsize=8)
+
+    fig.suptitle(title, fontsize=13)
+    plt.tight_layout()
+    plt.savefig(save_path, dpi=150, bbox_inches="tight"); plt.close()
 
 
 # ============================================================
@@ -110,7 +143,7 @@ def create_segment_model(cfg):
     IMAGE_SIZE = cfg.IMAGE_SIZE
     inp = tf.keras.layers.Input(shape=(*IMAGE_SIZE, 3), name="input_layer")
 
-    choice = cfg.BASE_MODEL_CHOICE.lower()
+    choice = (cfg.BASE_MODEL_CHOICE or "").lower()
     weights = cfg.WEIGHTS
     bases = {
         "vgg16": tf.keras.applications.VGG16,
@@ -203,8 +236,9 @@ def clone_and_rename(model, prefix):
         return layer.__class__.from_config(c)
     cloned = tf.keras.models.clone_model(model, clone_function=clone_fn)
     cloned.set_weights(model.get_weights())
-    cloned.name = f"{prefix}_model"
-    return cloned
+    named = tf.keras.models.Model(inputs=cloned.inputs, outputs=cloned.outputs,
+                                   name=f"{prefix}_segment_model")
+    return named
 
 
 def create_fusion_model(segment_paths, cfg, loss_fn):
@@ -315,6 +349,18 @@ def fusion_data_generator(df, cfg, augment=False):
 # ============================================================
 # ENTRENAMIENTO DE SEGMENTOS
 # ============================================================
+def _build_segment_model(cfg, loss_fn):
+    model_type = getattr(cfg, "MODEL_TYPE", "backbone")
+    if model_type == "simple_cnn":
+        cfg.USE_GENDER = False
+        model = create_simple_cnn_segment_model(cfg)
+    else:
+        model = create_segment_model(cfg)
+    model.compile(optimizer=get_optimizer(cfg.OPTIMIZER_CHOICE, cfg.LEARNING_RATE),
+                  loss=loss_fn, metrics=["mae"])
+    return model
+
+
 def train_one_segment(args_tuple):
     segment, experiment_idx = args_tuple
     cfg = load_experiment_config(experiment_idx)
@@ -324,6 +370,8 @@ def train_one_segment(args_tuple):
 
     exp_dir = get_experiment_output_dir(experiment_idx)
     models_dir = os.path.join(exp_dir, "models")
+    os.makedirs(models_dir, exist_ok=True)
+    os.makedirs(os.path.join(exp_dir, "training_history"), exist_ok=True)
     model_path = os.path.join(models_dir, f"{segment}_model.keras")
 
     if os.path.exists(model_path):
@@ -332,48 +380,236 @@ def train_one_segment(args_tuple):
 
     df = pd.read_csv(getattr(cfg, "DATASET_PATH", TRAINING_CSV))
     df = df[(df["boneage"] >= cfg.AGE_RANGE[0]) & (df["boneage"] <= cfg.AGE_RANGE[1])]
+    max_samples = getattr(cfg, "MAX_SAMPLES", None)
+    if max_samples:
+        df = df.sample(n=min(max_samples, len(df)), random_state=42).reset_index(drop=True)
     if cfg.USE_GENDER:
         df["gender"] = df["male"].astype(float)
     df["segment"] = segment
-
-    train_df, val_df = train_test_split(df, test_size=cfg.TEST_SPLIT, random_state=42)
+    df = df.reset_index(drop=True)
 
     loss_fn = LOSS_MAP.get(cfg.LOSS_FUNCTION_NAME, dynamic_attention_loss)
-    model_type = getattr(cfg, "MODEL_TYPE", "backbone")
+    use_cv = getattr(cfg, "USE_CROSS_VALIDATION", False)
+    n_folds = getattr(cfg, "N_FOLDS", 5)
 
-    if model_type == "simple_cnn":
-        # Los modelos CNN de segmento no usan género; éste se aplica en la fusión.
-        # Estamos en un subprocess, por lo que modificar cfg es seguro.
-        cfg.USE_GENDER = False
-        model = create_simple_cnn_segment_model(cfg)
+    if use_cv:
+        kf = KFold(n_splits=n_folds, shuffle=True, random_state=42)
+        fold_results = []
+        best_val_loss = float("inf")
+        best_fold_path = None
+
+        with timer(f"Segmento {segment} (CV {n_folds} folds)"):
+            for fold, (train_idx, val_idx) in enumerate(kf.split(df)):
+                train_df = df.iloc[train_idx].copy()
+                val_df   = df.iloc[val_idx].copy()
+                fold_path = os.path.join(models_dir, f"{segment}_fold{fold}.keras")
+
+                print(f"Entrenando segmento: {segment} — Fold {fold + 1}/{n_folds}")
+                model = _build_segment_model(cfg, loss_fn)
+                cbs = [
+                    tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=4,
+                                                      restore_best_weights=True),
+                    tf.keras.callbacks.ReduceLROnPlateau(monitor="val_loss", factor=0.5,
+                                                          patience=3, min_lr=1e-7, verbose=1),
+                    SaveModelCallback(fold_path),
+                ]
+                history = model.fit(
+                    custom_data_generator(train_df, cfg, augment=cfg.USE_AUGMENTATION),
+                    validation_data=custom_data_generator(val_df, cfg, augment=False),
+                    epochs=cfg.EPOCHS_SEGMENT,
+                    steps_per_epoch=len(train_df) // cfg.BATCH_SIZE,
+                    validation_steps=len(val_df) // cfg.BATCH_SIZE,
+                    verbose=2, callbacks=cbs,
+                )
+
+                best_epoch_val_loss = min(history.history["val_loss"])
+                best_epoch_val_mae  = history.history["val_mae"][
+                    history.history["val_loss"].index(best_epoch_val_loss)]
+                fold_results.append({
+                    "fold": fold,
+                    "val_loss": best_epoch_val_loss,
+                    "val_mae": best_epoch_val_mae,
+                    "history": {k: [float(v) for v in vals]
+                                for k, vals in history.history.items()},
+                    "total_epochs": cfg.EPOCHS_SEGMENT,
+                })
+                plot_history(history, f"Segmento {segment} Fold {fold + 1}",
+                             os.path.join(exp_dir, "training_history",
+                                          f"{segment}_fold{fold}_history.png"),
+                             total_epochs=cfg.EPOCHS_SEGMENT)
+
+                if best_epoch_val_loss < best_val_loss:
+                    best_val_loss = best_epoch_val_loss
+                    best_fold_path = fold_path
+
+        mean_mae = float(np.mean([r["val_mae"] for r in fold_results]))
+        std_mae  = float(np.std([r["val_mae"] for r in fold_results]))
+        best_fold_idx = int(min(range(len(fold_results)),
+                                key=lambda i: fold_results[i]["val_loss"]))
+        cv_metrics = {"folds": fold_results, "mean_val_mae": mean_mae,
+                      "std_val_mae": std_mae, "best_fold": best_fold_idx}
+        with open(os.path.join(exp_dir, "training_history",
+                               f"{segment}_cv_metrics.json"), "w") as f:
+            json.dump(cv_metrics, f, indent=2)
+
+        shutil.copy2(best_fold_path, model_path)
+        print(f"CV {segment}: MAE={mean_mae:.2f}±{std_mae:.2f} | "
+              f"Mejor fold={best_fold_idx} (val_loss={best_val_loss:.4f})")
+        print(f"Segmento {segment} completado (CV).")
+
     else:
-        model = create_segment_model(cfg)
+        train_df, val_df = train_test_split(df, test_size=cfg.TEST_SPLIT, random_state=42)
+        model = _build_segment_model(cfg, loss_fn)
+        cbs = [
+            tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=4,
+                                              restore_best_weights=True),
+            tf.keras.callbacks.ReduceLROnPlateau(monitor="val_loss", factor=0.5,
+                                                  patience=3, min_lr=1e-7, verbose=1),
+            SaveModelCallback(model_path),
+        ]
+        print(f"Entrenando segmento: {segment}")
+        with timer(f"Segmento {segment}"):
+            history = model.fit(
+                custom_data_generator(train_df, cfg, augment=cfg.USE_AUGMENTATION),
+                validation_data=custom_data_generator(val_df, cfg, augment=False),
+                epochs=cfg.EPOCHS_SEGMENT,
+                steps_per_epoch=len(train_df) // cfg.BATCH_SIZE,
+                validation_steps=len(val_df) // cfg.BATCH_SIZE,
+                verbose=2, callbacks=cbs,
+            )
+        plot_history(history, f"Segmento {segment}",
+                     os.path.join(exp_dir, "training_history", f"{segment}_history.png"),
+                     total_epochs=cfg.EPOCHS_SEGMENT)
+        with open(os.path.join(exp_dir, "training_history", f"{segment}_history.json"), "w") as f:
+            json.dump({"history": {k: [float(v) for v in vals]
+                                   for k, vals in history.history.items()},
+                       "total_epochs": cfg.EPOCHS_SEGMENT}, f, indent=2)
+        print(f"Segmento {segment} completado.")
 
-    model.compile(optimizer=get_optimizer(cfg.OPTIMIZER_CHOICE, cfg.LEARNING_RATE),
-                  loss=loss_fn, metrics=["mae"])
 
-    cbs = [
-        tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=4,
-                                          restore_best_weights=True),
-        tf.keras.callbacks.ReduceLROnPlateau(monitor="val_loss", factor=0.5,
-                                              patience=3, min_lr=1e-7, verbose=1),
-        SaveModelCallback(model_path),
-    ]
+# ============================================================
+# REPORTE DE CROSS-VALIDATION
+# ============================================================
+def report_cv_results(cfg, exp_dir):
+    history_dir = os.path.join(exp_dir, "training_history")
+    segments = cfg.SEGMENTS_ORDER
 
-    print(f"Entrenando segmento: {segment}")
-    with timer(f"Segmento {segment}"):
-        history = model.fit(
-            custom_data_generator(train_df, cfg, augment=cfg.USE_AUGMENTATION),
-            validation_data=custom_data_generator(val_df, cfg, augment=False),
-            epochs=cfg.EPOCHS_SEGMENT,
-            steps_per_epoch=len(train_df) // cfg.BATCH_SIZE,
-            validation_steps=len(val_df) // cfg.BATCH_SIZE,
-            verbose=2, callbacks=cbs,
-        )
+    # Cargar métricas de cada segmento
+    all_metrics = {}
+    for seg in segments:
+        path = os.path.join(history_dir, f"{seg}_cv_metrics.json")
+        if not os.path.exists(path):
+            print(f"[CV Report] No se encontró {path}, omitiendo.")
+            continue
+        with open(path) as f:
+            all_metrics[seg] = json.load(f)
 
-    plot_history(history, f"Segmento {segment}",
-                 os.path.join(exp_dir, "training_history", f"{segment}_history.png"))
-    print(f"Segmento {segment} completado.")
+    if not all_metrics:
+        return
+
+    n_folds = len(next(iter(all_metrics.values()))["folds"])
+
+    # ── 1. Tabla resumen ────────────────────────────────────────
+    fig, ax = plt.subplots(figsize=(10, len(segments) * 0.6 + 2))
+    ax.axis("off")
+    headers = ["Segmento"] + [f"Fold {i+1} MAE" for i in range(n_folds)] + ["Media ± Std", "Mejor fold"]
+    rows = []
+    for seg, m in all_metrics.items():
+        fold_maes = [f"{r['val_mae']:.2f}" for r in m["folds"]]
+        summary = f"{m['mean_val_mae']:.2f} ± {m['std_val_mae']:.2f}"
+        rows.append([seg.capitalize()] + fold_maes + [summary, str(m["best_fold"] + 1)])
+    table = ax.table(cellText=rows, colLabels=headers, cellLoc="center", loc="center")
+    table.auto_set_font_size(False)
+    table.set_fontsize(9)
+    table.scale(1, 1.5)
+    plt.title("Resumen Cross-Validation — val MAE por segmento", pad=12, fontsize=11)
+    plt.tight_layout()
+    plt.savefig(os.path.join(history_dir, "cv_summary_table.png"), dpi=150, bbox_inches="tight")
+    plt.close()
+
+    # ── 2. Boxplot MAE por segmento ─────────────────────────────
+    fig, ax = plt.subplots(figsize=(8, 5))
+    data = [[r["val_mae"] for r in all_metrics[seg]["folds"]] for seg in segments if seg in all_metrics]
+    labels = [seg.capitalize() for seg in segments if seg in all_metrics]
+    bp = ax.boxplot(data, labels=labels, patch_artist=True, notch=False)
+    colors = ["#4C72B0", "#DD8452", "#55A868", "#C44E52"]
+    for patch, color in zip(bp["boxes"], colors[:len(data)]):
+        patch.set_facecolor(color)
+        patch.set_alpha(0.7)
+    ax.set_title("Distribución val MAE por segmento (CV)")
+    ax.set_ylabel("val MAE")
+    ax.grid(axis="y", linestyle="--", alpha=0.5)
+    plt.tight_layout()
+    plt.savefig(os.path.join(history_dir, "cv_boxplot.png"), dpi=150)
+    plt.close()
+
+    # ── 3. Heatmap fold × segmento ──────────────────────────────
+    segs_available = [seg for seg in segments if seg in all_metrics]
+    matrix = np.array([[r["val_mae"] for r in all_metrics[seg]["folds"]]
+                        for seg in segs_available]).T  # shape: (folds, segments)
+    fig, ax = plt.subplots(figsize=(max(6, len(segs_available) * 1.5), max(4, n_folds * 0.8 + 1)))
+    im = ax.imshow(matrix, cmap="YlOrRd", aspect="auto")
+    plt.colorbar(im, ax=ax, label="val MAE")
+    ax.set_xticks(range(len(segs_available)))
+    ax.set_xticklabels([s.capitalize() for s in segs_available])
+    ax.set_yticks(range(n_folds))
+    ax.set_yticklabels([f"Fold {i+1}" for i in range(n_folds)])
+    for i in range(n_folds):
+        for j in range(len(segs_available)):
+            ax.text(j, i, f"{matrix[i, j]:.1f}", ha="center", va="center", fontsize=8,
+                    color="black" if matrix[i, j] < matrix.max() * 0.8 else "white")
+    ax.set_title("Heatmap val MAE — Fold × Segmento")
+    plt.tight_layout()
+    plt.savefig(os.path.join(history_dir, "cv_heatmap.png"), dpi=150)
+    plt.close()
+
+    # ── 4. Barras de val_MAE y val_Loss por fold por segmento ──
+    fold_labels = [f"Fold {i+1}" for i in range(n_folds)]
+    fold_positions = list(range(1, n_folds + 1))
+    for seg in segs_available:
+        m = all_metrics[seg]
+        fig, axes = plt.subplots(1, 2, figsize=(max(8, n_folds * 1.5), 4))
+        for fold_idx in range(n_folds):
+            axes[0].bar(fold_positions[fold_idx], m["folds"][fold_idx]["val_mae"],
+                        color=colors[fold_idx % len(colors)], alpha=0.8,
+                        label=fold_labels[fold_idx])
+            axes[1].bar(fold_positions[fold_idx], max(m["folds"][fold_idx]["val_loss"], 0),
+                        color=colors[fold_idx % len(colors)], alpha=0.8)
+        mean_loss = float(np.mean([r["val_loss"] for r in m["folds"]]))
+        axes[0].axhline(m["mean_val_mae"], color="black", linestyle="--",
+                        label=f"Media={m['mean_val_mae']:.2f}")
+        axes[1].axhline(mean_loss, color="black", linestyle="--",
+                        label=f"Media={mean_loss:.2f}")
+        for ax in axes:
+            ax.set_xticks(fold_positions)
+            ax.set_xticklabels(fold_labels)
+            ax.set_ylim(bottom=0)
+            ax.set_xlabel("Fold")
+            ax.grid(axis="y", linestyle="--", alpha=0.5)
+            ax.legend(fontsize=8)
+        axes[0].set_title(f"{seg.capitalize()} — val MAE por fold")
+        axes[0].set_ylabel("val MAE (meses)")
+        axes[1].set_title(f"{seg.capitalize()} — val Loss por fold")
+        axes[1].set_ylabel("val Loss")
+        plt.suptitle(f"Cross-Validation: {seg.capitalize()}", fontsize=12)
+        plt.tight_layout()
+        plt.savefig(os.path.join(history_dir, f"{seg}_cv_bars.png"), dpi=150,
+                    bbox_inches="tight")
+        plt.close()
+
+    # ── 5. JSON resumen global ───────────────────────────────────
+    summary = {seg: {"mean_val_mae": m["mean_val_mae"], "std_val_mae": m["std_val_mae"],
+                     "best_fold": m["best_fold"]}
+               for seg, m in all_metrics.items()}
+    with open(os.path.join(history_dir, "cv_summary.json"), "w") as f:
+        json.dump(summary, f, indent=2)
+
+    print("\n===== RESUMEN CROSS-VALIDATION =====")
+    for seg, m in all_metrics.items():
+        print(f"  {seg:10s}  MAE = {m['mean_val_mae']:.2f} ± {m['std_val_mae']:.2f}"
+              f"  (mejor fold: {m['best_fold'] + 1})")
+    print("=====================================\n")
+    print(f"Gráficos guardados en: {history_dir}")
 
 
 # ============================================================
@@ -399,6 +635,9 @@ def train_fusion(cfg, exp_dir):
 
     df = pd.read_csv(getattr(cfg, "DATASET_PATH", TRAINING_CSV))
     df = df[(df["boneage"] >= cfg.AGE_RANGE[0]) & (df["boneage"] <= cfg.AGE_RANGE[1])]
+    max_samples = getattr(cfg, "MAX_SAMPLES", None)
+    if max_samples:
+        df = df.sample(n=min(max_samples, len(df)), random_state=42).reset_index(drop=True)
     train_f, val_f = train_test_split(df, test_size=cfg.TEST_SPLIT, random_state=42)
 
     sig = tuple([tf.TensorSpec((None, *cfg.IMAGE_SIZE, 3), tf.float32)
@@ -435,7 +674,12 @@ def train_fusion(cfg, exp_dir):
             callbacks=cbs, verbose=2,
         )
     plot_history(hist_f, "Fusión",
-                 os.path.join(exp_dir, "training_history", "fusion_history.png"))
+                 os.path.join(exp_dir, "training_history", "fusion_history.png"),
+                 total_epochs=cfg.FUSION_EPOCHS)
+    with open(os.path.join(exp_dir, "training_history", "fusion_history.json"), "w") as f:
+        json.dump({"history": {k: [float(v) for v in vals]
+                               for k, vals in hist_f.history.items()},
+                   "total_epochs": cfg.FUSION_EPOCHS}, f, indent=2)
 
     if cfg.FINE_TUNING_EPOCHS > 0:
         if model_type == "simple_cnn":
@@ -454,7 +698,12 @@ def train_fusion(cfg, exp_dir):
                 callbacks=cbs, verbose=2,
             )
         plot_history(hist_ft, "Fine-Tuning",
-                     os.path.join(exp_dir, "training_history", "fusion_ft.png"))
+                     os.path.join(exp_dir, "training_history", "fusion_ft.png"),
+                     total_epochs=cfg.FINE_TUNING_EPOCHS)
+        with open(os.path.join(exp_dir, "training_history", "fusion_ft.json"), "w") as f:
+            json.dump({"history": {k: [float(v) for v in vals]
+                                   for k, vals in hist_ft.history.items()},
+                       "total_epochs": cfg.FINE_TUNING_EPOCHS}, f, indent=2)
 
     print("Fusión completada.")
 
@@ -495,6 +744,9 @@ def main():
                 ex.map(train_one_segment, [(seg, args.experiment) for seg in pendientes])
     else:
         print("Todos los modelos de segmento ya existen.")
+
+    if getattr(cfg, "USE_CROSS_VALIDATION", False):
+        report_cv_results(cfg, exp_dir)
 
     train_fusion(cfg, exp_dir)
     print("===== PROCESO COMPLETO FINALIZADO =====")

@@ -1,27 +1,39 @@
-# Core
-tensorflow==2.18.0
-keras==3.8.0
+# Python 3.9 recomendado (compatible con TF 2.10 en todas las plataformas)
+#
+# GPU en clúster HPC (Leo Átrox / CADS — driver 470, CUDA 11.4):
+#   module load anaconda3/2024.02 && conda activate boneage_gpu
+#   (ver README sección GPU > Clúster HPC para recrear el entorno)
+#
+# Sin GPU (CPU only) en Windows / Linux / macOS:
+#   pip install -r requirements.txt
+#
+# NOTA: TF 2.10 es la última versión compatible con GPU en el clúster (CUDA 11.2).
+#       TF 2.12+ requiere CUDA 11.8 (driver >= 520).
+#       En equipos locales con GPU moderna (CUDA 12.x) la GPU no será usada — solo CPU.
+
+# Core — keras viene bundled; no instalar keras por separado
+tensorflow==2.10.0
+numpy==1.23.5
 
 # Data
-numpy==2.0.2
 pandas==2.2.3
 scikit-learn==1.6.1
 scipy==1.15.1
-h5py==3.12.1
+h5py==3.11.0
 
-# Vision
-opencv-python==4.11.0.86
-Pillow==11.1.0
-scikit-image==0.25.1
+# Vision — opencv < 4.10 requerido con numpy 1.x
+opencv-python==4.9.0.80
+Pillow==10.4.0
+scikit-image==0.21.0
 
 # Visualization
-matplotlib==3.10.0
+matplotlib==3.7.5
 seaborn==0.13.2
-dataframe_image==0.2.7
+dataframe_image==0.2.3
 
 # Dataset download
 kagglehub
 
 # Utilities
-joblib==1.4.2
+joblib==1.3.2
 tqdm

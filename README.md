@@ -69,9 +69,22 @@ boneage-predictor/
 
 > Todos los comandos se ejecutan desde el **root del proyecto** (`boneage-predictor/`).
 
+El proyecto usa **TensorFlow 2.10** en todos los entornos para garantizar compatibilidad uniforme.
+En equipos locales con GPU moderna (CUDA 12.x) la GPU no será utilizada — el código correrá en CPU.
+En el clúster HPC con CUDA 11.4 la GPU sí funciona.
+
+### Compatibilidad de versiones
+
+| Componente | Versión | Motivo |
+|---|---|---|
+| TensorFlow | 2.10 | Última versión compatible con GPU en clúster (CUDA 11.4, driver 470) |
+| numpy | 1.23.x | TF 2.10 no soporta numpy 2.x |
+| opencv | 4.9.x | Compilado contra numpy 1.x; versiones ≥ 4.10 requieren numpy 2.x |
+| keras | bundled | Viene incluido en TF 2.10 — **no instalar keras por separado** |
+
 ### 1. Requisitos previos
 
-- Python 3.10–3.12 (recomendado; 3.14 puede tener incompatibilidades con TensorFlow)
+- Python **3.9** (recomendado para TF 2.10; versiones ≥ 3.11 pueden tener incompatibilidades)
 - Git
 
 ### 2. Crear y activar el entorno virtual
@@ -82,13 +95,13 @@ python -m venv venv
 venv\Scripts\activate
 ```
 
-**Linux / macOS / SLURM:**
+**Linux / macOS:**
 ```bash
 python -m venv venv
 source venv/bin/activate
 ```
 
-El prompt cambiará a `(venv)` cuando esté activo. Todos los comandos siguientes deben ejecutarse con el entorno activo.
+El prompt cambiará a `(venv)` cuando esté activo.
 
 ### 3. Instalar dependencias
 
@@ -98,35 +111,30 @@ python.exe -m pip install --upgrade pip
 python.exe -m pip install -r requirements.txt
 ```
 
-**Linux / macOS / SLURM:**
+**Linux / macOS:**
 ```bash
 pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-### 4. GPU (opcional)
+### 4. GPU en clúster HPC (Leo Átrox / CADS)
 
-**Local:** TensorFlow 2.18 requiere **CUDA 11.8+** y **cuDNN 8.6+**.
-
-**Clúster HPC (Leo Átrox, CADS):** CUDA 11.4 no es compatible con TF 2.18.
-Usar el entorno conda `boneage_gpu` preconfigurado con TF 2.10 + cuDNN 8.1:
+El clúster tiene driver NVIDIA 470 (CUDA 11.4). Usar el entorno conda preconfigurado:
 
 ```bash
 module load anaconda3/2024.02
 conda activate boneage_gpu
 ```
 
-Si necesitas recrear el entorno desde cero:
+Para recrear el entorno desde cero:
 ```bash
-conda create --name boneage_gpu python=3.9 -y
+conda create -n boneage_gpu python=3.9 -y
 conda activate boneage_gpu
 mkdir -p $CONDA_PREFIX/etc/conda/activate.d
 echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CONDA_PREFIX/lib/' \
      > $CONDA_PREFIX/etc/conda/activate.d/env_vars.sh
 conda install -c conda-forge cudatoolkit=11.2 cudnn=8.1 -y
-pip install tensorflow==2.10
-pip install pandas scikit-learn scipy "opencv-python<4.10" Pillow \
-    scikit-image matplotlib seaborn joblib tqdm kagglehub
+pip install -r requirements.txt
 ```
 
 ### 5. Verificar instalación
@@ -135,7 +143,7 @@ pip install pandas scikit-learn scipy "opencv-python<4.10" Pillow \
 python -c "import tensorflow as tf; print(tf.__version__); print(tf.config.list_physical_devices('GPU'))"
 ```
 
-Debe imprimir la versión de TF y la lista de GPUs (vacía si solo hay CPU).
+Debe imprimir `2.10.x` y la lista de GPUs (vacía si solo hay CPU).
 
 ---
 

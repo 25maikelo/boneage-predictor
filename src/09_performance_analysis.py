@@ -180,8 +180,8 @@ def main():
 
     with timer("Carga de modelos"):
         fusion_model = load_model(
-            os.path.join(models_dir, "fusion_model.keras"),
-            custom_objects=LOSS_MAP, safe_mode=False
+            os.path.join(models_dir, "fusion_model"),
+            custom_objects=LOSS_MAP
         )
         fusion_model.compile(
             optimizer=get_optimizer(cfg.OPTIMIZER_CHOICE, cfg.LEARNING_RATE),
@@ -190,9 +190,9 @@ def main():
         )
         segment_models = {}
         for seg in cfg.SEGMENTS_ORDER:
-            path = os.path.join(models_dir, f"{seg}_model.keras")
+            path = os.path.join(models_dir, f"{seg}_model")
             if os.path.exists(path):
-                m = load_model(path, custom_objects=LOSS_MAP, safe_mode=False)
+                m = load_model(path, custom_objects=LOSS_MAP)
                 m.compile(optimizer=get_optimizer(cfg.OPTIMIZER_CHOICE, cfg.LEARNING_RATE),
                           loss=LOSS_MAP.get(cfg.LOSS_FUNCTION_NAME, dynamic_attention_loss),
                           metrics=["mae"])

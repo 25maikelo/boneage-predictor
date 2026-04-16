@@ -196,7 +196,7 @@ def create_fusion_model_cnn(segment_paths, cfg, loss_fn):
     inputs, feature_outputs = [], []
 
     for seg in cfg.SEGMENTS_ORDER:
-        seg_model = load_model(f"{segment_paths[seg]}.keras", custom_objects=LOSS_MAP)
+        seg_model = load_model(f"{segment_paths[seg]}", custom_objects=LOSS_MAP)
         feature_extractor = tf.keras.models.Model(
             inputs=seg_model.input,
             outputs=seg_model.get_layer("flatten_features").output,
@@ -249,7 +249,7 @@ def create_fusion_model(segment_paths, cfg, loss_fn):
 
     for seg in cfg.SEGMENTS_ORDER:
         inp = tf.keras.layers.Input(shape=(*cfg.IMAGE_SIZE, 3), name=f"input_{seg}")
-        orig = load_model(f"{segment_paths[seg]}.keras", custom_objects=LOSS_MAP)
+        orig = load_model(f"{segment_paths[seg]}", custom_objects=LOSS_MAP)
         seg_model = clone_and_rename(orig, seg)
         out = seg_model([inp, gender_in]) if cfg.USE_GENDER else seg_model(inp)
         inputs.append(inp)
@@ -372,7 +372,7 @@ def train_one_segment(args_tuple):
     models_dir = os.path.join(exp_dir, "models")
     os.makedirs(models_dir, exist_ok=True)
     os.makedirs(os.path.join(exp_dir, "training_history"), exist_ok=True)
-    model_path = os.path.join(models_dir, f"{segment}_model.keras")
+    model_path = os.path.join(models_dir, f"{segment}_model")
 
     if os.path.exists(model_path):
         print(f"Modelo '{segment}' ya existe, omitiendo.")
@@ -402,7 +402,7 @@ def train_one_segment(args_tuple):
             for fold, (train_idx, val_idx) in enumerate(kf.split(df)):
                 train_df = df.iloc[train_idx].copy()
                 val_df   = df.iloc[val_idx].copy()
-                fold_path = os.path.join(models_dir, f"{segment}_fold{fold}.keras")
+                fold_path = os.path.join(models_dir, f"{segment}_fold{fold}")
 
                 print(f"Entrenando segmento: {segment} — Fold {fold + 1}/{n_folds}")
                 model = _build_segment_model(cfg, loss_fn)
@@ -452,7 +452,12 @@ def train_one_segment(args_tuple):
                                f"{segment}_cv_metrics.json"), "w") as f:
             json.dump(cv_metrics, f, indent=2)
 
-        shutil.copy2(best_fold_path, model_path)
+        if os.path.isdir(best_fold_path):
+            if os.path.exists(model_path):
+                shutil.rmtree(model_path)
+            shutil.copytree(best_fold_path, model_path)
+        else:
+            shutil.copy2(best_fold_path, model_path)
         print(f"CV {segment}: MAE={mean_mae:.2f}±{std_mae:.2f} | "
               f"Mejor fold={best_fold_idx} (val_loss={best_val_loss:.4f})")
         print(f"Segmento {segment} completado (CV).")
@@ -617,7 +622,7 @@ def report_cv_results(cfg, exp_dir):
 # ============================================================
 def train_fusion(cfg, exp_dir):
     models_dir = os.path.join(exp_dir, "models")
-    fusion_path = os.path.join(models_dir, "fusion_model.keras")
+    fusion_path = os.path.join(models_dir, "fusion_model")
     loss_fn = LOSS_MAP.get(cfg.LOSS_FUNCTION_NAME, dynamic_attention_loss)
 
     model_type = getattr(cfg, "MODEL_TYPE", "backbone")
@@ -736,12 +741,12 @@ def main():
 
     models_dir = os.path.join(exp_dir, "models")
     pendientes = [seg for seg in cfg.SEGMENTS_ORDER
-                  if not os.path.exists(os.path.join(models_dir, f"{seg}_model.keras"))]
+                  if not os.path.exists(os.path.join(models_dir, f"{seg}_model"))]
 
     if pendientes:
         with timer("Entrenamiento de segmentos"):
-            with ProcessPoolExecutor(max_workers=len(pendientes)) as ex:
-                ex.map(train_one_segment, [(seg, args.experiment) for seg in pendientes])
+            for seg in pendientes:
+                train_one_segment((seg, args.experiment))
     else:
         print("Todos los modelos de segmento ya existen.")
 

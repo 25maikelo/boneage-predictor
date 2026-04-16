@@ -168,30 +168,37 @@ def parse_age_to_months(age_str):
         return np.nan
 
 
+def _load_seg_model_compat(path):
+    return load_model(path, compile=False)
+
+
 def load_all_models(cfg, exp_dir):
     models_dir = os.path.join(exp_dir, "models")
-    from config.paths import SEGMENTATION_MODEL_PATH
+    from config.paths import get_segmentation_model_path
     cfg_seg = getattr(cfg, "SEGMENTATION_MODEL", None)
     if cfg_seg:
-        seg_path = cfg_seg if os.path.isabs(cfg_seg) else os.path.join(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__))), cfg_seg
-        )
+        # Si es un nombre de run (sin separadores de ruta), resuelve via helper
+        if os.sep not in cfg_seg and "/" not in cfg_seg and not cfg_seg.endswith(".h5"):
+            seg_path = get_segmentation_model_path(cfg_seg)
+        else:
+            seg_path = cfg_seg if os.path.isabs(cfg_seg) else os.path.join(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__))), cfg_seg
+            )
     else:
-        local = os.path.join(models_dir, "modelo_segmentacion.h5")
-        seg_path = local if os.path.exists(local) else SEGMENTATION_MODEL_PATH
+        seg_path = get_segmentation_model_path()
     print(f"Modelo de segmentación: {seg_path}")
-    seg_model = load_model(seg_path, compile=False)
+    seg_model = _load_seg_model_compat(seg_path)
     segment_models = {}
     for seg in cfg.SEGMENTS_ORDER:
-        path = os.path.join(models_dir, f"{seg}_model.keras")
+        path = os.path.join(models_dir, f"{seg}_model")
         if os.path.exists(path):
-            m = load_model(path, custom_objects=LOSS_MAP, safe_mode=False)
+            m = load_model(path, custom_objects=LOSS_MAP)
             m.compile(optimizer=get_optimizer(cfg.OPTIMIZER_CHOICE, cfg.LEARNING_RATE),
                       loss=LOSS_MAP.get(cfg.LOSS_FUNCTION_NAME, dynamic_attention_loss),
                       metrics=["mae"])
             segment_models[seg] = m
-    fusion = load_model(os.path.join(models_dir, "fusion_model.keras"),
-                        custom_objects=LOSS_MAP, safe_mode=False)
+    fusion = load_model(os.path.join(models_dir, "fusion_model"),
+                        custom_objects=LOSS_MAP)
     fusion.compile(optimizer=get_optimizer(cfg.OPTIMIZER_CHOICE, cfg.LEARNING_RATE),
                    loss=LOSS_MAP.get(cfg.LOSS_FUNCTION_NAME, dynamic_attention_loss),
                    metrics=["mae"])

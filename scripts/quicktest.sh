@@ -39,7 +39,7 @@ python src/05_dataset_analysis.py --experiment $EXP \
     2>&1 | tee -a "$LOGFILE" || fail "05_dataset_analysis falló"
 
 # ── Paso 06: Entrenamiento ───────────────────────────────────
-log "--- Paso 06: training (CNN pura, $MAX_SAMPLES muestras, 2 folds) ---"
+log "--- Paso 06: training ---"
 python src/06_training.py --experiment $EXP \
     2>&1 | tee -a "$LOGFILE" || fail "06_training falló"
 

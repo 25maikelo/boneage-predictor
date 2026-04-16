@@ -25,7 +25,6 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 import cv2
 import numpy as np
 import pandas as pd
-import dataframe_image as dfi
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -845,7 +844,18 @@ def main():
             "Valor":   [round(r, 4) for r in results],
         })
         perf_table_path = os.path.join(eval_dir, "performance_table.png")
-        dfi.export(perf_df.style, perf_table_path)
+        fig, ax = plt.subplots(figsize=(5, 2))
+        fig.patch.set_visible(False); ax.axis("off")
+        tbl = ax.table(cellText=perf_df.values, colLabels=perf_df.columns,
+                       cellLoc="center", loc="center")
+        tbl.scale(1, 2)
+        for (i, j), cell in tbl.get_celld().items():
+            cell.set_facecolor("#40466e" if i == 0 else ("#f1f1f2" if i % 2 == 0 else "#e0e0e0"))
+            if i == 0:
+                cell.set_text_props(color="white", weight="bold")
+            cell.set_edgecolor("black")
+        plt.savefig(perf_table_path, bbox_inches="tight", pad_inches=0)
+        plt.close(fig)
         print(f"Tabla de performance guardada: {perf_table_path}")
 
         metrics = {

@@ -47,8 +47,39 @@ MEX_IMAGES_DIR = os.path.join(MEX_DIR, "images")
 # MODELOS PRE-ENTRENADOS
 # ============================================================
 PRETRAINED_MODELS_DIR    = os.path.join(PROJECT_ROOT, "models")
-SEGMENTATION_MODEL_PATH  = os.path.join(PRETRAINED_MODELS_DIR, "modelo_segmentacion.h5")
 HAND_DETECTOR_OUTPUT_DIR = os.path.join(PRETRAINED_MODELS_DIR, "hand-detector")
+
+
+def get_segmentation_model_path(run=None):
+    """Devuelve la ruta al modelo de segmentación.
+
+    Args:
+        run: Nombre del run (ej. 'hand-detector_01') o None para
+             seleccionar automáticamente el más reciente disponible.
+             Si no existe ningún run, usa el modelo legado modelo_segmentacion.h5.
+    """
+    if run is not None:
+        path = os.path.join(HAND_DETECTOR_OUTPUT_DIR, run, "models", "segmentation_model.h5")
+        if os.path.exists(path):
+            return path
+
+    # Auto-selección: último run con modelo guardado
+    if os.path.isdir(HAND_DETECTOR_OUTPUT_DIR):
+        runs = sorted([
+            d for d in os.listdir(HAND_DETECTOR_OUTPUT_DIR)
+            if os.path.isdir(os.path.join(HAND_DETECTOR_OUTPUT_DIR, d))
+            and d.startswith("hand-detector_")
+        ])
+        for r in reversed(runs):
+            path = os.path.join(HAND_DETECTOR_OUTPUT_DIR, r, "models", "segmentation_model.h5")
+            if os.path.exists(path):
+                return path
+
+    # Fallback al modelo legado
+    return os.path.join(PRETRAINED_MODELS_DIR, "modelo_segmentacion.h5")
+
+
+SEGMENTATION_MODEL_PATH = get_segmentation_model_path()
 
 # ============================================================
 # EXPERIMENTOS

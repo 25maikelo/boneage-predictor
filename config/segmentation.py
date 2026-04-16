@@ -7,6 +7,12 @@ Modifica aquí los parámetros antes de ejecutar:
 Las rutas de entrada/salida vienen de config/paths.py.
 """
 
+# ─── Selección del modelo de segmentación ─────────────────────────────────────
+# Nombre del run a usar en src/preprocessing/04_segment_images.py.
+# None  → selecciona automáticamente el último run disponible en models/hand-detector/
+# str   → usa ese run específico, ej. "hand-detector_01"
+HAND_DETECTOR_RUN = None
+
 # ─── Imagen ───────────────────────────────────────────────────────────────────
 IMAGE_SIZE  = (224, 224)
 

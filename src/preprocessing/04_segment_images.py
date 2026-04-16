@@ -29,8 +29,9 @@ from tensorflow.keras.models import load_model
 
 from config.paths import (
     EQUALIZED_IMAGES_DIR, MASKS_DIR, SEGMENTS_DIR,
-    SEGMENTED_IMAGES_DIR, SEGMENTATION_MODEL_PATH
+    SEGMENTED_IMAGES_DIR, get_segmentation_model_path
 )
+from config.segmentation import HAND_DETECTOR_RUN
 from src.utils.timing import report_timing, setup_logging
 
 START_TIME = time.time()
@@ -120,8 +121,9 @@ if __name__ == "__main__":
     setup_gpu()
     setup_output_dirs()
 
-    print(f"Cargando modelo de segmentación: {SEGMENTATION_MODEL_PATH}")
-    seg_model = load_model(SEGMENTATION_MODEL_PATH, compile=False)
+    seg_model_path = get_segmentation_model_path(HAND_DETECTOR_RUN)
+    print(f"Cargando modelo de segmentación: {seg_model_path}")
+    seg_model = load_model(seg_model_path, compile=False)
 
     procesar_todas(seg_model)
     report_timing(START_TIME, "04_segment_images.py")

@@ -874,7 +874,7 @@ def main():
                          os.path.join(eval_dir, "test_prediction.png"))
 
     # Guardar modelo
-    model_path = os.path.join(models_dir, "segmentation_model.h5")
+    model_path = os.path.join(models_dir, "modelo_segmentacion.h5")
     model.save(model_path)
     model.save(SEGMENTATION_MODEL_PATH)
     print(f"Modelo guardado en: {model_path}")

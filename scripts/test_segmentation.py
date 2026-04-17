@@ -5,7 +5,7 @@ Genera visualizaciones en scripts/seg_test_output/.
 
 Uso:
     python scripts/test_segmentation.py
-    python scripts/test_segmentation.py --n 10 --model models/hand-detector/hand-detector_00/models/segmentation_model.h5
+    python scripts/test_segmentation.py --n 10 --model models/hand-detector/hand-detector_00/models/modelo_segmentacion.h5
 """
 import argparse
 import os
@@ -113,6 +113,6 @@ if __name__ == "__main__":
     args = parse_args()
     model_path = args.model or os.path.join(
         PROJECT_ROOT,
-        "models/hand-detector/hand-detector_00/models/segmentation_model.h5"
+        "models/hand-detector/hand-detector_00/models/modelo_segmentacion.h5"
     )
     run(model_path, args.n)

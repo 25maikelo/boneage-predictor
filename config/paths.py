@@ -59,7 +59,7 @@ def get_segmentation_model_path(run=None):
              Si no existe ningún run, usa el modelo legado modelo_segmentacion.h5.
     """
     if run is not None:
-        path = os.path.join(HAND_DETECTOR_OUTPUT_DIR, run, "models", "segmentation_model.h5")
+        path = os.path.join(HAND_DETECTOR_OUTPUT_DIR, run, "models", "modelo_segmentacion.h5")
         if os.path.exists(path):
             return path
 
@@ -71,7 +71,7 @@ def get_segmentation_model_path(run=None):
             and d.startswith("hand-detector_")
         ])
         for r in reversed(runs):
-            path = os.path.join(HAND_DETECTOR_OUTPUT_DIR, r, "models", "segmentation_model.h5")
+            path = os.path.join(HAND_DETECTOR_OUTPUT_DIR, r, "models", "modelo_segmentacion.h5")
             if os.path.exists(path):
                 return path
 

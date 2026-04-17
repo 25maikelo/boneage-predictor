@@ -17,6 +17,8 @@ experiments/*/mex-validation/
 
 # Logs del clúster
 logs/
+*.log
+experiments/*/quicktest_log/
 
 # ============================================================
 # Python

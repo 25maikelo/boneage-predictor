@@ -185,10 +185,17 @@ def create_simple_cnn_segment_model(cfg):
         x = tf.keras.layers.MaxPooling2D(2, 2)(x)
 
     x = tf.keras.layers.Flatten(name="flatten_features")(x)
+
+    inputs = [inp]
+    if cfg.USE_GENDER:
+        g = tf.keras.layers.Input(shape=(1,), name="gender_input")
+        x = tf.keras.layers.Concatenate()([x, g])
+        inputs.append(g)
+
     x = tf.keras.layers.Dense(512, activation="relu")(x)
     x = tf.keras.layers.Dropout(dropout)(x)
     out = tf.keras.layers.Dense(1, activation="linear", name="boneage_output")(x)
-    return tf.keras.models.Model(inp, out)
+    return tf.keras.models.Model(inputs, out)
 
 
 def create_fusion_model_cnn(segment_paths, cfg, loss_fn):
@@ -352,7 +359,6 @@ def fusion_data_generator(df, cfg, augment=False):
 def _build_segment_model(cfg, loss_fn):
     model_type = getattr(cfg, "MODEL_TYPE", "backbone")
     if model_type == "simple_cnn":
-        cfg.USE_GENDER = False
         model = create_simple_cnn_segment_model(cfg)
     else:
         model = create_segment_model(cfg)

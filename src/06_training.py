@@ -204,8 +204,9 @@ def create_fusion_model_cnn(segment_paths, cfg, loss_fn):
 
     for seg in cfg.SEGMENTS_ORDER:
         seg_model = load_model(f"{segment_paths[seg]}", custom_objects=LOSS_MAP)
+        # flatten_features only depends on image input (gender is added after flatten)
         feature_extractor = tf.keras.models.Model(
-            inputs=seg_model.input,
+            inputs=seg_model.inputs[0],
             outputs=seg_model.get_layer("flatten_features").output,
             name=f"feature_extractor_{seg}",
         )

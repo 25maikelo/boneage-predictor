@@ -19,7 +19,6 @@ LABELED_IMAGES_DIR   = os.path.join(IMAGES_DIR, "labeled")
 CROPPED_IMAGES_DIR   = os.path.join(IMAGES_DIR, "cropped")
 EQUALIZED_IMAGES_DIR = os.path.join(IMAGES_DIR, "equalized")
 MASKS_DIR            = os.path.join(IMAGES_DIR, "masks")
-SEGMENTS_DIR         = os.path.join(IMAGES_DIR, "segments")
 SEGMENTED_IMAGES_DIR = os.path.join(IMAGES_DIR, "segmented")
 
 # Datos de entrenamiento del detector de mano (LabelMe format)

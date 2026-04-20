@@ -1,18 +1,17 @@
 # ============================================================
-# Configuración del Experimento 30
-# CNN pura sin backbone
+# Experimento 34 — DenseNet121 con género
+# Réplica de exp 32 con código corregido (fusión con USE_GENDER)
+# Parámetros idénticos a exp 33 excepto MODEL_TYPE y backbone
+# Comparar contra exp 33 (CNN pura) para evaluar backbone vs CNN
 # ============================================================
 
-MODEL_TYPE = "simple_cnn"
+MODEL_TYPE = "backbone"
 IMAGE_SIZE = (112, 112)
-BASE_MODEL_CHOICE = None   # No usado con simple_cnn
+BASE_MODEL_CHOICE = "densenet121"
 WEIGHTS = None
 DENSE_UNITS = 256
 DROPOUT_RATE = 0.5
-NUM_LAYERS_UNFREEZE = 0
-CNN_FILTERS = [32, 64, 128, 256]
-CNN_KERNEL_SIZE = 3
-CNN_DROPOUT = 0.3
+NUM_LAYERS_UNFREEZE = 10
 
 BATCH_SIZE = 32
 EPOCHS_SEGMENT = 15
@@ -23,7 +22,7 @@ OPTIMIZER_CHOICE = "adam"
 TEST_SPLIT = 0.2
 
 AGE_RANGE = (24, 216)
-USE_GENDER = False
+USE_GENDER = True
 USE_AUGMENTATION = True
 
 LOSS_FUNCTION_NAME = "attention_loss"
@@ -44,6 +43,4 @@ SEGMENTS_ORDER = ["pinky", "middle", "thumb", "wrist"]
 USE_CROSS_VALIDATION = True
 N_FOLDS = 5
 
-# Modelo de segmentación a usar (ruta relativa a PROJECT_ROOT, o absoluta).
-# Si no se define, se usa config.paths.SEGMENTATION_MODEL_PATH.
 SEGMENTATION_MODEL = "models/hand-detector/hand-detector_00/models/modelo_segmentacion.h5"

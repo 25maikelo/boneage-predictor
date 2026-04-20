@@ -28,7 +28,7 @@ tf.get_logger().setLevel("ERROR")
 from tensorflow.keras.models import load_model
 
 from config.paths import (
-    EQUALIZED_IMAGES_DIR, MASKS_DIR, SEGMENTS_DIR,
+    EQUALIZED_IMAGES_DIR, MASKS_DIR,
     SEGMENTED_IMAGES_DIR, get_segmentation_model_path
 )
 from config.segmentation import HAND_DETECTOR_RUN
@@ -75,10 +75,8 @@ def segment_image(img_gray, model):
 
 def setup_output_dirs():
     os.makedirs(MASKS_DIR, exist_ok=True)
-    os.makedirs(SEGMENTS_DIR, exist_ok=True)
     os.makedirs(SEGMENTED_IMAGES_DIR, exist_ok=True)
     for cls in SEGMENT_CLASSES:
-        os.makedirs(os.path.join(SEGMENTS_DIR, cls), exist_ok=True)
         os.makedirs(os.path.join(SEGMENTED_IMAGES_DIR, cls), exist_ok=True)
 
 

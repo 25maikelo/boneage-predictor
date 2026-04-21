@@ -3,8 +3,6 @@
 #SBATCH -J boneage_06_training
 #SBATCH -n 1
 #SBATCH -t 4-00:00:00
-#SBATCH -o /lustre/home/mlozano/boneage-predictor/logs/out_%j.log
-#SBATCH -e /lustre/home/mlozano/boneage-predictor/logs/err_%j.log
 #SBATCH --gres=gpu:1
 
 module load anaconda3/2024.02

@@ -21,7 +21,7 @@ class _Tee:
         self._stream = io.TextIOWrapper(
             stream.buffer, encoding="utf-8", errors="replace", line_buffering=True
         ) if hasattr(stream, "buffer") else stream
-        self._file = open(filepath, "w", encoding="utf-8", buffering=1)
+        self._file = open(filepath, "a", encoding="utf-8", buffering=1)
 
     def write(self, data):
         self._stream.write(data)
@@ -60,7 +60,13 @@ def setup_logging(script_name: str, log_dir: str = None) -> str:
     sys.stdout = _Tee(sys.stdout, log_path)
     sys.stderr = _Tee(sys.stderr, log_path)
 
+    job_id = os.environ.get("SLURM_JOB_ID", "local")
+    sep = "=" * 55
+    print(f"\n{sep}")
+    print(f"[RUN START] {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"[RUN START] script={script_name}  job={job_id}")
     print(f"[LOG] {log_path}")
+    print(sep)
     return log_path
 
 

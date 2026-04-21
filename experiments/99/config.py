@@ -54,3 +54,4 @@ N_FOLDS             = 2
 
 # ── Rutas ────────────────────────────────────────────────────
 SEGMENTATION_MODEL  = "models/hand-detector/hand-detector_00/models/modelo_segmentacion.h5"
+FREEZE_EXTRACTORS = True

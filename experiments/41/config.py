@@ -1,11 +1,10 @@
 # ============================================================
-# Experimento 32 — DenseNet121 con género
-# Réplica de exp 27 con configuración actualizada (CV, SEGMENTATION_MODEL)
-# Parámetros idénticos a exp 31 excepto MODEL_TYPE y backbone
-# Comparar contra exp 31 (CNN pura) para evaluar backbone vs CNN
+# Experimento 41 — DenseNet121 vectores de características con género, dataset balanceado
+# Réplica del diseño de exp 35 usando balanced_dataset.csv (11,783 imgs · 36 edades).
+# Solo edades con ≥50 muestras. Comparar contra exp 35 (raw) y exp 38 (completo).
 # ============================================================
 
-MODEL_TYPE = "backbone"
+MODEL_TYPE = "backbone_vectors"
 IMAGE_SIZE = (112, 112)
 BASE_MODEL_CHOICE = "densenet121"
 WEIGHTS = None
@@ -43,5 +42,8 @@ SEGMENTS_ORDER = ["pinky", "middle", "thumb", "wrist"]
 USE_CROSS_VALIDATION = True
 N_FOLDS = 5
 
-SEGMENTATION_MODEL = "models/hand-detector/hand-detector_00/models/modelo_segmentacion.h5"
 FREEZE_EXTRACTORS = True
+
+DATASET_PATH = "data/training/dataset_analysis/balanced_dataset.csv"
+
+SEGMENTATION_MODEL = "models/hand-detector/hand-detector_00/models/modelo_segmentacion.h5"

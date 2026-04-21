@@ -47,3 +47,4 @@ SEGMENTS_ORDER = ["pinky", "middle", "thumb", "wrist"]
 # Modelo de segmentación a usar (ruta relativa a PROJECT_ROOT, o absoluta).
 # Si no se define, se usa config.paths.SEGMENTATION_MODEL_PATH.
 SEGMENTATION_MODEL = "models/hand-detector/hand-detector_00/models/modelo_segmentacion.h5"
+FREEZE_EXTRACTORS = True

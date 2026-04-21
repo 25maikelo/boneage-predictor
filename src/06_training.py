@@ -164,7 +164,8 @@ def create_segment_model(cfg):
         x = tf.keras.layers.Concatenate()([x, g])
         inputs.append(g)
 
-    x = tf.keras.layers.Dense(cfg.DENSE_UNITS, activation="relu")(x)
+    x = tf.keras.layers.Dense(cfg.DENSE_UNITS, activation="relu",
+                               name="backbone_features")(x)
     x = tf.keras.layers.Dropout(cfg.DROPOUT_RATE)(x)
     out = tf.keras.layers.Dense(1, activation="linear", name="boneage_output")(x)
     return tf.keras.models.Model(inputs=inputs, outputs=out)
@@ -210,7 +211,7 @@ def create_fusion_model_cnn(segment_paths, cfg, loss_fn):
             outputs=seg_model.get_layer("flatten_features").output,
             name=f"feature_extractor_{seg}",
         )
-        feature_extractor.trainable = False
+        feature_extractor.trainable = not getattr(cfg, "FREEZE_EXTRACTORS", True)
 
         inp = tf.keras.layers.Input(shape=(*cfg.IMAGE_SIZE, 3), name=f"input_{seg}")
         inputs.append(inp)
@@ -230,6 +231,46 @@ def create_fusion_model_cnn(segment_paths, cfg, loss_fn):
     out = tf.keras.layers.Dense(1, activation="linear", name="boneage_output")(x)
 
     fusion = tf.keras.models.Model(inputs=inputs, outputs=out, name="fusion_model_cnn")
+    fusion.compile(
+        optimizer=tf.keras.optimizers.Adam(learning_rate=cfg.LEARNING_RATE),
+        loss=loss_fn, metrics=["mae"],
+    )
+    return fusion
+
+
+def create_fusion_model_backbone_vectors(segment_paths, cfg, loss_fn):
+    """Fusión basada en vectores backbone_features (Dense intermedio) de cada modelo de segmento."""
+    inputs, feature_outputs = [], []
+
+    for seg in cfg.SEGMENTS_ORDER:
+        seg_model = load_model(f"{segment_paths[seg]}", custom_objects=LOSS_MAP)
+        # backbone_features solo depende de la imagen (género se concatena después del GAP)
+        feature_extractor = tf.keras.models.Model(
+            inputs=seg_model.inputs[0],
+            outputs=seg_model.get_layer("backbone_features").output,
+            name=f"feature_extractor_{seg}",
+        )
+        feature_extractor.trainable = not getattr(cfg, "FREEZE_EXTRACTORS", True)
+
+        inp = tf.keras.layers.Input(shape=(*cfg.IMAGE_SIZE, 3), name=f"input_{seg}")
+        inputs.append(inp)
+        feature_outputs.append(feature_extractor(inp))
+
+    x = tf.keras.layers.Concatenate()(feature_outputs)
+
+    if cfg.USE_GENDER:
+        gender_in = tf.keras.layers.Input(shape=(1,), name="gender_input")
+        inputs.append(gender_in)
+        x = tf.keras.layers.Concatenate()([x, gender_in])
+
+    x = tf.keras.layers.Dense(512, activation="relu")(x)
+    x = tf.keras.layers.Dropout(0.5)(x)
+    x = tf.keras.layers.Dense(256, activation="relu")(x)
+    x = tf.keras.layers.Dropout(0.3)(x)
+    out = tf.keras.layers.Dense(1, activation="linear", name="boneage_output")(x)
+
+    fusion = tf.keras.models.Model(inputs=inputs, outputs=out,
+                                    name="fusion_model_backbone_vectors")
     fusion.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate=cfg.LEARNING_RATE),
         loss=loss_fn, metrics=["mae"],
@@ -642,6 +683,8 @@ def train_fusion(cfg, exp_dir):
                      for seg in cfg.SEGMENTS_ORDER}
         if model_type == "simple_cnn":
             fusion = create_fusion_model_cnn(seg_paths, cfg, loss_fn)
+        elif model_type == "backbone_vectors":
+            fusion = create_fusion_model_backbone_vectors(seg_paths, cfg, loss_fn)
         else:
             fusion = create_fusion_model(seg_paths, cfg, loss_fn)
 

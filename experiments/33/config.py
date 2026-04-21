@@ -45,4 +45,8 @@ SEGMENTS_ORDER = ["pinky", "middle", "thumb", "wrist"]
 USE_CROSS_VALIDATION = True
 N_FOLDS = 5
 
+FREEZE_EXTRACTORS = True
+
+DATASET_PATH = "data/training/boneage-training-dataset.csv"
+
 SEGMENTATION_MODEL = "models/hand-detector/hand-detector_00/models/modelo_segmentacion.h5"

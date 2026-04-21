@@ -1,11 +1,11 @@
 # ============================================================
-# Experimento 32 — DenseNet121 con género
-# Réplica de exp 27 con configuración actualizada (CV, SEGMENTATION_MODEL)
-# Parámetros idénticos a exp 31 excepto MODEL_TYPE y backbone
-# Comparar contra exp 31 (CNN pura) para evaluar backbone vs CNN
+# Experimento 35 — DenseNet121 vectores de características con género
+# Primera ejecución de backbone_vectors con dataset raw (24–216 m).
+# Comparar contra exp 34 (mismo dataset, fusión escalar) para evaluar
+# impacto de pasar vectores 256-dim vs escalares a la fusión.
 # ============================================================
 
-MODEL_TYPE = "backbone"
+MODEL_TYPE = "backbone_vectors"
 IMAGE_SIZE = (112, 112)
 BASE_MODEL_CHOICE = "densenet121"
 WEIGHTS = None
@@ -43,5 +43,8 @@ SEGMENTS_ORDER = ["pinky", "middle", "thumb", "wrist"]
 USE_CROSS_VALIDATION = True
 N_FOLDS = 5
 
-SEGMENTATION_MODEL = "models/hand-detector/hand-detector_00/models/modelo_segmentacion.h5"
 FREEZE_EXTRACTORS = True
+
+DATASET_PATH = "data/training/boneage-training-dataset.csv"
+
+SEGMENTATION_MODEL = "models/hand-detector/hand-detector_00/models/modelo_segmentacion.h5"

@@ -1,0 +1,32 @@
+{
+  "IMAGE_SIZE": [
+    224,
+    224
+  ],
+  "INPUT_CHANNELS": 3,
+  "NUM_CLASSES": 5,
+  "BATCH_SIZE": 8,
+  "EPOCHS": 30,
+  "ARCHITECTURE": "unet_resnet50",
+  "ENCODER_WEIGHTS": "radimagenet",
+  "BASE_MODEL_TRAINABLE": false,
+  "DATA_AUGMENTATION": true,
+  "AUG_ROTATION_RANGE": 15,
+  "AUG_WIDTH_SHIFT_RANGE": 0.1,
+  "AUG_HEIGHT_SHIFT_RANGE": 0.1,
+  "AUG_ZOOM_RANGE": 0.1,
+  "AUG_HORIZONTAL_FLIP": false,
+  "AUG_VERTICAL_FLIP": false,
+  "AUG_SHEAR_RANGE": 0.05,
+  "AUG_BRIGHTNESS_RANGE": [
+    0.8,
+    1.2
+  ],
+  "optimizer": "adam",
+  "loss": "categorical_crossentropy",
+  "early_stopping_patience": 5,
+  "reduce_lr_factor": 0.5,
+  "reduce_lr_patience": 1,
+  "reduce_lr_min_lr": 1e-06,
+  "timestamp": "2026-03-23 23:20:42"
+}

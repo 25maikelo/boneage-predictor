@@ -1,0 +1,29 @@
+{
+  "IMAGE_SIZE": [
+    224,
+    224
+  ],
+  "INPUT_CHANNELS": 3,
+  "NUM_CLASSES": 5,
+  "BATCH_SIZE": 8,
+  "EPOCHS": 30,
+  "ARCHITECTURE": "mobilenetv2_sym",
+  "ENCODER_WEIGHTS": "imagenet",
+  "BASE_MODEL_TRAINABLE": true,
+  "DATA_AUGMENTATION": false,
+  "AUG_ROTATION_RANGE": null,
+  "AUG_WIDTH_SHIFT_RANGE": null,
+  "AUG_HEIGHT_SHIFT_RANGE": null,
+  "AUG_ZOOM_RANGE": null,
+  "AUG_HORIZONTAL_FLIP": null,
+  "AUG_VERTICAL_FLIP": null,
+  "AUG_SHEAR_RANGE": null,
+  "AUG_BRIGHTNESS_RANGE": null,
+  "optimizer": "adam",
+  "loss": "categorical_crossentropy",
+  "early_stopping_patience": 5,
+  "reduce_lr_factor": 0.5,
+  "reduce_lr_patience": 1,
+  "reduce_lr_min_lr": 1e-06,
+  "timestamp": "2026-03-21 11:40:57"
+}

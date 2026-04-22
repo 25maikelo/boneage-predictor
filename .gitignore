@@ -8,7 +8,11 @@ data/mex-validation/
 data/hand-detector/
 
 # Modelos entrenados
-models/
+models/pretrained/
+models/*.filepart
+models/hand-detector/*/models/
+models/hand-detector/*/training_history/
+models/hand-detector/*/evaluation/
 experiments/*/models/
 experiments/*/training_history/
 experiments/*/evaluation/

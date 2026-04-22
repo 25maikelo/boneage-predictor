@@ -96,6 +96,22 @@ Réplicas de los experimentos 36 y 38 con `FREEZE_EXTRACTORS = False`: los 4 ext
 
 ---
 
+---
+
+## Fase 6 — CNN Unificada end-to-end (Exps 44–46)
+
+Nueva arquitectura `unified_cnn`: 4 ramas CNN separadas (una por segmento) entrenadas **end-to-end** sobre bone age directamente, sin el pipeline de dos etapas (entrenar segmentos → entrenar fusión). Cada rama tiene la misma estructura que `simple_cnn` (bloques Conv2D + BN + ReLU + MaxPool → Flatten). Las 4 salidas se concatenan junto con el género y se pasan por dos capas Dense antes de la predicción final.
+
+> **Diferencia clave vs `simple_cnn`:** eliminación del pipeline de dos fases — la optimización es directamente sobre la tarea final desde el inicio. Los parámetros CNN son idénticos a exps 33/36/39 para aislar el efecto de la arquitectura.
+
+| Exp | Estado | Dataset | Épocas | Comparar con |
+|-----|--------|---------|--------|--------------|
+| **44** | **Solo config** | Raw · ~12,499 imgs (24–216 m) | 30 | Exp 33 (`simple_cnn` raw) |
+| **45** | **Solo config** | Completo · 12,611 imgs (1–228 m) | 30 | Exp 36 (`simple_cnn` completo) |
+| **46** | **Solo config** | Balanceado · 11,783 imgs (≥50/edad) | 30 | Exp 39 (`simple_cnn` balanceado) |
+
+---
+
 ## Matriz de comparación por arquitectura y dataset
 
 | Arquitectura | Raw (24–216 m) | Completo (1–228 m) | Balanceado (≥50/edad) | Completo · extractor libre |
@@ -103,6 +119,7 @@ Réplicas de los experimentos 36 y 38 con `FREEZE_EXTRACTORS = False`: los 4 ext
 | `simple_cnn` | Exp 33 | Exp 36 | Exp 39 | Exp 42 |
 | `backbone` DenseNet121 escalar | Exp 34 | Exp 37 | Exp 40 | — |
 | `backbone_vectors` DenseNet121 | Exp 35 | Exp 38 | Exp 41 | Exp 43 |
+| `unified_cnn` | Exp 44 | Exp 45 | Exp 46 | — |
 
 ---
 
@@ -127,3 +144,4 @@ Réplicas de los experimentos 36 y 38 con `FREEZE_EXTRACTORS = False`: los 4 ext
 | Apr 21 | `a7d1265` | Añade documentación MD (pipeline, arquitecturas, dataset report) |
 | Apr 21 | `a7d1265` | Nueva arquitectura `backbone_vectors` + Exps 35–38 (dataset completo) |
 | Apr 21 | *(actual)* | Flag `FREEZE_EXTRACTORS` en todos los configs + Exps 42–43 (extractores descongelados) |
+| Apr 22 | *(actual)* | Nueva arquitectura `unified_cnn` (end-to-end, 4 ramas separadas) + Exps 44–46 |

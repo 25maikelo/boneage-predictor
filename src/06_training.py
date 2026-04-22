@@ -199,6 +199,40 @@ def create_simple_cnn_segment_model(cfg):
     return tf.keras.models.Model(inputs, out)
 
 
+def create_unified_cnn_model(cfg):
+    """4 ramas CNN separadas (una por segmento) entrenadas end-to-end."""
+    filters     = getattr(cfg, "CNN_FILTERS", [32, 64, 128, 256])
+    kernel_size = getattr(cfg, "CNN_KERNEL_SIZE", 3)
+    dropout     = getattr(cfg, "CNN_DROPOUT", 0.3)
+
+    all_inputs, branch_outputs = [], []
+    for seg in cfg.SEGMENTS_ORDER:
+        inp = tf.keras.layers.Input(shape=(*cfg.IMAGE_SIZE, 3), name=f"input_{seg}")
+        all_inputs.append(inp)
+        x = inp
+        for i, f in enumerate(filters):
+            x = tf.keras.layers.Conv2D(f, kernel_size, padding="same",
+                                       name=f"{seg}_conv{i}")(x)
+            x = tf.keras.layers.BatchNormalization(name=f"{seg}_bn{i}")(x)
+            x = tf.keras.layers.Activation("relu", name=f"{seg}_relu{i}")(x)
+            x = tf.keras.layers.MaxPooling2D(2, 2, name=f"{seg}_pool{i}")(x)
+        branch_outputs.append(tf.keras.layers.Flatten(name=f"{seg}_flatten")(x))
+
+    x = tf.keras.layers.Concatenate(name="concat_branches")(branch_outputs)
+
+    if cfg.USE_GENDER:
+        g = tf.keras.layers.Input(shape=(1,), name="gender_input")
+        all_inputs.append(g)
+        x = tf.keras.layers.Concatenate(name="concat_gender")([x, g])
+
+    x = tf.keras.layers.Dense(512, activation="relu", name="dense1")(x)
+    x = tf.keras.layers.Dropout(dropout, name="drop1")(x)
+    x = tf.keras.layers.Dense(256, activation="relu", name="dense2")(x)
+    x = tf.keras.layers.Dropout(dropout, name="drop2")(x)
+    out = tf.keras.layers.Dense(1, activation="linear", name="boneage_output")(x)
+    return tf.keras.models.Model(all_inputs, out, name="unified_cnn")
+
+
 def create_fusion_model_cnn(segment_paths, cfg, loss_fn):
     """Fusión basada en vectores Flatten de cada CNN de segmento."""
     inputs, feature_outputs = [], []
@@ -764,6 +798,145 @@ def train_fusion(cfg, exp_dir):
 
 
 # ============================================================
+# ENTRENAMIENTO UNIFICADO (unified_cnn)
+# ============================================================
+def train_unified_cnn(cfg, exp_dir):
+    models_dir = os.path.join(exp_dir, "models")
+    history_dir = os.path.join(exp_dir, "training_history")
+    os.makedirs(models_dir, exist_ok=True)
+    os.makedirs(history_dir, exist_ok=True)
+
+    unified_path = os.path.join(models_dir, "unified_model")
+    if os.path.exists(unified_path):
+        print("Modelo unificado ya existe, omitiendo.")
+        return
+
+    loss_fn = LOSS_MAP.get(cfg.LOSS_FUNCTION_NAME, dynamic_attention_loss)
+
+    df = pd.read_csv(getattr(cfg, "DATASET_PATH", TRAINING_CSV))
+    df = df[(df["boneage"] >= cfg.AGE_RANGE[0]) & (df["boneage"] <= cfg.AGE_RANGE[1])]
+    max_samples = getattr(cfg, "MAX_SAMPLES", None)
+    if max_samples:
+        df = df.sample(n=min(max_samples, len(df)), random_state=42).reset_index(drop=True)
+    df = df.reset_index(drop=True)
+
+    sig = tuple(tf.TensorSpec((None, *cfg.IMAGE_SIZE, 3), tf.float32)
+                for _ in cfg.SEGMENTS_ORDER)
+    if cfg.USE_GENDER:
+        sig += (tf.TensorSpec((None, 1), tf.float32),)
+
+    use_cv = getattr(cfg, "USE_CROSS_VALIDATION", False)
+    n_folds = getattr(cfg, "N_FOLDS", 5)
+
+    def make_ds(data, augment):
+        return tf.data.Dataset.from_generator(
+            lambda: fusion_data_generator(data, cfg, augment=augment),
+            output_signature=(sig, tf.TensorSpec((None,), tf.float32)),
+        )
+
+    def make_callbacks(save_path):
+        return [
+            tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=4,
+                                             restore_best_weights=True),
+            tf.keras.callbacks.ReduceLROnPlateau(monitor="val_loss", factor=0.5,
+                                                 patience=3, min_lr=1e-7, verbose=1),
+            SaveModelCallback(save_path),
+        ]
+
+    if use_cv:
+        kf = KFold(n_splits=n_folds, shuffle=True, random_state=42)
+        fold_results = []
+        best_val_loss = float("inf")
+        best_fold_path = None
+
+        with timer(f"Unified CNN (CV {n_folds} folds)"):
+            for fold, (train_idx, val_idx) in enumerate(kf.split(df)):
+                train_df = df.iloc[train_idx].copy().reset_index(drop=True)
+                val_df   = df.iloc[val_idx].copy().reset_index(drop=True)
+                fold_path = os.path.join(models_dir, f"unified_fold{fold}")
+
+                print(f"Entrenando unified CNN — Fold {fold + 1}/{n_folds}")
+                model = create_unified_cnn_model(cfg)
+                model.compile(optimizer=get_optimizer(cfg.OPTIMIZER_CHOICE, cfg.LEARNING_RATE),
+                              loss=loss_fn, metrics=["mae"])
+
+                history = model.fit(
+                    make_ds(train_df, cfg.USE_AUGMENTATION),
+                    validation_data=make_ds(val_df, False),
+                    epochs=cfg.EPOCHS_SEGMENT,
+                    steps_per_epoch=len(train_df) // cfg.BATCH_SIZE,
+                    validation_steps=len(val_df) // cfg.BATCH_SIZE,
+                    callbacks=make_callbacks(fold_path),
+                    verbose=2,
+                )
+
+                best_epoch_val_loss = min(history.history["val_loss"])
+                best_epoch_val_mae  = history.history["val_mae"][
+                    history.history["val_loss"].index(best_epoch_val_loss)]
+                fold_results.append({
+                    "fold": fold,
+                    "val_loss": best_epoch_val_loss,
+                    "val_mae": best_epoch_val_mae,
+                    "history": {k: [float(v) for v in vals]
+                                for k, vals in history.history.items()},
+                    "total_epochs": cfg.EPOCHS_SEGMENT,
+                })
+                plot_history(history, f"Unified CNN Fold {fold + 1}",
+                             os.path.join(history_dir, f"unified_fold{fold}_history.png"),
+                             total_epochs=cfg.EPOCHS_SEGMENT)
+
+                if best_epoch_val_loss < best_val_loss:
+                    best_val_loss = best_epoch_val_loss
+                    best_fold_path = fold_path
+
+        mean_mae = float(np.mean([r["val_mae"] for r in fold_results]))
+        std_mae  = float(np.std([r["val_mae"] for r in fold_results]))
+        best_fold_idx = int(min(range(len(fold_results)),
+                                key=lambda i: fold_results[i]["val_loss"]))
+        cv_metrics = {"folds": fold_results, "mean_val_mae": mean_mae,
+                      "std_val_mae": std_mae, "best_fold": best_fold_idx}
+        with open(os.path.join(history_dir, "unified_cv_metrics.json"), "w") as f:
+            json.dump(cv_metrics, f, indent=2)
+
+        if os.path.isdir(best_fold_path):
+            if os.path.exists(unified_path):
+                shutil.rmtree(unified_path)
+            shutil.copytree(best_fold_path, unified_path)
+        else:
+            shutil.copy2(best_fold_path, unified_path)
+
+        print(f"\nCV Unified CNN: MAE={mean_mae:.2f}±{std_mae:.2f} | "
+              f"Mejor fold={best_fold_idx} (val_loss={best_val_loss:.4f})")
+        print("Unified CNN completado (CV).")
+
+    else:
+        train_df, val_df = train_test_split(df, test_size=cfg.TEST_SPLIT, random_state=42)
+        model = create_unified_cnn_model(cfg)
+        model.compile(optimizer=get_optimizer(cfg.OPTIMIZER_CHOICE, cfg.LEARNING_RATE),
+                      loss=loss_fn, metrics=["mae"])
+
+        print("Entrenando unified CNN...")
+        with timer("Unified CNN"):
+            history = model.fit(
+                make_ds(train_df, cfg.USE_AUGMENTATION),
+                validation_data=make_ds(val_df, False),
+                epochs=cfg.EPOCHS_SEGMENT,
+                steps_per_epoch=len(train_df) // cfg.BATCH_SIZE,
+                validation_steps=len(val_df) // cfg.BATCH_SIZE,
+                callbacks=make_callbacks(unified_path),
+                verbose=2,
+            )
+        plot_history(history, "Unified CNN",
+                     os.path.join(history_dir, "unified_history.png"),
+                     total_epochs=cfg.EPOCHS_SEGMENT)
+        with open(os.path.join(history_dir, "unified_history.json"), "w") as f:
+            json.dump({"history": {k: [float(v) for v in vals]
+                                   for k, vals in history.history.items()},
+                       "total_epochs": cfg.EPOCHS_SEGMENT}, f, indent=2)
+        print("Unified CNN completado.")
+
+
+# ============================================================
 # MAIN
 # ============================================================
 def parse_args():
@@ -789,21 +962,28 @@ def main():
     exp_dir = get_experiment_output_dir(args.experiment)
     print(f"Experimento: {args.experiment} → {exp_dir}")
 
-    models_dir = os.path.join(exp_dir, "models")
-    pendientes = [seg for seg in cfg.SEGMENTS_ORDER
-                  if not os.path.exists(os.path.join(models_dir, f"{seg}_model"))]
+    model_type = getattr(cfg, "MODEL_TYPE", "backbone")
 
-    if pendientes:
-        with timer("Entrenamiento de segmentos"):
-            for seg in pendientes:
-                train_one_segment((seg, args.experiment))
+    if model_type == "unified_cnn":
+        with timer("Entrenamiento unificado"):
+            train_unified_cnn(cfg, exp_dir)
     else:
-        print("Todos los modelos de segmento ya existen.")
+        models_dir = os.path.join(exp_dir, "models")
+        pendientes = [seg for seg in cfg.SEGMENTS_ORDER
+                      if not os.path.exists(os.path.join(models_dir, f"{seg}_model"))]
 
-    if getattr(cfg, "USE_CROSS_VALIDATION", False):
-        report_cv_results(cfg, exp_dir)
+        if pendientes:
+            with timer("Entrenamiento de segmentos"):
+                for seg in pendientes:
+                    train_one_segment((seg, args.experiment))
+        else:
+            print("Todos los modelos de segmento ya existen.")
 
-    train_fusion(cfg, exp_dir)
+        if getattr(cfg, "USE_CROSS_VALIDATION", False):
+            report_cv_results(cfg, exp_dir)
+
+        train_fusion(cfg, exp_dir)
+
     print("===== PROCESO COMPLETO FINALIZADO =====")
 
 

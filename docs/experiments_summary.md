@@ -43,9 +43,9 @@ Se introduce `simple_cnn` (4 bloques conv + Flatten + Dense). El foco es compara
 | 30 | Completado | `simple_cnn` | No | 112×112 | 15/20/10 | Pinky/Thumb/Wrist: ~123 m · Middle: ~36 m | — | Sin género; MAE anómalo en 3 segmentos sugiere artefacto de segmentación |
 | 31 | Incompleto | `simple_cnn` | Sí | 112×112 | 15/20/10 | Pinky: 36.6 · Middle: 36.4 · Thumb: 36.6 · Wrist: 36.7 | — | Género restaura consistencia entre segmentos; entrenamiento no terminó (bug en fusión detectado después) |
 | 32 | Completado | `backbone` (DenseNet121) | Sí | 112×112 | 15/20/10 | Pinky: 37.1 · Middle: 37.6 · Thumb: 37.0 · Wrist: 37.1 | — | Réplica de Exp 27 con infraestructura actualizada (CV + rutas segmentación); referencia backbone para comparar con CNN |
-| 33 | Completado *(ajuste de código)* | `simple_cnn` | Sí | 112×112 | 15/20/10 | Pinky: 35.43 · Middle: 27.42 · Thumb: 25.55 · Wrist: 26.73 · **Prom: 28.78** | ~50 m (no convergió) | **Réplica corregida de Exp 31** — fix bug fusión `USE_GENDER`; fusión con vectores 50K-dim inestable |
-| 34 | Completado *(ajuste de código)* | `backbone` (DenseNet121) | Sí | 112×112 | 15/20/10 | Pinky: 29.17 · Middle: 28.86 · Thumb: 23.53 · Wrist: 28.70 · **Prom: 27.57** | **~13.4 m** | **Réplica corregida de Exp 32** — fusión con 4 escalares converge muy bien |
-| **35** | **Solo config** | `backbone_vectors` (DenseNet121) | Sí | 112×112 | 15/20/10 | — | — | **Nueva arquitectura** — fusión recibe 4×256 vectores del backbone; hipótesis: mejor que escalares (exp 34) |
+| 33 | ✅ Completado *(ajuste de código)* | `simple_cnn` | Sí | 112×112 | 15/20/10 | Pinky: 35.43 · Middle: 27.42 · Thumb: 25.55 · Wrist: 26.73 · **Prom: 28.78** | ~50 m (no convergió) | **Réplica corregida de Exp 31** — fix bug fusión `USE_GENDER`; fusión con vectores 50K-dim inestable |
+| 34 | ✅ Completado *(ajuste de código)* | `backbone` (DenseNet121) | Sí | 112×112 | 15/20/10 | Pinky: 29.17 · Middle: 28.86 · Thumb: 23.53 · Wrist: 28.70 · **Prom: 27.57** | **~13.4 m** | **Réplica corregida de Exp 32** — fusión con 4 escalares converge muy bien |
+| **35** | ⚠️ Error fusión (retry en cola) | `backbone_vectors` (DenseNet121) | Sí | 112×112 | 15/20/10 | Seg. completados | — | Bug `Graph disconnected` en fusión con género — corregido, retry pendiente |
 
 ---
 
@@ -59,9 +59,9 @@ Réplicas exactas de los experimentos 33, 34 y 35 con la única diferencia de qu
 
 | Exp | Estado | Tipo modelo | Imagen | Dataset | Épocas (seg/fus/ft) | MAE CV prom. | val_mae fusión | Comparar con |
 |-----|--------|-------------|--------|---------|----------------------|--------------|----------------|--------------|
-| **36** | **Solo config** | `simple_cnn` | 112×112 | 12,611 imgs · 160 edades | 15/20/10 | — | — | Exp 33 |
-| **37** | **Solo config** | `backbone` (DenseNet121) | 112×112 | 12,611 imgs · 160 edades | 15/20/10 | — | — | Exp 34 |
-| **38** | **Solo config** | `backbone_vectors` (DenseNet121) | 112×112 | 12,611 imgs · 160 edades | 15/20/10 | — | — | Exp 35 |
+| 36 | ✅ Completado | `simple_cnn` | 112×112 | 12,611 imgs · 160 edades | 15/20/10 | Pinky: 36.07 · Middle: 34.10 · Thumb: 32.70 · Wrist: 36.09 · **Prom: 34.74** | **29.48 m** (fine-tuning) | Exp 33 |
+| **37** | **En cola** | `backbone` (DenseNet121) | 112×112 | 12,611 imgs · 160 edades | 15/20/10 | — | — | Exp 34 |
+| **38** | **En cola** | `backbone_vectors` (DenseNet121) | 112×112 | 12,611 imgs · 160 edades | 15/20/10 | — | — | Exp 35 |
 
 ---
 
@@ -73,9 +73,9 @@ Réplicas de los experimentos 33, 34 y 35 usando `balanced_dataset.csv` (11,783 
 
 | Exp | Estado | Tipo modelo | Dataset | Épocas (seg/fus/ft) | MAE CV prom. | val_mae fusión | Comparar con |
 |-----|--------|-------------|---------|----------------------|--------------|----------------|--------------|
-| **39** | **Solo config** | `simple_cnn` | 11,783 imgs · 36 edades | 15/20/10 | — | — | Exp 33 (raw) · Exp 36 (completo) |
-| **40** | **Solo config** | `backbone` (DenseNet121) | 11,783 imgs · 36 edades | 15/20/10 | — | — | Exp 34 (raw) · Exp 37 (completo) |
-| **41** | **Solo config** | `backbone_vectors` (DenseNet121) | 11,783 imgs · 36 edades | 15/20/10 | — | — | Exp 35 (raw) · Exp 38 (completo) |
+| **39** | **En cola** | `simple_cnn` | 11,783 imgs · 36 edades | 15/20/10 | — | — | Exp 33 (raw) · Exp 36 (completo) |
+| **40** | **En cola** | `backbone` (DenseNet121) | 11,783 imgs · 36 edades | 15/20/10 | — | — | Exp 34 (raw) · Exp 37 (completo) |
+| **41** | **En cola** | `backbone_vectors` (DenseNet121) | 11,783 imgs · 36 edades | 15/20/10 | — | — | Exp 35 (raw) · Exp 38 (completo) |
 
 ---
 
@@ -91,8 +91,8 @@ Réplicas de los experimentos 36 y 38 con `FREEZE_EXTRACTORS = False`: los 4 ext
 
 | Exp | Estado | Tipo modelo | Dataset | Épocas (seg/fus/ft) | FREEZE_EXTRACTORS | MAE CV prom. | Comparar con |
 |-----|--------|-------------|---------|----------------------|-------------------|--------------|--------------|
-| **42** | **Solo config** | `simple_cnn` | Completo · 12,611 imgs (1–228 m) | 15/20/10 | `False` | — | Exp 36 (`True`) |
-| **43** | **Solo config** | `backbone_vectors` (DenseNet121) | Completo · 12,611 imgs (1–228 m) | 15/20/10 | `False` | — | Exp 38 (`True`) |
+| **42** | **En cola** | `simple_cnn` | Completo · 12,611 imgs (1–228 m) | 15/20/10 | `False` | — | Exp 36 (`True`) |
+| **43** | **En cola** | `backbone_vectors` (DenseNet121) | Completo · 12,611 imgs (1–228 m) | 15/20/10 | `False` | — | Exp 38 (`True`) |
 
 ---
 
@@ -104,22 +104,41 @@ Nueva arquitectura `unified_cnn`: 4 ramas CNN separadas (una por segmento) entre
 
 > **Diferencia clave vs `simple_cnn`:** eliminación del pipeline de dos fases — la optimización es directamente sobre la tarea final desde el inicio. Los parámetros CNN son idénticos a exps 33/36/39 para aislar el efecto de la arquitectura.
 
-| Exp | Estado | Dataset | Épocas | Comparar con |
-|-----|--------|---------|--------|--------------|
-| **44** | **Solo config** | Raw · ~12,499 imgs (24–216 m) | 30 | Exp 33 (`simple_cnn` raw) |
-| **45** | **Solo config** | Completo · 12,611 imgs (1–228 m) | 30 | Exp 36 (`simple_cnn` completo) |
-| **46** | **Solo config** | Balanceado · 11,783 imgs (≥50/edad) | 30 | Exp 39 (`simple_cnn` balanceado) |
+| Exp | Estado | Dataset | Épocas (CV) | MAE CV prom. | Comparar con |
+|-----|--------|---------|-------------|--------------|--------------|
+| 44 | 🔄 En curso (fold 4/5) | Raw · ~12,499 imgs (24–216 m) | 30 | ~19.7 m (parcial) | Exp 33 (`simple_cnn` raw) |
+| 45 | ✅ Completado | Completo · 12,611 imgs (1–228 m) | 30 | **30.02 ± 7.16 m** | Exp 36 (`simple_cnn` completo) |
+| 46 | 🔄 En curso (fold 1/5) | Balanceado · 11,783 imgs (≥50/edad) | 30 | — | Exp 39 (`simple_cnn` balanceado) |
 
 ---
 
-## Matriz de comparación por arquitectura y dataset
+## Resumen de resultados
 
-| Arquitectura | Raw (24–216 m) | Completo (1–228 m) | Balanceado (≥50/edad) | Completo · extractor libre |
-|---|---|---|---|---|
-| `simple_cnn` | Exp 33 | Exp 36 | Exp 39 | Exp 42 |
-| `backbone` DenseNet121 escalar | Exp 34 | Exp 37 | Exp 40 | — |
-| `backbone_vectors` DenseNet121 | Exp 35 | Exp 38 | Exp 41 | Exp 43 |
-| `unified_cnn` | Exp 44 | Exp 45 | Exp 46 | — |
+**Tipos de modelo:**
+- **simple_cnn** — 4 CNNs independientes por segmento + modelo de fusión
+- **backbone** — 4 DenseNet121 entrenados desde cero + fusión escalar
+- **backbone_vectors** — 4 DenseNet121 entrenados desde cero + fusión con vectores 256-dim
+- **unified_cnn** — una sola CNN que recibe los 4 segmentos simultáneamente y predice directamente la edad ósea, sin etapa de fusión separada
+
+| Exp | Tipo | Dataset | CV MAE | Fusión MAE | Estado |
+|-----|------|---------|--------|-----------|--------|
+| 33 | `simple_cnn` | raw (24–216 m) | 26.4 m | 37.8 m | ✅ |
+| 36 | `simple_cnn` | completo (1–228 m) | 34.3 m | 29.5 m | ✅ |
+| 39 | `simple_cnn` | balanceado (≥50/edad) | — | — | ⏳ |
+| 42 | `simple_cnn` | completo · extractor libre | — | — | ⏳ |
+| 34 | `backbone` | raw (24–216 m) | 27.6 m | **13.5 m** | ✅ |
+| 37 | `backbone` | completo (1–228 m) | 29.0 m | — | 🔄 |
+| 40 | `backbone` | balanceado (≥50/edad) | — | — | ⏳ |
+| 35 | `backbone_vectors` | raw (24–216 m) | 26.6 m | — | ⚠️ |
+| 38 | `backbone_vectors` | completo (1–228 m) | — | — | 🔄 |
+| 41 | `backbone_vectors` | balanceado (≥50/edad) | — | — | ⏳ |
+| 43 | `backbone_vectors` | completo · extractor libre | — | — | ⏳ |
+| 44 | `unified_cnn` | raw (24–216 m) | **19.5 m** | N/A | ✅ |
+| 45 | `unified_cnn` | completo (1–228 m) | 30.0 m | N/A | ✅ |
+| 46 | `unified_cnn` | balanceado (≥50/edad) | **23.2 m** | N/A | ✅ |
+
+> CV MAE: error promedio de validación cruzada (5 folds). Fusión MAE: mejor val_mae del modelo integrador final. Valores en meses de edad ósea.
+> ✅ completado · 🔄 en curso · ⏳ en cola · ⚠️ error (retry en cola)
 
 ---
 
@@ -145,3 +164,4 @@ Nueva arquitectura `unified_cnn`: 4 ramas CNN separadas (una por segmento) entre
 | Apr 21 | `a7d1265` | Nueva arquitectura `backbone_vectors` + Exps 35–38 (dataset completo) |
 | Apr 21 | *(actual)* | Flag `FREEZE_EXTRACTORS` en todos los configs + Exps 42–43 (extractores descongelados) |
 | Apr 22 | *(actual)* | Nueva arquitectura `unified_cnn` (end-to-end, 4 ramas separadas) + Exps 44–46 |
+| Apr 23 | *(actual)* | Fix bug `Graph disconnected` en fusión `backbone_vectors` (afecta exps 35/38/41/43) |

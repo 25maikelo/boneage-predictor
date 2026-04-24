@@ -276,11 +276,16 @@ def create_fusion_model_backbone_vectors(segment_paths, cfg, loss_fn):
     """Fusión basada en vectores backbone_features (Dense intermedio) de cada modelo de segmento."""
     inputs, feature_outputs = [], []
 
+    # gender_input compartido entre los 4 extractores (mismo valor por paciente)
+    gender_in = None
+    if cfg.USE_GENDER:
+        gender_in = tf.keras.layers.Input(shape=(1,), name="gender_input")
+
     for seg in cfg.SEGMENTS_ORDER:
         seg_model = load_model(f"{segment_paths[seg]}", custom_objects=LOSS_MAP)
-        # backbone_features solo depende de la imagen (género se concatena después del GAP)
+        # backbone_features depende de imagen + género (género se concatena antes del Dense)
         feature_extractor = tf.keras.models.Model(
-            inputs=seg_model.inputs[0],
+            inputs=seg_model.inputs,
             outputs=seg_model.get_layer("backbone_features").output,
             name=f"feature_extractor_{seg}",
         )
@@ -288,14 +293,14 @@ def create_fusion_model_backbone_vectors(segment_paths, cfg, loss_fn):
 
         inp = tf.keras.layers.Input(shape=(*cfg.IMAGE_SIZE, 3), name=f"input_{seg}")
         inputs.append(inp)
-        feature_outputs.append(feature_extractor(inp))
-
-    x = tf.keras.layers.Concatenate()(feature_outputs)
+        extractor_inputs = [inp, gender_in] if cfg.USE_GENDER else inp
+        feature_outputs.append(feature_extractor(extractor_inputs))
 
     if cfg.USE_GENDER:
-        gender_in = tf.keras.layers.Input(shape=(1,), name="gender_input")
         inputs.append(gender_in)
-        x = tf.keras.layers.Concatenate()([x, gender_in])
+
+    x = tf.keras.layers.Concatenate()(feature_outputs)
+    # género ya está codificado en cada backbone_features — no añadir de nuevo
 
     x = tf.keras.layers.Dense(512, activation="relu")(x)
     x = tf.keras.layers.Dropout(0.5)(x)

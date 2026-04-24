@@ -4,6 +4,8 @@
 #SBATCH -n 1
 #SBATCH -t 4-00:00:00
 #SBATCH --gres=gpu:1
+#SBATCH --output=/dev/null
+#SBATCH --error=/dev/null
 
 module load anaconda3/2024.02
 eval "$(conda shell.bash hook)"

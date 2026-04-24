@@ -1,6 +1,6 @@
 # Arquitecturas de Entrenamiento
 
-El pipeline soporta dos modos de entrenamiento controlados por `MODEL_TYPE` en el `config.py` del experimento.
+El pipeline soporta cuatro modos de entrenamiento controlados por `MODEL_TYPE` en el `config.py` del experimento.
 
 ---
 
@@ -92,33 +92,103 @@ input_wrist  (H,W,3) → feature_extractor_wrist  → flatten_features → [12,5
 
 ---
 
+## Modo 3: Backbone Vectors (`MODEL_TYPE = "backbone_vectors"`)
+
+Variante del Modo 1 donde la fusión recibe el vector intermedio de 256 dimensiones (`backbone_features`) en lugar del escalar de salida. Los extractores pueden estar congelados (`FREEZE_EXTRACTORS=True`) o entrenarse junto con la fusión (`FREEZE_EXTRACTORS=False`).
+
+### Modelo de segmento
+
+Idéntico al Modo 1, con la diferencia de que la capa Dense intermedia tiene nombre explícito:
+
+```
+...
+Dense(DENSE_UNITS, relu, name="backbone_features")   ← extracción de vector
+    ↓
+Dropout(DROPOUT_RATE)
+    ↓
+Dense(1, linear)   ← predicción individual (no se usa en fusión)
+```
+
+### Modelo de fusión (`create_fusion_model_backbone_vectors`)
+
+```
+input_pinky  (H,W,3) → feature_extractor_pinky  → backbone_features → [256] ──┐
+input_middle (H,W,3) → feature_extractor_middle → backbone_features → [256] ──┤
+input_thumb  (H,W,3) → feature_extractor_thumb  → backbone_features → [256] ──┼── Concatenate [1,024]
+input_wrist  (H,W,3) → feature_extractor_wrist  → backbone_features → [256] ──┘
+                                                                                  ↓
+                                                            [Concatenate(género)] ← si USE_GENDER=True
+                                                                                  ↓
+                                                                     Dense(512, relu)
+                                                                                  ↓
+                                                                        Dropout(0.5)
+                                                                                  ↓
+                                                                     Dense(256, relu)
+                                                                                  ↓
+                                                                        Dropout(0.3)
+                                                                                  ↓
+                                                                  Dense(1, linear)
+```
+
+---
+
+## Modo 4: Unified CNN (`MODEL_TYPE = "unified_cnn"`)
+
+Las 4 ramas CNN se entrenan **end-to-end en una sola fase**, sin pipeline de segmentos + fusión. No hay entrenamiento previo de modelos individuales ni fine-tuning posterior. Toda la red se optimiza simultáneamente desde el inicio.
+
+```
+input_pinky  (H,W,3) ──► [Conv→BN→ReLU→Pool] × 4 ──► Flatten [12,544] ──┐
+input_middle (H,W,3) ──► [Conv→BN→ReLU→Pool] × 4 ──► Flatten [12,544] ──┤
+input_thumb  (H,W,3) ──► [Conv→BN→ReLU→Pool] × 4 ──► Flatten [12,544] ──┼── Concatenate [50,176]
+input_wrist  (H,W,3) ──► [Conv→BN→ReLU→Pool] × 4 ──► Flatten [12,544] ──┘
+                                                                            ↓
+                                                        [Concatenate(género)] ← si USE_GENDER=True
+                                                                            ↓
+                                                               Dense(512, relu)
+                                                                            ↓
+                                                                  Dropout(0.3)
+                                                                            ↓
+                                                               Dense(256, relu)
+                                                                            ↓
+                                                                  Dropout(0.3)
+                                                                            ↓
+                                                            Dense(1, linear)  →  predicción (meses)
+```
+
+> **Diferencia clave vs simple_cnn:** En `simple_cnn` las ramas CNN se entrenan por separado (una por región) y luego se congela su salida para entrenar la fusión. En `unified_cnn` todas las ramas se entrenan simultáneamente con el mismo gradiente de la pérdida global.
+
+---
+
 ## Comparativa
 
-| Aspecto | Backbone | CNN Simple |
-|---|---|---|
-| Info. que llega a fusión | 4 escalares | 4 vectores (~12K-dim c/u) |
-| Pérdida de info. espacial | Alta (GAP colapsa todo) | Ninguna (Flatten preserva posición) |
-| Pesos iniciales | ImageNet (opcional) | Desde cero |
-| Parámetros por segmento | ~7M (DenseNet121) | ~3–5M |
-| Velocidad por época | ~400s | ~350s |
-| Soporte USE_GENDER | Sí | Sí |
+| Aspecto | backbone | simple_cnn | backbone_vectors | unified_cnn |
+|---|---|---|---|---|
+| Info. a fusión | 4 escalares | 4 × 12K flatten | 4 × 256 vectores | — (end-to-end) |
+| Fases de entrenamiento | 3 (seg + fusión + ft) | 3 (seg + fusión + ft) | 3 (seg + fusión + ft) | 1 (todo junto) |
+| Pesos iniciales | ImageNet (opcional) | Desde cero | ImageNet (opcional) | Desde cero |
+| Parámetros por segmento | ~7M (DenseNet121) | ~3–5M | ~7M (DenseNet121) | ~3–5M |
+| FREEZE_EXTRACTORS | N/A | Sí | Sí | N/A |
+| Soporte USE_GENDER | Sí | Sí | Sí | Sí |
 
 ---
 
 ## Parámetros de Configuración
 
 ```python
-MODEL_TYPE          = "simple_cnn"   # "simple_cnn" | "backbone"
+MODEL_TYPE          = "simple_cnn"   # "simple_cnn" | "backbone" | "backbone_vectors" | "unified_cnn"
 
-# Solo para simple_cnn
+# Solo para simple_cnn, backbone_vectors y unified_cnn
 CNN_FILTERS         = [32, 64, 128, 256]
 CNN_KERNEL_SIZE     = 3
 CNN_DROPOUT         = 0.3
 
-# Solo para backbone
+# Solo para backbone y backbone_vectors
 BASE_MODEL_CHOICE   = "densenet121"  # "vgg16" | "densenet121" | "inceptionv3" | "resnet50"
 WEIGHTS             = None           # None | "imagenet"
 NUM_LAYERS_UNFREEZE = 10
+
+# Para simple_cnn y backbone_vectors
+FREEZE_EXTRACTORS   = True           # False = extractores se entrenan con la fusión
 
 # Compartidos
 USE_GENDER          = True

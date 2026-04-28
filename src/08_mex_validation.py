@@ -183,20 +183,24 @@ def load_all_models(cfg, exp_dir):
         seg_path = get_segmentation_model_path()
     print(f"Modelo de segmentación: {seg_path}")
     seg_model = _load_seg_model_compat(seg_path)
-    segment_models = {}
-    for seg in cfg.SEGMENTS_ORDER:
-        path = os.path.join(models_dir, f"{seg}_model")
-        if os.path.exists(path):
-            m = load_model(path, custom_objects=LOSS_MAP)
-            m.compile(optimizer=get_optimizer(cfg.OPTIMIZER_CHOICE, cfg.LEARNING_RATE),
-                      loss=LOSS_MAP.get(cfg.LOSS_FUNCTION_NAME, dynamic_attention_loss),
-                      metrics=["mae"])
-            segment_models[seg] = m
-    fusion = load_model(os.path.join(models_dir, "fusion_model"),
-                        custom_objects=LOSS_MAP)
-    fusion.compile(optimizer=get_optimizer(cfg.OPTIMIZER_CHOICE, cfg.LEARNING_RATE),
-                   loss=LOSS_MAP.get(cfg.LOSS_FUNCTION_NAME, dynamic_attention_loss),
-                   metrics=["mae"])
+    model_type = getattr(cfg, "MODEL_TYPE", "backbone")
+    loss_fn = LOSS_MAP.get(cfg.LOSS_FUNCTION_NAME, dynamic_attention_loss)
+    opt = get_optimizer(cfg.OPTIMIZER_CHOICE, cfg.LEARNING_RATE)
+
+    if model_type == "unified_cnn":
+        segment_models = {}
+        fusion = load_model(os.path.join(models_dir, "unified_model"), custom_objects=LOSS_MAP)
+        fusion.compile(optimizer=opt, loss=loss_fn, metrics=["mae"])
+    else:
+        segment_models = {}
+        for seg in cfg.SEGMENTS_ORDER:
+            path = os.path.join(models_dir, f"{seg}_model")
+            if os.path.exists(path):
+                m = load_model(path, custom_objects=LOSS_MAP)
+                m.compile(optimizer=opt, loss=loss_fn, metrics=["mae"])
+                segment_models[seg] = m
+        fusion = load_model(os.path.join(models_dir, "fusion_model"), custom_objects=LOSS_MAP)
+        fusion.compile(optimizer=opt, loss=loss_fn, metrics=["mae"])
     return seg_model, segment_models, fusion
 
 

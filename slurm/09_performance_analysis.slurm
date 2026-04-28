@@ -1,9 +1,10 @@
 #!/bin/bash
-#SBATCH -p gpu
+#SBATCH -p q1
 #SBATCH -J boneage_09_performance_analysis
 #SBATCH -n 1
 #SBATCH -t 1-00:00
-#SBATCH --gres=gpu:1
+#SBATCH --output=/dev/null
+#SBATCH --error=/dev/null
 
 module load anaconda3/2024.02
 eval "$(conda shell.bash hook)"

@@ -1,7 +1,7 @@
 # Pipeline — Bone Age Predictor
 
 ```
-00 → 01 → 02 → 03 → 04 → 05 → 06 → 07 → 09
+00 → 01 → 02 → 03 → 04 → 05 → 06 → 07 → 09 → 10
                                     ↓
                                     08
 ```
@@ -124,7 +124,7 @@ Filtra el CSV de entrenamiento para conservar solo imágenes con los 4 segmentos
 **Uso:**
 `python src/06_training.py --experiment N`
 
-Entrena 4 modelos de segmento (uno por región anatómica) con K-Fold CV, luego construye y entrena el modelo de fusión. Soporta dos arquitecturas (ver [arquitecturas.md](arquitecturas.md)):
+Entrena 4 modelos de segmento (uno por región anatómica) con K-Fold CV, luego construye y entrena el modelo de fusión. Soporta dos arquitecturas (ver [arquitecturas.md](../design/arquitecturas.md)):
 
 - `MODEL_TYPE = "simple_cnn"` — CNN desde cero con Flatten
 - `MODEL_TYPE = "backbone"` — backbone preentrenado (VGG16, DenseNet121, InceptionV3, ResNet50)
@@ -195,6 +195,23 @@ Genera tabla comparativa de métricas, mapas de saliencia por segmento y anális
 
 ---
 
+### 10 · Análisis por rango de edad
+**Script:**
+`src/10_age_range_analysis.py`
+
+**Uso:**
+`python src/10_age_range_analysis.py --experiment N [--bin-size 12] [--dataset both]`
+
+Descompone el error por intervalo de edad e identifica sesgos sistemáticos por rango etario. Ver [10_age_range_analysis.md](../scripts/10_age_range_analysis.md) para documentación completa.
+
+**Entrada:**
+`data/validation/`, `data/mex-validation/`, `experiments/N/models/`
+
+**Salida:**
+`experiments/N/age_range_analysis/`
+
+---
+
 ## Ejecución en Clúster (SLURM)
 
 ```bash
@@ -202,6 +219,7 @@ sbatch slurm/06_training.slurm N        # entrenamiento
 sbatch slurm/07_validation.slurm N      # validación estándar
 sbatch slurm/08_mex_validation.slurm N  # validación mexicana
 sbatch slurm/09_performance_analysis.slurm N
+sbatch slurm/10_age_range_analysis.slurm N 12 both  # análisis por rango de edad
 
 bash scripts/quicktest.sh 99            # pipeline completo con datos mínimos
 ```

@@ -1,0 +1,15 @@
+{
+  "experiment": 42,
+  "bin_size": 12,
+  "dataset": "both",
+  "n_total": 1500,
+  "n_ok": 1467,
+  "n_failed": 33,
+  "global_mae": 27.68,
+  "global_bias": -11.04,
+  "global_rmse": 37.83,
+  "within_12m_pct": 30.7,
+  "within_24m_pct": 55.5,
+  "best_range": "72\u201384 m (6\u20137 a)",
+  "worst_range": "12\u201324 m (1\u20132 a)"
+}

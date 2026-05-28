@@ -45,7 +45,7 @@ Se introduce `simple_cnn` (4 bloques conv + Flatten + Dense). El foco es compara
 | 32 | Completado | `backbone` (DenseNet121) | Sí | 112×112 | 15/20/10 | Pinky: 37.1 · Middle: 37.6 · Thumb: 37.0 · Wrist: 37.1 | — | Réplica de Exp 27 con infraestructura actualizada (CV + rutas segmentación); referencia backbone para comparar con CNN |
 | 33 | ✅ Completado *(ajuste de código)* | `simple_cnn` | Sí | 112×112 | 15/20/10 | Pinky: 35.43 · Middle: 27.42 · Thumb: 25.55 · Wrist: 26.73 · **Prom: 28.78** | ~50 m (no convergió) | **Réplica corregida de Exp 31** — fix bug fusión `USE_GENDER`; fusión con vectores 50K-dim inestable |
 | 34 | ✅ Completado *(ajuste de código)* | `backbone` (DenseNet121) | Sí | 112×112 | 15/20/10 | Pinky: 29.17 · Middle: 28.86 · Thumb: 23.53 · Wrist: 28.70 · **Prom: 27.57** | **~13.4 m** | **Réplica corregida de Exp 32** — fusión con 4 escalares converge muy bien |
-| **35** | ⚠️ Error fusión (retry en cola) | `backbone_vectors` (DenseNet121) | Sí | 112×112 | 15/20/10 | Seg. completados | — | Bug `Graph disconnected` en fusión con género — corregido, retry pendiente |
+| **35** | ✅ Completado | `backbone_vectors` (DenseNet121) | Sí | 112×112 | 15/20/10 | Pinky: 23.42 · Middle: 27.15 · Thumb: 22.87 · Wrist: 32.84 · **Prom: 26.57** | 27.6 m | — |
 
 ---
 
@@ -60,8 +60,8 @@ Réplicas exactas de los experimentos 33, 34 y 35 con la única diferencia de qu
 | Exp | Estado | Tipo modelo | Imagen | Dataset | Épocas (seg/fus/ft) | MAE CV prom. | val_mae fusión | Comparar con |
 |-----|--------|-------------|--------|---------|----------------------|--------------|----------------|--------------|
 | 36 | ✅ Completado | `simple_cnn` | 112×112 | 12,611 imgs · 160 edades | 15/20/10 | Pinky: 36.07 · Middle: 34.10 · Thumb: 32.70 · Wrist: 36.09 · **Prom: 34.74** | **29.48 m** (fine-tuning) | Exp 33 |
-| **37** | **En cola** | `backbone` (DenseNet121) | 112×112 | 12,611 imgs · 160 edades | 15/20/10 | — | — | Exp 34 |
-| **38** | **En cola** | `backbone_vectors` (DenseNet121) | 112×112 | 12,611 imgs · 160 edades | 15/20/10 | — | — | Exp 35 |
+| **37** | ✅ Completado | `backbone` (DenseNet121) | 112×112 | 12,611 imgs · 160 edades | 15/20/10 | Pinky: 28.99 · Middle: 30.96 · Thumb: 29.48 · Wrist: 29.30 · **Prom: 29.68** | **6.8 m** | Exp 34 |
+| **38** | ✅ Completado | `backbone_vectors` (DenseNet121) | 112×112 | 12,611 imgs · 160 edades | 15/20/10 | Pinky: 33.07 · Middle: 32.56 · Thumb: 28.02 · Wrist: 31.85 · **Prom: 31.38** | 30.3 m | Exp 35 |
 
 ---
 
@@ -73,9 +73,9 @@ Réplicas de los experimentos 33, 34 y 35 usando `balanced_dataset.csv` (11,783 
 
 | Exp | Estado | Tipo modelo | Dataset | Épocas (seg/fus/ft) | MAE CV prom. | val_mae fusión | Comparar con |
 |-----|--------|-------------|---------|----------------------|--------------|----------------|--------------|
-| **39** | **En cola** | `simple_cnn` | 11,783 imgs · 36 edades | 15/20/10 | — | — | Exp 33 (raw) · Exp 36 (completo) |
-| **40** | **En cola** | `backbone` (DenseNet121) | 11,783 imgs · 36 edades | 15/20/10 | — | — | Exp 34 (raw) · Exp 37 (completo) |
-| **41** | **En cola** | `backbone_vectors` (DenseNet121) | 11,783 imgs · 36 edades | 15/20/10 | — | — | Exp 35 (raw) · Exp 38 (completo) |
+| **39** | ✅ Completado | `simple_cnn` | 11,783 imgs · 36 edades | 15/20/10 | Pinky: 33.37 · Middle: 27.88 · Thumb: 22.93 · Wrist: 34.25 · **Prom: 29.61** | 41.8 m | Exp 33 (raw) · Exp 36 (completo) |
+| **40** | ✅ Completado | `backbone` (DenseNet121) | 11,783 imgs · 36 edades | 15/20/10 | Pinky: 23.60 · Middle: 26.43 · Thumb: 21.09 · Wrist: 33.81 · **Prom: 26.23** | **9.0 m** | Exp 34 (raw) · Exp 37 (completo) |
+| **41** | ✅ Completado | `backbone_vectors` (DenseNet121) | 11,783 imgs · 36 edades | 15/20/10 | Pinky: 28.90 · Middle: 27.19 · Thumb: 21.58 · Wrist: 29.29 · **Prom: 26.74** | 26.9 m | Exp 35 (raw) · Exp 38 (completo) |
 
 ---
 
@@ -91,8 +91,8 @@ Réplicas de los experimentos 36 y 38 con `FREEZE_EXTRACTORS = False`: los 4 ext
 
 | Exp | Estado | Tipo modelo | Dataset | Épocas (seg/fus/ft) | FREEZE_EXTRACTORS | MAE CV prom. | Comparar con |
 |-----|--------|-------------|---------|----------------------|-------------------|--------------|--------------|
-| **42** | **En cola** | `simple_cnn` | Completo · 12,611 imgs (1–228 m) | 15/20/10 | `False` | — | Exp 36 (`True`) |
-| **43** | **En cola** | `backbone_vectors` (DenseNet121) | Completo · 12,611 imgs (1–228 m) | 15/20/10 | `False` | — | Exp 38 (`True`) |
+| **42** | ✅ Completado | `simple_cnn` | Completo · 12,611 imgs (1–228 m) | 15/20/10 | `False` | Pinky: 35.72 · Middle: 33.99 · Thumb: 35.23 · Wrist: 27.49 · **Prom: 33.11** | Exp 36 (`True`) |
+| **43** | ✅ Completado | `backbone_vectors` (DenseNet121) | Completo · 12,611 imgs (1–228 m) | 15/20/10 | `False` | Pinky: 34.32 · Middle: 31.47 · Thumb: 29.22 · Wrist: 31.16 · **Prom: 31.54** | Exp 38 (`True`) |
 
 ---
 
@@ -106,9 +106,9 @@ Nueva arquitectura `unified_cnn`: 4 ramas CNN separadas (una por segmento) entre
 
 | Exp | Estado | Dataset | Épocas (CV) | MAE CV prom. | Comparar con |
 |-----|--------|---------|-------------|--------------|--------------|
-| 44 | 🔄 En curso (fold 4/5) | Raw · ~12,499 imgs (24–216 m) | 30 | ~19.7 m (parcial) | Exp 33 (`simple_cnn` raw) |
+| 44 | ✅ Completado | Raw · ~12,499 imgs (24–216 m) | 30 | **19.5 m** | Exp 33 (`simple_cnn` raw) |
 | 45 | ✅ Completado | Completo · 12,611 imgs (1–228 m) | 30 | **30.02 ± 7.16 m** | Exp 36 (`simple_cnn` completo) |
-| 46 | 🔄 En curso (fold 1/5) | Balanceado · 11,783 imgs (≥50/edad) | 30 | — | Exp 39 (`simple_cnn` balanceado) |
+| 46 | ✅ Completado | Balanceado · 11,783 imgs (≥50/edad) | 30 | **23.2 m** | Exp 39 (`simple_cnn` balanceado) |
 
 ---
 
@@ -120,25 +120,25 @@ Nueva arquitectura `unified_cnn`: 4 ramas CNN separadas (una por segmento) entre
 - **backbone_vectors** — 4 DenseNet121 entrenados desde cero + fusión con vectores 256-dim
 - **unified_cnn** — una sola CNN que recibe los 4 segmentos simultáneamente y predice directamente la edad ósea, sin etapa de fusión separada
 
-| Exp | Tipo | Dataset | CV MAE | Fusión MAE | Val MAE | Estado |
-|-----|------|---------|--------|-----------|---------|--------|
-| 33 | `simple_cnn` | recortado (24–216 m) | 26.1 m | 37.8 m | 39.2 m | ✅ |
-| 36 | `simple_cnn` | completo (1–228 m) | 34.3 m | 29.5 m | 30.2 m | ✅ |
-| 39 | `simple_cnn` | balanceado (≥50/edad) | 29.6 m | 42.0 m | 43.5 m | ✅ |
-| 42 | `simple_cnn` | completo · extractor libre | 33.1 m | 21.1 m | — | 🔄 |
-| 34 | `backbone` | recortado (24–216 m) | 27.6 m | **13.5 m** | **14.6 m** | ✅ |
-| 37 | `backbone` | completo (1–228 m) | 29.7 m | **14.0 m** | **15.3 m** | ✅ |
-| 40 | `backbone` | balanceado (≥50/edad) | 26.2 m | **13.8 m** | **15.1 m** | ✅ |
-| 35 | `backbone_vectors` | recortado (24–216 m) | 26.6 m | — | — | ⚠️ |
-| 38 | `backbone_vectors` | completo (1–228 m) | 31.4 m | 38.9 m | 40.0 m | ✅ |
-| 41 | `backbone_vectors` | balanceado (≥50/edad) | 26.7 m | 33.1 m | 35.0 m | ✅ |
-| 43 | `backbone_vectors` | completo · extractor libre | 32.9 m | — | — | 🔄 |
-| 44 | `unified_cnn` | recortado (24–216 m) | **19.5 m** | N/A | **19.0 m** | ✅ |
-| 45 | `unified_cnn` | completo (1–228 m) | 30.0 m | N/A | 29.0 m | ✅ |
-| 46 | `unified_cnn` | balanceado (≥50/edad) | **23.2 m** | N/A | **21.0 m** | ✅ |
+| Exp | Tipo | Dataset | CV MAE | Fusión MAE | Val MAE | Mex MAE | Estado |
+|-----|------|---------|--------|-----------|---------|---------|--------|
+| 33 | `simple_cnn` | recortado (24–216 m) | 26.4 m | 34.5 m | 39.2 m | 35.9 m | ✅ |
+| 36 | `simple_cnn` | completo (1–228 m) | 34.3 m | 25.5 m | 30.2 m | 22.2 m | ✅ |
+| 39 | `simple_cnn` | balanceado (≥50/edad) | 29.6 m | 41.8 m | 43.5 m | 35.9 m | ✅ |
+| **42** | **`simple_cnn`** | **completo · extractor libre** | **33.1 m** | **20.1 m** | **24.1 m** | **20.0 m** | ✅ |
+| **34** | **`backbone`** | **recortado (24–216 m)** | **27.6 m** | **9.2 m** | **14.6 m** | **17.6 m** | ✅ |
+| **37** | **`backbone`** | **completo (1–228 m)** | **29.7 m** | **6.8 m** | **15.4 m** | **16.7 m** | ✅ |
+| **40** | **`backbone`** | **balanceado (≥50/edad)** | **26.2 m** | **9.0 m** | **15.1 m** | **13.9 m** | ✅ |
+| 35 | `backbone_vectors` | recortado (24–216 m) | 26.6 m | 27.6 m | 36.7 m | 23.4 m | ✅ |
+| 38 | `backbone_vectors` | completo (1–228 m) | 31.4 m | 30.3 m | 40.0 m | 28.0 m | ✅ |
+| 41 | `backbone_vectors` | balanceado (≥50/edad) | 26.7 m | 26.9 m | 35.0 m | 27.3 m | ✅ |
+| **43** | **`backbone_vectors`** | **completo · extractor libre** | **31.5 m** | **17.3 m** | **23.0 m** | **18.5 m** | ✅ |
+| **44** | **`unified_cnn`** | **recortado (24–216 m)** | **19.5 m** | N/A | **19.0 m** | **16.9 m** | ✅ |
+| 45 | `unified_cnn` | completo (1–228 m) | 30.0 m | N/A | 29.0 m | 21.0 m | ✅ |
+| **46** | **`unified_cnn`** | **balanceado (≥50/edad)** | **23.2 m** | N/A | **21.0 m** | **21.9 m** | ✅ |
 
-> CV MAE: error promedio de validación cruzada (5 folds). Fusión MAE: mejor val_mae del modelo integrador final. Val MAE: MAE sobre dataset de validación estándar. Valores en meses de edad ósea.
-> ✅ completado · 🔄 en curso · ⚠️ error (retry en cola)
+> CV MAE: validación cruzada (5 folds) · Fusión MAE: mejor val_mae del integrador final · Val MAE: dataset RSNA (1,393 imgs) · Mex MAE: dataset mexicano (98 imgs) · **Negrita** = mejor por arquitectura
+> ✅ completado
 
 ---
 
@@ -149,14 +149,14 @@ Nueva arquitectura `unified_cnn`: 4 ramas CNN separadas (una por segmento) entre
 | 33 | `simple_cnn` | recortado (24–216 m) | 39.2 m |
 | 36 | `simple_cnn` | completo (1–228 m) | 30.2 m |
 | 39 | `simple_cnn` | balanceado | 43.5 m |
-| 42 | `simple_cnn` | completo · extractor libre | ⏳ |
+| **42** | **`simple_cnn`** | **completo · extractor libre** | **24.1 m** |
 | 34 | `backbone` | recortado (24–216 m) | **14.6 m** |
 | 37 | `backbone` | completo (1–228 m) | **15.4 m** |
 | 40 | `backbone` | balanceado | **15.1 m** |
-| 35 | `bbone_vec` | recortado (24–216 m) | ⚠️ |
+| 35 | `bbone_vec` | recortado (24–216 m) | 36.7 m |
 | 38 | `bbone_vec` | completo (1–228 m) | 40.0 m |
 | 41 | `bbone_vec` | balanceado | 35.0 m |
-| 43 | `bbone_vec` | completo · extractor libre | ⏳ |
+| **43** | **`bbone_vec`** | **completo · extractor libre** | **23.0 m** |
 | 44 | `unified_cnn` | recortado (24–216 m) | **19.0 m** |
 | 45 | `unified_cnn` | completo (1–228 m) | 29.0 m |
 | 46 | `unified_cnn` | balanceado | **21.0 m** |
@@ -170,14 +170,14 @@ Nueva arquitectura `unified_cnn`: 4 ramas CNN separadas (una por segmento) entre
 | 33 | `simple_cnn` | recortado (24–216 m) | 35.9 m |
 | 36 | `simple_cnn` | completo (1–228 m) | 22.2 m |
 | 39 | `simple_cnn` | balanceado | 35.9 m |
-| 42 | `simple_cnn` | completo · extractor libre | ⏳ |
+| **42** | **`simple_cnn`** | **completo · extractor libre** | **24.1 m** |
 | 34 | `backbone` | recortado (24–216 m) | 17.6 m |
 | 37 | `backbone` | completo (1–228 m) | 16.7 m |
 | 40 | `backbone` | balanceado | **13.9 m** |
-| 35 | `bbone_vec` | recortado (24–216 m) | ⚠️ |
+| 35 | `bbone_vec` | recortado (24–216 m) | 23.4 m |
 | 38 | `bbone_vec` | completo (1–228 m) | 28.0 m |
 | 41 | `bbone_vec` | balanceado | 27.3 m |
-| 43 | `bbone_vec` | completo · extractor libre | ⏳ |
+| **43** | **`bbone_vec`** | **completo · extractor libre** | **23.0 m** |
 | 44 | `unified_cnn` | recortado (24–216 m) | **16.9 m** |
 | 45 | `unified_cnn` | completo (1–228 m) | 21.0 m |
 | 46 | `unified_cnn` | balanceado | 21.9 m |
@@ -191,14 +191,14 @@ Nueva arquitectura `unified_cnn`: 4 ramas CNN separadas (una por segmento) entre
 | 33 | `simple_cnn` | recortado (24–216 m) | 34.5 m | 33.0 m | 21.4 m | 18.9 m | 21.0 m |
 | 36 | `simple_cnn` | completo (1–228 m) | 25.5 m | 37.7 m | 35.0 m | 19.7 m | 26.0 m |
 | 39 | `simple_cnn` | balanceado | 41.8 m | 31.1 m | 21.8 m | 30.3 m | 21.4 m |
-| 42 | `simple_cnn` | completo · extractor libre | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ |
+| **42** | **`simple_cnn`** | **completo · extractor libre** | **20.1 m** | 35.6 m | 27.0 m | 19.6 m | 21.0 m |
 | 34 | `backbone` | recortado (24–216 m) | **9.2 m** | 24.3 m | 15.9 m | 19.7 m | 21.2 m |
 | 37 | `backbone` | completo (1–228 m) | **6.8 m** | 20.5 m | 20.5 m | 54.9 m | 22.6 m |
 | 40 | `backbone` | balanceado | **9.0 m** | 25.1 m | 17.7 m | 18.3 m | 29.5 m |
-| 35 | `bbone_vec` | recortado (24–216 m) | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
+| 35 | `bbone_vec` | recortado (24–216 m) | 27.5 m | 15.4 m | 15.7 m | 19.6 m | 23.2 m |
 | 38 | `bbone_vec` | completo (1–228 m) | 30.3 m | 15.2 m | 34.9 m | 14.3 m | 22.9 m |
 | 41 | `bbone_vec` | balanceado | 26.9 m | 19.4 m | 18.2 m | 17.2 m | 19.9 m |
-| 43 | `bbone_vec` | completo · extractor libre | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ |
+| **43** | **`bbone_vec`** | **completo · extractor libre** | **17.3 m** | 27.4 m | 21.1 m | 19.8 m | 24.7 m |
 | 44 | `unified_cnn` | recortado (24–216 m) | **16.0 m** | N/A | N/A | N/A | N/A |
 | 45 | `unified_cnn` | completo (1–228 m) | 25.6 m | N/A | N/A | N/A | N/A |
 | 46 | `unified_cnn` | balanceado | **16.2 m** | N/A | N/A | N/A | N/A |

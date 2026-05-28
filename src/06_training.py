@@ -100,10 +100,7 @@ def plot_history(history, title, save_path, total_epochs=None):
     actual = len(history.history.get("loss", []))
     epochs = range(1, actual + 1)
     x_max = total_epochs if total_epochs and total_epochs >= actual else actual
-    step = max(1, x_max // 10)
-    x_ticks = list(range(1, x_max + 1, step))
-    if x_max not in x_ticks:
-        x_ticks.append(x_max)
+    x_ticks = list(range(1, x_max + 1))
 
     # Panel izquierdo: Loss
     for key, label, style in [("loss", "Train Loss", "-"), ("val_loss", "Val Loss", "--")]:

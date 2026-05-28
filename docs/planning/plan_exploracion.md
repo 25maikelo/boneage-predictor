@@ -73,33 +73,21 @@ Cada ablación modifica **una sola variable** respecto al experimento ganador. E
 
 ---
 
-### 2.3 Ablación de fine-tuning depth
-
-**Variable:** `NUM_LAYERS_UNFREEZE`
-**Valores:** `0` (sin fine-tuning de backbone), `5`, `10` (baseline), `20`, `-1` (todas las capas)
-**Costo:** 4 experimentos (~160 h)
-
-**Motivación:** El fine-tuning parcial del backbone es una de las decisiones de diseño con mayor impacto en modelos de transferencia. Actualmente está fijo en 10 capas sin evidencia de que sea óptimo. Con `0` se mide si el fine-tuning aporta algo; con `all` se mide el riesgo de sobreajuste.
-
-**Solo aplica si el ganador usa DenseNet121.** Si gana `simple_cnn`, esta ablación no es relevante.
-
-**Resultado esperado:** Profundidad óptima de descongelamiento para el backbone.
-
----
-
-### 2.4 Ablación de tamaño de imagen
+### 2.3 Experimento de tamaño de imagen
 
 **Variable:** `IMAGE_SIZE`
 **Valores:** `(112, 112)` (baseline) vs. `(224, 224)`
-**Costo:** 1 experimento (~80 h, aproximadamente el doble por mayor resolución)
+**Costo:** 2 experimentos (~160 h; ~2–3x más lento por mayor resolución — monitorear límite de 4 días)
 
-**Motivación:** Los experimentos 24/25 evaluaron 224×224 con ResNet50 pero no con DenseNet121 ni con la nueva arquitectura de fusión. Imágenes más grandes pueden capturar detalles óseos finos que mejoran la predicción, especialmente en rangos de edad extremos.
+**Motivación:** Los experimentos 24/25 evaluaron 224×224 con ResNet50 pero no con DenseNet121 ni con la arquitectura de fusión actual. Imágenes más grandes pueden capturar detalles óseos finos que mejoran la predicción, especialmente en rangos de edad extremos.
 
-**Condición para ejecutar:** Solo si las ablaciones 2.1–2.3 ya están saturadas (mejoras marginales < 1 mes MAE).
+**Condición para ejecutar:** Solo si 2.1–2.2 están saturados (mejoras marginales < 1 mes MAE).
+
+> **Nota:** `NUM_LAYERS_UNFREEZE` no aplica como variable de optimización — con `WEIGHTS=None` el modelo entrena todas las capas desde el inicio y el parámetro no tiene efecto. Aplica únicamente en transfer learning (`WEIGHTS='imagenet'`).
 
 ---
 
-### 2.5 Incorporación de datos clínicos
+### 2.4 Incorporación de datos clínicos
 
 **Variable:** Entradas adicionales al vector tabular de fusión
 **Candidatos:** edad cronológica, talla, peso, z-score talla/edad, etnia
@@ -118,9 +106,8 @@ Cada ablación modifica **una sola variable** respecto al experimento ganador. E
 |---|---|---|---|
 | 1 | Género (`USE_GENDER`) | ~40 h | Siempre |
 | 2 | LR + épocas fusión | ~80–320 h | Siempre |
-| 3 | Fine-tuning depth | ~160 h | Solo si ganador usa DenseNet |
-| 4 | Tamaño de imagen | ~80 h | Solo si 1–3 están saturados |
-| 5 | Datos clínicos adicionales | variable | Sujeto a disponibilidad |
+| 3 | Tamaño de imagen | ~160 h | Solo si 1–2 están saturados |
+| 4 | Datos clínicos adicionales | variable | Sujeto a disponibilidad |
 
 ---
 

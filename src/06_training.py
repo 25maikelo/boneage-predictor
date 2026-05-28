@@ -51,6 +51,16 @@ def setup_gpu():
 
 
 # ============================================================
+# UTILIDADES DE MODELOS
+# ============================================================
+def _move_model(src, dst):
+    """Mueve src → dst (directorio o archivo). Elimina dst si ya existe."""
+    if os.path.exists(dst):
+        shutil.rmtree(dst) if os.path.isdir(dst) else os.remove(dst)
+    shutil.move(src, dst)
+
+
+# ============================================================
 # CALLBACKS
 # ============================================================
 class SaveModelCallback(tf.keras.callbacks.Callback):
@@ -549,12 +559,13 @@ def train_one_segment(args_tuple):
     else:
         train_df, val_df = train_test_split(df, test_size=cfg.TEST_SPLIT, random_state=42)
         model = _build_segment_model(cfg, loss_fn)
+        ckpt_path = model_path + "_ckpt"
         cbs = [
             tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=4,
                                               restore_best_weights=True),
             tf.keras.callbacks.ReduceLROnPlateau(monitor="val_loss", factor=0.5,
                                                   patience=3, min_lr=1e-7, verbose=1),
-            SaveModelCallback(model_path),
+            SaveModelCallback(ckpt_path),
         ]
         print(f"Entrenando segmento: {segment}")
         with timer(f"Segmento {segment}"):
@@ -566,6 +577,7 @@ def train_one_segment(args_tuple):
                 validation_steps=len(val_df) // cfg.BATCH_SIZE,
                 verbose=2, callbacks=cbs,
             )
+        _move_model(ckpt_path, model_path)
         plot_history(history, f"Segmento {segment}",
                      os.path.join(exp_dir, "training_history", f"{segment}_history.png"),
                      total_epochs=cfg.EPOCHS_SEGMENT)
@@ -745,12 +757,13 @@ def train_fusion(cfg, exp_dir):
         output_signature=(sig, tf.TensorSpec((None,), tf.float32))
     )
 
+    fusion_ckpt = fusion_path + "_ckpt"
     cbs = [
         tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=4,
                                           restore_best_weights=True),
         tf.keras.callbacks.ReduceLROnPlateau(monitor="val_loss", factor=0.5,
                                               patience=3, min_lr=1e-7),
-        SaveModelCallback(fusion_path),
+        SaveModelCallback(fusion_ckpt),
     ]
     if cfg.USE_WARMUP:
         cbs.insert(0, WarmupLR(cfg.WARMUP_EPOCHS, cfg.WARMUP_INITIAL_LR, cfg.LEARNING_RATE))
@@ -764,6 +777,7 @@ def train_fusion(cfg, exp_dir):
             validation_steps=len(val_f) // cfg.BATCH_SIZE,
             callbacks=cbs, verbose=2,
         )
+    _move_model(fusion_ckpt, fusion_path)
     plot_history(hist_f, "Fusión",
                  os.path.join(exp_dir, "training_history", "fusion_history.png"),
                  total_epochs=cfg.FUSION_EPOCHS)
@@ -780,14 +794,23 @@ def train_fusion(cfg, exp_dir):
         fusion.compile(optimizer=get_optimizer(cfg.OPTIMIZER_CHOICE, cfg.LEARNING_RATE / 10),
                        loss=loss_fn, metrics=["mae"])
         print("Fine-tuning fusión...")
+        ft_ckpt = fusion_path + "_ft_ckpt"
+        cbs_ft = [
+            tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=4,
+                                              restore_best_weights=True),
+            tf.keras.callbacks.ReduceLROnPlateau(monitor="val_loss", factor=0.5,
+                                                  patience=3, min_lr=1e-7),
+            SaveModelCallback(ft_ckpt),
+        ]
         with timer("Fine-tuning"):
             hist_ft = fusion.fit(
                 train_ds, validation_data=val_ds,
                 epochs=cfg.FINE_TUNING_EPOCHS,
                 steps_per_epoch=len(train_f) // cfg.BATCH_SIZE,
                 validation_steps=len(val_f) // cfg.BATCH_SIZE,
-                callbacks=cbs, verbose=2,
+                callbacks=cbs_ft, verbose=2,
             )
+        _move_model(ft_ckpt, fusion_path)
         plot_history(hist_ft, "Fine-Tuning",
                      os.path.join(exp_dir, "training_history", "fusion_ft.png"),
                      total_epochs=cfg.FINE_TUNING_EPOCHS)
@@ -917,6 +940,7 @@ def train_unified_cnn(cfg, exp_dir):
         model.compile(optimizer=get_optimizer(cfg.OPTIMIZER_CHOICE, cfg.LEARNING_RATE),
                       loss=loss_fn, metrics=["mae"])
 
+        unified_ckpt = unified_path + "_ckpt"
         print("Entrenando unified CNN...")
         with timer("Unified CNN"):
             history = model.fit(
@@ -925,9 +949,10 @@ def train_unified_cnn(cfg, exp_dir):
                 epochs=cfg.EPOCHS_SEGMENT,
                 steps_per_epoch=len(train_df) // cfg.BATCH_SIZE,
                 validation_steps=len(val_df) // cfg.BATCH_SIZE,
-                callbacks=make_callbacks(unified_path),
+                callbacks=make_callbacks(unified_ckpt),
                 verbose=2,
             )
+        _move_model(unified_ckpt, unified_path)
         plot_history(history, "Unified CNN",
                      os.path.join(history_dir, "unified_history.png"),
                      total_epochs=cfg.EPOCHS_SEGMENT)

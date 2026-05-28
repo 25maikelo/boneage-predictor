@@ -76,7 +76,12 @@ Val MAE de **19–21 m** en recortado y balanceado, con sesgo casi nulo (±2 m).
 
 | Arquitectura | Mejor rango | Peor rango |
 |---|---|---|
-| `backbone` / `unified_cnn` | 96–108 m (8–9 a) | 12–24 m (1–2 a) — lactantes |
-| `simple_cnn` / `bbone_vec` (congelado) | 36–60 m (3–5 a) | >216 m (18+ a) — adolescentes tardíos |
-| `simple_cnn` / `bbone_vec` (libre) | 60–84 m (5–7 a) | 12–24 m (1–2 a) |
+| `backbone` | 96–108 m (8–9 a) | 228–240 m (19–20 a) — adolescentes tardíos |
+| `unified_cnn` | 96–108 m (8–9 a) | 228–240 m (19–20 a) — adolescentes tardíos |
+| `simple_cnn` / `bbone_vec` (congelado) | 36–60 m (3–5 a) | 228–240 m (19–20 a) — adolescentes tardíos |
+| `simple_cnn` libre | 72–84 m (6–7 a) | 228–240 m (19–20 a) — adolescentes tardíos |
+| `bbone_vec` libre | 12–24 m (1–2 a)* | 228–240 m (19–20 a) — adolescentes tardíos |
+
+> El extremo **228–240 m es universalmente el peor rango en todas las arquitecturas** — las edades próximas al cierre de epífisis son las más difíciles de predecir.
+> *Bin 12–24 m tiene solo 11 imágenes — muestra pequeña.
 

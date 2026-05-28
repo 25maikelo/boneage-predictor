@@ -107,7 +107,7 @@ El script agrupa adicionalmente por rangos con significado clínico estandarizad
 
 ```bash
 cd /lustre/home/mlozano/boneage-predictor
-for exp in 33 34 36 37 38 39 40 41 44 45 46; do
+for exp in 33 34 35 36 37 38 39 40 41 42 43 44 45 46; do
   sbatch slurm/10_age_range_analysis.slurm $exp 12 both
 done
 ```

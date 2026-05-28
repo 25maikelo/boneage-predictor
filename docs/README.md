@@ -35,6 +35,7 @@
 | [resultados.md](results/resultados.md) | Tabla resumen de todos los experimentos con podio y hallazgos principales |
 | [resumen_evaluacion.md](results/resumen_evaluacion.md) | Resultados detallados: scripts 07/08/09/10, ranking global, análisis por segmento y rango de edad, conclusiones |
 | [experiments_summary.md](results/experiments_summary.md) | Historial completo por experimento: configuración, MAE CV por segmento, estado, línea de tiempo de código |
+| [optimizacion.md](results/optimizacion.md) | **Documento vivo** — experimentos de optimización Fase 6 (exps 47+): género, LR, fine-tuning depth, imagen, datos clínicos |
 
 ---
 

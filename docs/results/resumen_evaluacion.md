@@ -51,36 +51,41 @@
 
 ## 3. Análisis por rango de edad (script 10)
 
-> ⚠️ **Resultados en regeneración.** Se detectó un bug en el parser del dataset MEX (edades con coma decimal y en años, no meses) que afectaba a 25/100 registros y causaba conversión incorrecta en los 75 restantes. El fix está aplicado en `src/10_age_range_analysis.py` y los 11 jobs se relanzaron el 2026-05-28 (SLURM 550088–550098). Los datos de esta sección serán válidos una vez terminen.
+> Resultados corregidos 2026-05-28. Fix aplicado en `src/10_age_range_analysis.py`: el dataset MEX ahora usa 100/100 registros con edades correctamente convertidas a meses (antes: 75/100, con conversión errónea de años). Los sesgos combinados (RSNA+MEX) difieren de los sesgos RSNA-only de la sección 1.
 
-| Exp | Tipo | Dataset | Mejor rango | Peor rango | ±12m | Sesgo |
-|-----|------|---------|-------------|------------|------|-------|
-| 33 | `simple_cnn` | recortado | 36–48 m (3–4 a) | 228–240 m (19–20 a) | 11.8% | −31.6 m |
-| 36 | `simple_cnn` | completo | 36–48 m (3–4 a) | 228–240 m (19–20 a) | 22.5% | −20.2 m |
-| 39 | `simple_cnn` | balanceado | 36–48 m (3–4 a) | 228–240 m (19–20 a) | 9.2% | −35.8 m |
-| 42 | `simple_cnn` | completo+libre | 72–84 m (6–7 a) | 12–24 m (1–2 a) | 30.7% | −11.0 m |
-| 34 | `backbone` | recortado | 96–108 m (8–9 a) | 12–24 m (1–2 a) | 50.9% | +0.8 m |
-| 37 | `backbone` | completo | 96–108 m (8–9 a) | 12–24 m (1–2 a) | 48.9% | +1.3 m |
-| 40 | `backbone` | balanceado | 96–108 m (8–9 a) | 12–24 m (1–2 a) | 47.1% | −0.7 m |
-| 35 | `bbone_vec` | recortado | 36–48 m (3–4 a) | 228–240 m (19–20 a) | 14.7% | −28.0 m |
-| 38 | `bbone_vec` | completo | 36–48 m (3–4 a) | 228–240 m (19–20 a) | 13.4% | −31.6 m |
-| 41 | `bbone_vec` | balanceado | 36–48 m (3–4 a) | 228–240 m (19–20 a) | 15.5% | −26.5 m |
-| 43 | `bbone_vec` | completo+libre | 48–60 m (4–5 a) | 12–24 m (1–2 a) | 28.8% | −12.8 m |
-| 44 | `unified_cnn` | recortado | 96–108 m (8–9 a) | 12–24 m (1–2 a) | 35.9% | −1.8 m |
-| 45 | `unified_cnn` | completo | 96–108 m (8–9 a) | 228–240 m (19–20 a) | 24.3% | −18.5 m |
-| 46 | `unified_cnn` | balanceado | 96–108 m (8–9 a) | 12–24 m (1–2 a) | 35.3% | +0.9 m |
+| Exp | Tipo | Dataset | Mejor rango | Peor rango | ±12m | Sesgo combinado |
+|-----|------|---------|-------------|------------|------|-----------------|
+| 33 | `simple_cnn` | recortado | 36–48 m (3–4 a) | 228–240 m (19–20 a) | 12.6% | −37.4 m |
+| 36 | `simple_cnn` | completo | 60–72 m (5–6 a) | 228–240 m (19–20 a) | 24.1% | −25.7 m |
+| 39 | `simple_cnn` | balanceado | 36–48 m (3–4 a) | 228–240 m (19–20 a) | 9.9% | −41.5 m |
+| 42 | `simple_cnn` | completo+libre | 72–84 m (6–7 a) | 228–240 m (19–20 a) | 31.6% | −16.7 m |
+| 34 | `backbone` | recortado | 96–108 m (8–9 a) | 0–12 m (0–1 a)¹ | 53.2% | −4.9 m |
+| 37 | `backbone` | completo | 96–108 m (8–9 a) | 228–240 m (19–20 a) | 50.9% | −4.4 m |
+| 40 | `backbone` | balanceado | 96–108 m (8–9 a) | 228–240 m (19–20 a) | 49.1% | −6.4 m |
+| 35 | `bbone_vec` | recortado | 48–60 m (4–5 a) | 228–240 m (19–20 a) | 15.8% | −33.6 m |
+| 38 | `bbone_vec` | completo | 36–48 m (3–4 a) | 228–240 m (19–20 a) | 14.3% | −37.2 m |
+| 41 | `bbone_vec` | balanceado | 48–60 m (4–5 a) | 228–240 m (19–20 a) | 16.4% | −32.2 m |
+| 43 | `bbone_vec` | completo+libre | 12–24 m (1–2 a)² | 228–240 m (19–20 a) | 30.6% | −18.5 m |
+| 44 | `unified_cnn` | recortado | 96–108 m (8–9 a) | 228–240 m (19–20 a) | 37.4% | −7.5 m |
+| 45 | `unified_cnn` | completo | 0–12 m (0–1 a)¹ | 228–240 m (19–20 a) | 25.4% | −24.1 m |
+| 46 | `unified_cnn` | balanceado | 108–120 m (9–10 a) | 228–240 m (19–20 a) | 36.9% | −4.8 m |
 
-### Patrón de sesgo por arquitectura
+> ¹ Bin con solo 2 imágenes (RSNA val: 3 m y 6 m) — estadísticamente no representativo.
+> ² Bin con 11 imágenes — muestra pequeña.
+
+### Patrón de sesgo por arquitectura (RSNA+MEX combinados)
 
 | Arquitectura | Sesgo típico | Patrón |
 |---|---|---|
-| `simple_cnn` (congelado) | −20 a −36 m | Subestima sistemáticamente |
-| `simple_cnn` (libre) | −11 m | Mejora notable al descongelar |
-| `backbone` | ±1 m | Mejor calibrado — casi sin sesgo |
-| `bbone_vec` (congelado) | −26 a −32 m | Subestima sistemáticamente |
-| `bbone_vec` (libre) | −13 m | Mejora notable al descongelar |
-| `unified_cnn` (recortado/bal.) | ±2 m | Comparable a `backbone` |
-| `unified_cnn` (completo) | −18.5 m | Dataset completo introduce sesgo |
+| `simple_cnn` (congelado) | −26 a −42 m | Subestima sistemáticamente |
+| `simple_cnn` (libre) | — | Pendiente rerun |
+| `backbone` | −4 a −7 m | Leve subestimación al combinar con MEX |
+| `bbone_vec` (congelado) | −32 a −37 m | Subestima sistemáticamente |
+| `bbone_vec` (libre) | — | Pendiente rerun |
+| `unified_cnn` (recortado/bal.) | −5 a −8 m | Comparable a `backbone` |
+| `unified_cnn` (completo) | −24 m | Dataset completo introduce sesgo |
+
+**Cambio clave vs. análisis anterior:** el peor rango para `backbone` y `unified_cnn` es ahora **228–240 m (adolescentes tardíos)**, no 12–24 m. El resultado anterior estaba distorsionado por el bug del MEX que concentraba casos con edades erróneas en rangos bajos.
 
 ---
 

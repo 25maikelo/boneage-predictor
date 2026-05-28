@@ -2,14 +2,14 @@
   "experiment": 34,
   "bin_size": 12,
   "dataset": "both",
-  "n_total": 1500,
-  "n_ok": 1467,
+  "n_total": 1525,
+  "n_ok": 1492,
   "n_failed": 33,
-  "global_mae": 19.47,
-  "global_bias": 0.81,
-  "global_rmse": 33.51,
-  "within_12m_pct": 50.9,
-  "within_24m_pct": 78.8,
+  "global_mae": 14.35,
+  "global_bias": -4.86,
+  "global_rmse": 19.4,
+  "within_12m_pct": 53.2,
+  "within_24m_pct": 82.5,
   "best_range": "96\u2013108 m (8\u20139 a)",
-  "worst_range": "12\u201324 m (1\u20132 a)"
+  "worst_range": "0\u201312 m (0\u20131 a)"
 }

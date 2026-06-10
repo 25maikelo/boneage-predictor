@@ -1,16 +1,19 @@
 # Experimentos de Optimización — Fase 6 (Exps 47+)
 
 > Documento vivo: se llena a medida que completan los experimentos.
-> Baselines: **Exp 34** (`backbone`) y **Exp 43** (`backbone_vectors` libre) — los mejores de cada arquitectura.
+> Baselines: **Exp 37** (`backbone`, completo) y **Exp 43** (`backbone_vectors` libre, completo) — todos los experimentos nuevos usan `AGE_RANGE=(1,228)` para que ambas arquitecturas sean comparables sobre el mismo dataset.
 
 ---
 
 ## Baselines de referencia
 
-| Exp | Arquitectura | Dataset | Val MAE | Mex MAE | ±12m | Sesgo |
-|-----|-------------|---------|:-------:|:-------:|:----:|:-----:|
-| **34** | `backbone` | recortado | **14.6 m** | 17.6 m | 50.9% | +0.8 m |
-| **43** | `backbone_vectors` libre | completo | **23.0 m** | 18.5 m | 28.8% | −12.8 m |
+| Exp | Arquitectura | Dataset | Val MAE | Mex MAE | Fusión MAE | ±12m | Sesgo |
+|-----|-------------|---------|:-------:|:-------:|:----------:|:----:|:-----:|
+| **34** *(referencia histórica)* | `backbone` | recortado | 14.6 m | 17.6 m | 9.2 m | 50.9% | +0.8 m |
+| **37** | `backbone` | completo | **15.4 m** | 16.7 m | 6.8 m | 48.9% | +1.3 m |
+| **43** | `backbone_vectors` libre | completo | **23.0 m** | 18.5 m | 17.3 m | 28.8% | −12.8 m |
+
+> **Nota:** Exp 34 (recortado) es el ganador global por MAE en RSNA, pero usa `AGE_RANGE=(24,216)`, distinto del dataset de `backbone_vectors` (completo). Para que las ablaciones de género, LR y épocas sean comparables entre ambas arquitecturas sobre el mismo dataset, se adoptó **Exp 37** (completo) como baseline de `backbone`. Se mantiene Exp 34 como referencia histórica del mejor resultado absoluto.
 
 ---
 
@@ -21,37 +24,41 @@
 
 | Exp | Arquitectura | USE_GENDER | Val MAE | Mex MAE | ±12m | Sesgo | Δ vs baseline |
 |-----|-------------|:----------:|:-------:|:-------:|:----:|:-----:|:-------------:|
-| 34 | `backbone` | True *(baseline)* | 14.6 m | 17.6 m | 50.9% | +0.8 m | — |
-| ⏳ 47 | `backbone` | **False** | — | — | — | — | — |
+| 37 | `backbone` | True *(baseline)* | 15.4 m | 16.7 m | 48.9% | +1.3 m | — |
+| ✅ 47 | `backbone` | **False** | — | — | — | — | — |
 | 43 | `backbone_vectors` libre | True *(baseline)* | 23.0 m | 18.5 m | 28.8% | −12.8 m | — |
-| ⏳ 48 | `backbone_vectors` libre | **False** | — | — | — | — | — |
+| ✅ 48 | `backbone_vectors` libre | **False** | — | — | — | — | — |
 
 ---
 
 ## 2.2 · Experimento de LR y épocas de fusión
 
-**Pregunta:** ¿El LR de fusión actual (5e-4 / 20 épocas) es óptimo?
+**Pregunta:** ¿El LR de fusión actual (1e-3 / 20 épocas) es óptimo?
 **Variable cambiada:** `LEARNING_RATE` y `FUSION_EPOCHS`
 
-### backbone (base: Exp 34)
+> El baseline real (37/43) usa LR=1e-3. Por eso esta ablación cubre dos preguntas distintas:
+> - **¿LR menor?** → exp 49/51 (1e-4, también con menos épocas)
+> - **¿Más épocas con el mismo LR?** → exp 50/52 (1e-3, igual que baseline, pero 30 épocas)
 
-| Exp | LR fusión | Épocas fusión | Val MAE | Mex MAE | ±12m | Sesgo | Δ vs 34 |
+### backbone (base: Exp 37)
+
+| Exp | LR fusión | Épocas fusión | Val MAE | Mex MAE | ±12m | Sesgo | Δ vs 37 |
 |-----|:---------:|:-------------:|:-------:|:-------:|:----:|:-----:|:-------:|
-| 34 | 5e-4 *(baseline)* | 20 | 14.6 m | 17.6 m | 50.9% | +0.8 m | — |
+| 37 | 1e-3 *(baseline)* | 20 | 15.4 m | 16.7 m | 48.9% | +1.3 m | — |
 | ⏳ 49 | **1e-4** | **10** | — | — | — | — | — |
-| ⏳ 50 | **1e-3** | **30** | — | — | — | — | — |
-| ⏳ 51 | *intermedio* | *intermedio* | — | — | — | — | — |
+| ⏳ 50 | 1e-3 *(igual)* | **30** | — | — | — | — | — |
+| — | *intermedio* | *intermedio* | — | — | — | — | — |
 
 ### backbone_vectors (base: Exp 43)
 
 | Exp | LR fusión | Épocas fusión | Val MAE | Mex MAE | ±12m | Sesgo | Δ vs 43 |
 |-----|:---------:|:-------------:|:-------:|:-------:|:----:|:-----:|:-------:|
-| 43 | 5e-4 *(baseline)* | 20 | 23.0 m | 18.5 m | 28.8% | −12.8 m | — |
-| ⏳ 52 | **1e-4** | **10** | — | — | — | — | — |
-| ⏳ 53 | **1e-3** | **30** | — | — | — | — | — |
-| ⏳ 54 | *intermedio* | *intermedio* | — | — | — | — | — |
+| 43 | 1e-3 *(baseline)* | 20 | 23.0 m | 18.5 m | 28.8% | −12.8 m | — |
+| ✅ 51 | **1e-4** | **10** | — | — | — | — | — |
+| ✅ 52 | 1e-3 *(igual)* | **30** | — | — | — | — | — |
+| — | *intermedio* | *intermedio* | — | — | — | — | — |
 
-> Solo se agregan puntos intermedios (51, 54) si los extremos muestran señal clara de mejora.
+> Solo se agregan puntos intermedios si los extremos muestran señal clara de mejora.
 
 ---
 
@@ -63,7 +70,7 @@
 
 | Exp | Arquitectura | IMAGE_SIZE | Val MAE | Mex MAE | ±12m | Sesgo | Δ vs baseline |
 |-----|-------------|:----------:|:-------:|:-------:|:----:|:-----:|:-------------:|
-| 34 | `backbone` | 112×112 *(baseline)* | 14.6 m | 17.6 m | 50.9% | +0.8 m | — |
+| 37 | `backbone` | 112×112 *(baseline)* | 15.4 m | 16.7 m | 48.9% | +1.3 m | — |
 | ⏳ 55 | `backbone` | **224×224** | — | — | — | — | — |
 | 43 | `backbone_vectors` | 112×112 *(baseline)* | 23.0 m | 18.5 m | 28.8% | −12.8 m | — |
 | ⏳ 56 | `backbone_vectors` | **224×224** | — | — | — | — | — |
@@ -87,8 +94,8 @@
 
 | Prioridad | Experimento | Exps | Costo aprox. | Condición |
 |:---------:|-------------|------|:------------:|-----------|
-| 1 | Género | 47, 48 | ~80 h | Siempre |
-| 2 | LR extremos | 49–53 | ~160 h | Siempre |
-| 3 | LR intermedio | 51, 54 | ~80 h | Si hay señal en extremos |
+| 1 | Género | 47, 48 | ~30 h | Siempre |
+| 2 | LR extremos / épocas | 49, 50, 51, 52 | ~80 h | Siempre |
+| 3 | LR/épocas intermedio | TBD | ~40 h | Si hay señal en extremos |
 | 4 | Imagen 224×224 | 55, 56 | ~160 h | Si 1–3 saturados |
 | 5 | Datos clínicos | TBD | variable | Sujeto a disponibilidad |

@@ -131,14 +131,20 @@ Entrena 4 modelos de segmento (uno por región anatómica) con K-Fold CV, luego 
 
 **Fases:**
 1. **Segmentos** — `EPOCHS_SEGMENT` épocas × 5 folds por segmento (4 segmentos)
-2. **Fusión** — `FUSION_EPOCHS` épocas con extractores congelados
-3. **Fine-tuning** — `FINE_TUNING_EPOCHS` épocas con modelo completo
+2. **Fusión** — `FUSION_EPOCHS` épocas
+3. **Fine-tuning** — `FINE_TUNING_EPOCHS` épocas con LR/10
+
+> **Extractores congelados durante la fusión:** depende de `MODEL_TYPE` y `FREEZE_EXTRACTORS`.
+> - `simple_cnn` / `backbone_vectors`: extractores congelados si `FREEZE_EXTRACTORS=True` (default); se descongelan en fine-tuning (`simple_cnn`) o permanecen según el flag (`backbone_vectors`).
+> - `backbone`: `FREEZE_EXTRACTORS` no aplica (N/A) — toda la red (extractores + fusión) se entrena conjuntamente desde el inicio de la fase de fusión.
 
 **Entrada:**
-`data/images/segmented/`, `data/training/dataset_analysis/balanced_dataset.csv`
+`data/images/segmented/`, CSV definido por `DATASET_PATH` (filtrado por `AGE_RANGE`)
 
 **Salida:**
 `experiments/N/models/`, `experiments/N/training_history/`
+
+> **Nota:** por defecto `DATASET_PATH` es `data/training/boneage-training-dataset.csv` (raw). Los experimentos "balanceado" (39–41, 46) sobreescriben `DATASET_PATH` para usar `balanced_dataset.csv` (generado por el script 05).
 
 ---
 

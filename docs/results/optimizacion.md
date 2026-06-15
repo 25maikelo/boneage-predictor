@@ -22,12 +22,12 @@
 **Pregunta:** ¿Es el género indispensable en estas arquitecturas?
 **Variable cambiada:** `USE_GENDER = False` (todo lo demás igual al baseline)
 
-| Exp | Arquitectura | USE_GENDER | Val MAE | Mex MAE | ±12m | Sesgo | Δ vs baseline |
-|-----|-------------|:----------:|:-------:|:-------:|:----:|:-----:|:-------------:|
+| Exp | Arquitectura | USE_GENDER | Val MAE | Mex MAE | ±12m | Sesgo | Δ Val MAE |
+|-----|-------------|:----------:|:-------:|:-------:|:----:|:-----:|:---------:|
 | 37 | `backbone` | True *(baseline)* | 15.4 m | 16.7 m | 48.9% | +1.3 m | — |
-| ✅ 47 | `backbone` | **False** | — | — | — | — | — |
+| ✅ 47 | `backbone` | **False** | 16.5 m | 16.9 m | 48.0% | −4.0 m | +1.1 m ↑ |
 | 43 | `backbone_vectors` libre | True *(baseline)* | 23.0 m | 18.5 m | 28.8% | −12.8 m | — |
-| ✅ 48 | `backbone_vectors` libre | **False** | — | — | — | — | — |
+| ✅ 48 | `backbone_vectors` libre | **False** | 18.5 m | 16.2 m | 41.5% | −9.9 m | **−4.5 m ↓** |
 
 ---
 
@@ -42,20 +42,20 @@
 
 ### backbone (base: Exp 37)
 
-| Exp | LR fusión | Épocas fusión | Val MAE | Mex MAE | ±12m | Sesgo | Δ vs 37 |
-|-----|:---------:|:-------------:|:-------:|:-------:|:----:|:-----:|:-------:|
+| Exp | LR fusión | Épocas fusión | Val MAE | Mex MAE | ±12m | Sesgo | Δ Val MAE |
+|-----|:---------:|:-------------:|:-------:|:-------:|:----:|:-----:|:---------:|
 | 37 | 1e-3 *(baseline)* | 20 | 15.4 m | 16.7 m | 48.9% | +1.3 m | — |
-| ⏳ 49 | **1e-4** | **10** | — | — | — | — | — |
-| ⏳ 50 | 1e-3 *(igual)* | **30** | — | — | — | — | — |
+| ✅ 49 | **1e-4** | **10** | 17.4 m | 17.0 m | 44.1% | −9.3 m | +2.0 m ↑ |
+| ✅ 50 | 1e-3 *(igual)* | **30** | 16.8 m | 16.5 m | 48.0% | −3.7 m | +1.4 m ↑ |
 | — | *intermedio* | *intermedio* | — | — | — | — | — |
 
 ### backbone_vectors (base: Exp 43)
 
-| Exp | LR fusión | Épocas fusión | Val MAE | Mex MAE | ±12m | Sesgo | Δ vs 43 |
-|-----|:---------:|:-------------:|:-------:|:-------:|:----:|:-----:|:-------:|
+| Exp | LR fusión | Épocas fusión | Val MAE | Mex MAE | ±12m | Sesgo | Δ Val MAE |
+|-----|:---------:|:-------------:|:-------:|:-------:|:----:|:-----:|:---------:|
 | 43 | 1e-3 *(baseline)* | 20 | 23.0 m | 18.5 m | 28.8% | −12.8 m | — |
-| ✅ 51 | **1e-4** | **10** | — | — | — | — | — |
-| ✅ 52 | 1e-3 *(igual)* | **30** | — | — | — | — | — |
+| ✅ 51 | **1e-4** | **10** | 19.0 m | 16.1 m | 39.6% | −12.7 m | **−4.0 m ↓** |
+| ✅ 52 | 1e-3 *(igual)* | **30** | 26.2 m | 20.0 m | 26.5% | −24.0 m | +3.2 m ↑↑ |
 | — | *intermedio* | *intermedio* | — | — | — | — | — |
 
 > Solo se agregan puntos intermedios si los extremos muestran señal clara de mejora.

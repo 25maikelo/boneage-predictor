@@ -62,6 +62,20 @@
 
 ---
 
+## 2.2b · Combinación género + LR (`backbone_vectors`)
+
+**Pregunta:** ¿La mejora de quitar género (exp 48, −4.5m) y la mejora de LR bajo (exp 51, −4.0m) son aditivas?
+**Variables cambiadas:** `USE_GENDER=False` + `LEARNING_RATE=1e-4` + `FUSION_EPOCHS=10`
+
+| Exp | USE_GENDER | LR | Épocas | Val MAE | Mex MAE | ±12m | Sesgo | Δ vs 43 |
+|-----|:----------:|:--:|:------:|:-------:|:-------:|:----:|:-----:|:-------:|
+| 43 | True *(base)* | 1e-3 | 20 | 23.0 m | 18.5 m | 28.8% | −12.8 m | — |
+| 48 | **False** | 1e-3 | 20 | 18.5 m | 16.2 m | 41.5% | −9.9 m | −4.5 m |
+| 51 | True | **1e-4** | **10** | 19.0 m | 16.1 m | 39.6% | −12.7 m | −4.0 m |
+| ✅ 53 | **False** | **1e-4** | **10** | 18.3 m | 17.1 m | 41.3% | −11.7 m | −4.7 m |
+
+---
+
 ## 2.3 · Experimento de tamaño de imagen (`IMAGE_SIZE`)
 
 **Pregunta:** ¿224×224 mejora respecto a 112×112?
@@ -72,8 +86,8 @@
 |-----|-------------|:----------:|:-------:|:-------:|:----:|:-----:|:-------------:|
 | 37 | `backbone` | 112×112 *(baseline)* | 15.4 m | 16.7 m | 48.9% | +1.3 m | — |
 | ⏳ 55 | `backbone` | **224×224** | — | — | — | — | — |
-| 43 | `backbone_vectors` | 112×112 *(baseline)* | 23.0 m | 18.5 m | 28.8% | −12.8 m | — |
-| ⏳ 56 | `backbone_vectors` | **224×224** | — | — | — | — | — |
+| 48 | `backbone_vectors` libre | 112×112 *(mejor bbone_vec)* | 18.5 m | 16.2 m | 41.5% | −9.9 m | — |
+| ⏳ 56 | `backbone_vectors` libre | **224×224** | — | — | — | — | — |
 
 ---
 

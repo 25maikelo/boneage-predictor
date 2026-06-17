@@ -5,6 +5,8 @@
 # Pregunta: ¿imágenes más grandes mejoran la predicción en backbone?
 # Comparar contra Exp 37 (Val MAE=15.4m, Mex MAE=16.7m)
 # NOTA: tiempo estimado ~30-45h — monitorear límite de 4 días
+# NOTA 2: BATCH_SIZE reducido a 8 (32 causó OOM en fusión — 4 DenseNet121
+#         224x224 simultáneos no caben en GPU con batch=32; segmentos sí)
 # ============================================================
 
 MODEL_TYPE = "backbone"
@@ -15,7 +17,7 @@ DENSE_UNITS = 256
 DROPOUT_RATE = 0.5
 NUM_LAYERS_UNFREEZE = 10
 
-BATCH_SIZE = 32
+BATCH_SIZE = 8
 EPOCHS_SEGMENT = 15
 FUSION_EPOCHS = 20
 FINE_TUNING_EPOCHS = 10

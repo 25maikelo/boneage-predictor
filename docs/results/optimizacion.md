@@ -84,10 +84,12 @@
 
 | Exp | Arquitectura | IMAGE_SIZE | Val MAE | Mex MAE | ±12m | Sesgo | Δ vs baseline |
 |-----|-------------|:----------:|:-------:|:-------:|:----:|:-----:|:-------------:|
-| 37 | `backbone` | 112×112 *(baseline)* | 15.4 m | 16.7 m | 48.9% | +1.3 m | — |
-| ⏳ 55 | `backbone` | **224×224** | — | — | — | — | — |
+| 37 | `backbone` | 112×112 *(baseline)* | 15.3 m | 16.7 m | 51.5% | −5.6 m | — |
+| ✅ 55 | `backbone` | **224×224** | **13.4 m** 🥇 | 17.4 m | 58.3% | −6.7 m | **−1.9 m** ↓ |
 | 48 | `backbone_vectors` libre | 112×112 *(mejor bbone_vec)* | 18.5 m | 16.2 m | 41.5% | −9.9 m | — |
-| ⏳ 56 | `backbone_vectors` libre | **224×224** | — | — | — | — | — |
+| ✅ 56 | `backbone_vectors` libre | **224×224** | 15.5 m | 18.3 m | 49.4% | −6.0 m | **−3.0 m** ↓ |
+
+> **Patrón:** la imagen 224×224 mejora considerablemente RSNA en ambas arquitecturas (−1.9m y −3.0m), pero **empeora MEX** (+0.7m y +2.1m) — posible sobreajuste a las características de imagen de RSNA a mayor resolución, en detrimento de la generalización al dataset mexicano. Exp 55 es el nuevo mejor resultado global en RSNA (13.4m).
 
 ---
 
@@ -113,3 +115,32 @@
 | 3 | LR/épocas intermedio | TBD | ~40 h | Si hay señal en extremos |
 | 4 | Imagen 224×224 | 55, 56 | ~160 h | Si 1–3 saturados |
 | 5 | Datos clínicos | TBD | variable | Sujeto a disponibilidad |
+
+---
+
+## Tabla de referencia final — las 4 métricas por experimento
+
+> Consolida, para cada experimento, las cuatro métricas de MAE relevantes:
+> - **MAE Train** — error sobre el 80% de entrenamiento (último epoch de fusión+FT)
+> - **MAE Test interno** — error sobre el 20% reservado del mismo CSV de origen (`TEST_SPLIT=0.2`)
+> - **RSNA MAE** — dataset de validación externo e independiente (script 07, 1,393 imgs nunca vistas)
+> - **MEX MAE** — dataset mexicano externo (script 08, 98–100 imgs, otra población/equipo)
+>
+> En casi todos los experimentos, MAE Test interno < RSNA MAE: el holdout interno (mismo origen de datos) subestima el error real en un dataset verdaderamente externo.
+
+| Exp | Descripción | MAE Train | MAE Test interno | RSNA MAE | MEX MAE |
+|:---:|-------------|:---------:|:-----------------:|:--------:|:-------:|
+| 34 | `backbone` recortado *(hist.)* | 16.6 m | 9.2 m | 14.6 m | 17.6 m |
+| **37** | `backbone` completo *(base)* | 16.9 m | 6.8 m | 15.3 m | 16.7 m |
+| **43** | `backbone_vectors` libre *(base)* | 25.0 m | 17.3 m | 23.0 m | 18.5 m |
+| 47 | backbone, sin género | 16.4 m | 10.9 m | 16.5 m | 16.9 m |
+| 48 | bbone_vec, sin género | 17.7 m | 12.9 m | 18.5 m | 16.2 m |
+| 49 | backbone, LR=1e-4/10ep | 18.3 m | 11.5 m | 17.4 m | 17.0 m |
+| 50 | backbone, 30 épocas | 17.7 m | 9.5 m | 16.8 m | 16.5 m |
+| 51 | bbone_vec, LR=1e-4/10ep | 16.4 m | 14.9 m | 19.0 m | 16.1 m |
+| 52 | bbone_vec, 30 épocas | 26.7 m | 21.6 m | 26.2 m | 20.0 m |
+| 53 | bbone_vec, sin género + LR=1e-4 | 15.9 m | 12.7 m | 18.3 m | 17.1 m |
+| **55** | backbone, 224×224 | **13.9 m** | **8.1 m** | **13.4 m** 🥇 | 17.4 m |
+| **56** | bbone_vec, 224×224 | 16.0 m | 12.9 m | 15.5 m | 18.3 m |
+
+**Mejor RSNA:** Exp 55 (13.4m). **Mejor MEX:** Exp 51 (16.1m). Si se prioriza generalización clínica (MEX) sobre RSNA, Exp 37 (112×112) sigue siendo la opción más equilibrada.

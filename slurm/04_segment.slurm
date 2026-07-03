@@ -13,4 +13,4 @@ conda activate boneage_gpu
 mkdir -p logs
 cd /lustre/home/mlozano/boneage-predictor
 echo "Directorio de trabajo: $(pwd)"
-python src/preprocessing/04_segment_images.py
+python src/preprocessing/04_segment_images.py "$@"

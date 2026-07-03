@@ -111,6 +111,45 @@ def segment_spatial(img, model, segments_order):
     return segments
 
 
+def segment_crop_bbox(img, model, segments_order, padding_ratio=0.15):
+    """Igual que segment_spatial, pero recorta cada segmento a su bounding box
+    (+ padding relativo), sin preservar la posición espacial original.
+    Espejo de apply_mask_crop_bbox en src/preprocessing/04_segment_images.py."""
+    h0, w0 = img.shape
+    rgb = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+    inp = cv2.resize(rgb, (224, 224)) / 255.0
+    pred = model.predict(inp[np.newaxis, ...], verbose=0)[0]
+    mask = np.argmax(pred, axis=-1).astype(np.uint8)
+    mask = cv2.resize(mask, (w0, h0), interpolation=cv2.INTER_NEAREST)
+    orig3 = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+    segments = {}
+    for cid, name in enumerate(segments_order, start=1):
+        m = (mask == cid).astype(np.uint8)
+        ys, xs = np.where(m > 0)
+        if len(xs) == 0 or len(ys) == 0:
+            segments[name] = np.zeros((1, 1, 3), dtype=np.uint8)
+            continue
+        x0, x1 = int(xs.min()), int(xs.max())
+        y0, y1 = int(ys.min()), int(ys.max())
+        pad_x = int(round((x1 - x0 + 1) * padding_ratio))
+        pad_y = int(round((y1 - y0 + 1) * padding_ratio))
+        x0, x1 = max(0, x0 - pad_x), min(w0 - 1, x1 + pad_x)
+        y0, y1 = max(0, y0 - pad_y), min(h0 - 1, y1 + pad_y)
+        m3 = np.repeat(m[:, :, None] * 255, 3, axis=2)
+        masked = np.where(m3 == 255, orig3, 0).astype(np.uint8)
+        segments[name] = masked[y0:y1 + 1, x0:x1 + 1]
+    return segments
+
+
+def get_segments(img, model, segments_order, cfg):
+    """Dispatcher: elige spatial o cropped según cfg.SEGMENT_MODE
+    (default 'spatial' — compatibilidad con experimentos existentes)."""
+    if getattr(cfg, "SEGMENT_MODE", "spatial") == "cropped":
+        padding = getattr(cfg, "SEGMENT_CROP_PADDING", 0.15)
+        return segment_crop_bbox(img, model, segments_order, padding_ratio=padding)
+    return segment_spatial(img, model, segments_order)
+
+
 def normalize_image(img):
     return img.astype("float32") / 255.0
 
@@ -278,7 +317,7 @@ def main():
             try:
                 zoomed = frame_and_zoom(gray)
                 eq = clahe_equalize(zoomed)
-                segments = segment_spatial(eq, seg_model, cfg.SEGMENTS_ORDER)
+                segments = get_segments(eq, seg_model, cfg.SEGMENTS_ORDER, cfg)
                 if any(np.sum(s) == 0 for s in segments.values()):
                     failed.append((sid, "empty_segment")); continue
             except Exception as e:

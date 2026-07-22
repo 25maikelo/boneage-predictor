@@ -1,0 +1,23 @@
+{
+    "image_size": [224, 224],
+    "batch_size": 32,
+    "epochs_base": 5,
+    "use_custom_pretrained": false,
+    "custom_pretrained_path": "../models/base_model.keras",
+    "age_range": [94, 168],
+    "dataset_path": "../training-data/dataset_analysis/balanced_dataset.csv",
+    "analysis_dataset_path": "../training-data/boneage-training-dataset.csv",
+    "images_folder": "../images/imagenes_ecualizadas",
+    "segments_folder": "../images/segmentos_spatial",
+    "model_save_path": "../models",
+    "segments_order": ["pinky", "middle", "thumb", "wrist"],
+    "learning_rate": 0.01,
+    "epochs_segment": 5,
+    "fusion_epochs": 5,
+    "fine_tuning_epochs": 5,
+    "test_split": 0.2,
+    "use_gender": true,
+    "use_augmentation": true, 
+    "loss_function": "attention_loss",
+    "base_model_choice": ""
+}

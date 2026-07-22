@@ -92,10 +92,10 @@ Introduce `simple_cnn`. Experimentos 29–32 son exploraciones con bugs o config
 
 | Exp | Estado | Tipo | Género | Img | Dataset | Val RSNA | Val MEX | Puede correr | Notas |
 |-----|--------|------|:------:|-----|---------|:--------:|:-------:|:------------:|-------|
-| 29 | ⬜ | `simple_cnn` | Sí | 112×112 | — | — | — | ⚠️ | Sin modelos — entrenamiento nunca corrió; falta DATASET_PATH |
+| 29 | ⬜ | `simple_cnn` | Sí | 112×112 | — | — | — | ✅ | Sin modelos — entrenamiento nunca corrió |
 | 30 | ⚠️ | `simple_cnn` | No | 112×112 | raw (24–216 m) | ~62K m | ~79K m | ✅ | MAE desbordado — bug por ausencia de género (segmentos divergen) |
-| 31 | 🟡 | `simple_cnn` | Sí | 112×112 | raw (24–216 m) | — | — | ⚠️ | Modelos CV, sin val; falta DATASET_PATH |
-| 32 | 🟡 | `backbone` (DenseNet121) | Sí | 112×112 | raw (24–216 m) | — | — | ⚠️ | Modelos CV, sin val; falta DATASET_PATH |
+| 31 | 🟡 | `simple_cnn` | Sí | 112×112 | raw (24–216 m) | — | — | ✅ | Modelos CV; validación nunca ejecutada |
+| 32 | 🟡 | `backbone` (DenseNet121) | Sí | 112×112 | raw (24–216 m) | — | — | ✅ | Modelos CV; validación nunca ejecutada |
 | 33 | ✅ | `simple_cnn` | Sí | 112×112 | recortado (24–216 m) | 39.2 m | 35.9 m | ✅ | Fix bug fusión género; referencia simple_cnn |
 | 34 | ✅ | `backbone` (DenseNet121) | Sí | 112×112 | recortado (24–216 m) | 14.6 m | 17.6 m | ✅ | Mejor backbone escalar |
 | 35 | ✅ | `backbone_vectors` (DenseNet121) | Sí | 112×112 | recortado (24–216 m) | 36.6 m | 23.4 m | ✅ | Primera versión backbone_vectors |
@@ -245,6 +245,6 @@ Solo incluye experimentos con validación RSNA + MEX válidas (MAE < 500 m).
 | 17–22 | 5 campos faltantes en config.py + modelos Keras 3.x incompatibles | Añadir campos + reentrenar si se necesitan resultados formales |
 | 24 | Val solo PNGs, sin `plot_data.json` | Re-correr `07_validation.py` actualizado |
 | 25 | Sin validación | Correr `07_validation.py` + `08_mex_validation.py` |
-| 29 | Sin modelos; falta DATASET_PATH | Añadir DATASET_PATH → reentrenar |
-| 31–32 | Modelos CV, sin val; falta DATASET_PATH | Añadir DATASET_PATH → correr validación |
+| 29 | Sin modelos (nunca entrenó) | Reentrenar si se necesitan resultados |
+| 31–32 | Modelos CV; validación nunca ejecutada | Correr `07_validation.py` + `08_mex_validation.py` |
 | 30 | MAE desbordado (~62K m) | Investigar causa o descartar (bug sin género en simple_cnn) |

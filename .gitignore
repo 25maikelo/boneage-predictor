@@ -29,7 +29,7 @@ experiments/*/training-history/
 experiments/*/validation_legacy/
 experiments/*/*.png
 experiments/*/*.bak
-*_corrupted_backup/
+experiments/*/corrupted_backup/
 
 # ============================================================
 # Python

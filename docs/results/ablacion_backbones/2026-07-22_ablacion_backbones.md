@@ -109,6 +109,6 @@ Las pruebas se realizan sobre la **intersección de IDs** comunes entre cada par
 
 | Archivo | Descripción |
 |---------|-------------|
-| `docs/results/ablacion_backbones_rsna.json` | Resultados completos prueba pareada RSNA |
-| `docs/results/ablacion_backbones_mex.json` | Resultados completos prueba pareada MEX |
+| `docs/results/ablacion_backbones/2026-07-22_ablacion_backbones_rsna.json` | Resultados completos prueba pareada RSNA |
+| `docs/results/ablacion_backbones/2026-07-22_ablacion_backbones_mex.json` | Resultados completos prueba pareada MEX |
 | `src/11_paired_validation.py` | Script reutilizable de prueba pareada y ablación |

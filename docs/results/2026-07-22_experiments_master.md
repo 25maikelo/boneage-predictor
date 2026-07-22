@@ -92,7 +92,7 @@ Introduce `simple_cnn`. Experimentos 29–32 son exploraciones con bugs o config
 
 | Exp | Estado | Tipo | Género | Img | Dataset | Val RSNA | Val MEX | Puede correr | Notas |
 |-----|--------|------|:------:|-----|---------|:--------:|:-------:|:------------:|-------|
-| 29 | ⬜ | `simple_cnn` | Sí | 112×112 | — | — | — | ✅ | Sin modelos — entrenamiento nunca corrió |
+| 29 | 🔶 | `simple_cnn` | Sí | 112×112 | ~48 m* | ~31.6 m* | ✅ | Completado en Windows; modelos no migrados al clúster; val sin `plot_data.json` |
 | 30 | ⚠️ | `simple_cnn` | No | 112×112 | raw (24–216 m) | ~62K m | ~79K m | ✅ | MAE desbordado — bug por ausencia de género (segmentos divergen) |
 | 31 | 🟡 | `simple_cnn` | Sí | 112×112 | raw (24–216 m) | — | — | ✅ | Modelos CV; validación nunca ejecutada |
 | 32 | 🟡 | `backbone` (DenseNet121) | Sí | 112×112 | raw (24–216 m) | — | — | ✅ | Modelos CV; validación nunca ejecutada |
@@ -163,6 +163,8 @@ Variables estudiadas: género, learning rate, épocas de fusión.
 | 51 | ✅ | `backbone_vectors` | Sí | **1e-4** | **10** | Sí | 19.0 m | 16.1 m | ✅ | ¿LR bajo estabiliza bbone_vec libre? |
 | 52 | ✅ | `backbone_vectors` | Sí | 1e-3 | **30** | Sí | 26.2 m | 20.0 m | ✅ | ¿Más épocas mejoran bbone_vec libre? |
 | 53 | ✅ | `backbone_vectors` | **No** | **1e-4** | **10** | Sí | 18.3 m | 17.1 m | ✅ | ¿Mejora aditiva de quitar género + LR bajo? |
+
+> *Exp 29: valores de los logs de Windows (script de validación antiguo, sin `plot_data.json`).
 
 > Exp 54 no existe (número reservado, nunca creado).  
 > Conclusiones de fase 7: quitar género no ayuda en backbone (16.5 vs 15.3); LR y épocas de fusión tienen impacto marginal; backbone_vectors sigue siendo ~3 m peor que backbone en RSNA.
@@ -245,6 +247,6 @@ Solo incluye experimentos con validación RSNA + MEX válidas (MAE < 500 m).
 | 17–22 | 5 campos faltantes en config.py + modelos Keras 3.x incompatibles | Añadir campos + reentrenar si se necesitan resultados formales |
 | 24 | Val solo PNGs, sin `plot_data.json` | Re-correr `07_validation.py` actualizado |
 | 25 | Sin validación | Correr `07_validation.py` + `08_mex_validation.py` |
-| 29 | Sin modelos (nunca entrenó) | Reentrenar si se necesitan resultados |
+| 29 | Modelos solo en Windows, val sin `plot_data.json` | Migrar modelos al clúster o reentrenar → re-validar con script actualizado |
 | 31–32 | Modelos CV; validación nunca ejecutada | Correr `07_validation.py` + `08_mex_validation.py` |
 | 30 | MAE desbordado (~62K m) | Investigar causa o descartar (bug sin género en simple_cnn) |

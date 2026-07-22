@@ -34,3 +34,11 @@ WARMUP_EPOCHS = 5
 WARMUP_INITIAL_LR = 1e-5
 
 SEGMENTS_ORDER = ["pinky", "middle", "thumb", "wrist"]
+
+MODEL_TYPE = "backbone"
+USE_CROSS_VALIDATION = False
+N_FOLDS = 5
+FREEZE_EXTRACTORS = True
+DATASET_PATH = "data/training/dataset_analysis/balanced_dataset.csv"
+SEGMENT_MODE = "spatial"
+SEGMENTATION_MODEL = "models/hand-detector/hand-detector_00/models/modelo_segmentacion.h5"

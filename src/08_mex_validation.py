@@ -358,7 +358,11 @@ def main():
     mae = np.mean(np.abs(np.array(preds) - np.array(trues))) if preds else np.nan
 
     # Guardar datos de scatter y resumen para regeneración multiidioma
-    _plot_data["scatter"] = {"trues": [float(v) for v in trues], "preds": [float(v) for v in preds]}
+    _plot_data["scatter"] = {
+        "ids": [r["id"] for r in rows],
+        "trues": [float(v) for v in trues],
+        "preds": [float(v) for v in preds],
+    }
     _plot_data["summary"] = {
         "processed": len(rows), "failed": len(failed), "mae": float(mae) if preds else None,
     }

@@ -211,6 +211,16 @@ def _load_seg_model_compat(path):
     return load_model(path, compile=False)
 
 
+def _resolve_model_path(base_path):
+    """Devuelve la ruta real del modelo: SavedModel dir o .keras, lo que exista."""
+    if os.path.exists(base_path):
+        return base_path
+    keras_path = base_path + ".keras"
+    if os.path.exists(keras_path):
+        return keras_path
+    raise OSError(f"No file or directory found at {base_path} (ni .keras)")
+
+
 def load_all_models(cfg, exp_dir):
     models_dir = os.path.join(exp_dir, "models")
     from config.paths import get_segmentation_model_path
@@ -233,17 +243,21 @@ def load_all_models(cfg, exp_dir):
 
     if model_type == "unified_cnn":
         segment_models = {}
-        fusion = load_model(os.path.join(models_dir, "unified_model"), custom_objects=LOSS_MAP)
+        fusion = load_model(_resolve_model_path(os.path.join(models_dir, "unified_model")),
+                            custom_objects=LOSS_MAP)
         fusion.compile(optimizer=opt, loss=loss_fn, metrics=["mae"])
     else:
         segment_models = {}
         for seg in cfg.SEGMENTS_ORDER:
-            path = os.path.join(models_dir, f"{seg}_model")
-            if os.path.exists(path):
-                m = load_model(path, custom_objects=LOSS_MAP)
+            base = os.path.join(models_dir, f"{seg}_model")
+            try:
+                m = load_model(_resolve_model_path(base), custom_objects=LOSS_MAP)
                 m.compile(optimizer=opt, loss=loss_fn, metrics=["mae"])
                 segment_models[seg] = m
-        fusion = load_model(os.path.join(models_dir, "fusion_model"), custom_objects=LOSS_MAP)
+            except OSError:
+                pass
+        fusion = load_model(_resolve_model_path(os.path.join(models_dir, "fusion_model")),
+                            custom_objects=LOSS_MAP)
         fusion.compile(optimizer=opt, loss=loss_fn, metrics=["mae"])
     return seg_model, segment_models, fusion
 
@@ -392,7 +406,11 @@ def main():
     mae = np.mean(np.abs(np.array(preds) - np.array(trues))) if preds else np.nan
 
     # Guardar datos de scatter y resumen para regeneración multiidioma
-    _plot_data["scatter"] = {"trues": [float(v) for v in trues], "preds": [float(v) for v in preds]}
+    _plot_data["scatter"] = {
+        "ids": [r["id"] for r in rows],
+        "trues": [float(v) for v in trues],
+        "preds": [float(v) for v in preds],
+    }
     _plot_data["summary"] = {
         "processed": len(rows), "failed": len(failed), "mae": float(mae) if preds else None,
         "time_preprocess": float(np.mean(times_log["preprocess"])) if times_log["preprocess"] else None,

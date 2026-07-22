@@ -24,6 +24,13 @@ logs/
 *.log
 experiments/*/quicktest_log/
 
+# Artefactos generados / carpetas heredadas en experimentos
+experiments/*/training-history/
+experiments/*/validation_legacy/
+experiments/*/*.png
+experiments/*/*.bak
+*_corrupted_backup/
+
 # ============================================================
 # Python
 # ============================================================

@@ -106,6 +106,23 @@ def bootstrap_paired_test(err_a, err_b, n_bootstrap: int = 10_000, seed: int = 4
     return delta_obs, ci_lo, ci_hi, p_value
 
 
+def holm_correction(p_values: list, alpha: float = 0.05):
+    """
+    Holm step-down correction (más potente que Bonferroni, mismo FWER).
+    Devuelve (adjusted_p_values, reject_flags).
+    NaN se trata como p=1.0 (no rechazar).
+    """
+    n = len(p_values)
+    if n == 0:
+        return [], []
+    arr = np.array([p if not np.isnan(p) else 1.0 for p in p_values])
+    order = np.argsort(arr)
+    adjusted = np.minimum(1.0, np.maximum.accumulate(arr[order] * np.arange(n, 0, -1)))
+    result = np.empty(n)
+    result[order] = adjusted
+    return result.tolist(), (result < alpha).tolist()
+
+
 def age_bin_label(lo, hi):
     return f"{lo//12}-{hi//12}a ({lo}-{hi}m)"
 
@@ -216,14 +233,12 @@ def main():
     # ── prueba pareada ─────────────────────────────────────────────────────────
     pairs = list(combinations(sorted(exp_ids), 2))
     n_pairs = len(pairs)
-    alpha_corrected = alpha / n_pairs  # Bonferroni
 
     results = []
     for (a, b) in pairs:
         err_a, err_b, common = paired_errors(datasets[a], datasets[b])
         mae_a = float(np.mean(err_a))
         mae_b = float(np.mean(err_b))
-        label = f"Exp{a}({exp_configs[a]}) vs Exp{b}({exp_configs[b]})"
         entry = {
             "exp_a": a, "backbone_a": exp_configs[a], "mae_a": mae_a,
             "exp_b": b, "backbone_b": exp_configs[b], "mae_b": mae_b,
@@ -233,24 +248,34 @@ def main():
         if test_mode in ("wilcoxon", "both"):
             stat, p_w = wilcoxon_test(err_a, err_b)
             r = rank_biserial(err_a, err_b) if not np.isnan(stat) else np.nan
-            entry.update({"wilcoxon_W": stat, "wilcoxon_p": p_w,
-                          "wilcoxon_p_corrected": float(p_w * n_pairs) if not np.isnan(p_w) else None,
-                          "wilcoxon_r": r,
-                          "wilcoxon_significant": bool(p_w < alpha_corrected)})
+            entry.update({"wilcoxon_W": stat, "wilcoxon_p": p_w, "wilcoxon_r": r})
 
         if test_mode in ("bootstrap", "both"):
             delta, ci_lo, ci_hi, p_b = bootstrap_paired_test(err_a, err_b, n_bootstrap)
             entry.update({"bootstrap_delta": delta, "bootstrap_ci_lo": ci_lo,
-                          "bootstrap_ci_hi": ci_hi, "bootstrap_p": p_b,
-                          "bootstrap_p_corrected": float(p_b * n_pairs),
-                          "bootstrap_significant": bool(p_b < alpha_corrected)})
+                          "bootstrap_ci_hi": ci_hi, "bootstrap_p": p_b})
 
         results.append(entry)
+
+    # ── corrección Holm (step-down) ───────────────────────────────────────────
+    if test_mode in ("wilcoxon", "both"):
+        w_pvals = [e.get("wilcoxon_p", 1.0) for e in results]
+        w_padj, w_sig = holm_correction(w_pvals, alpha)
+        for e, padj, sig in zip(results, w_padj, w_sig):
+            e["wilcoxon_p_corrected"] = round(padj, 6)
+            e["wilcoxon_significant"] = sig
+
+    if test_mode in ("bootstrap", "both"):
+        b_pvals = [e.get("bootstrap_p", 1.0) for e in results]
+        b_padj, b_sig = holm_correction(b_pvals, alpha)
+        for e, padj, sig in zip(results, b_padj, b_sig):
+            e["bootstrap_p_corrected"] = round(padj, 6)
+            e["bootstrap_significant"] = sig
 
     # ── imprimir Wilcoxon ──────────────────────────────────────────────────────
     if test_mode in ("wilcoxon", "both"):
         print(f"\n{'='*60}")
-        print(f"WILCOXON signed-rank (Bonferroni α={alpha}/{n_pairs}={alpha_corrected:.4f})\n")
+        print(f"WILCOXON signed-rank (Holm step-down, α={alpha}, n_comparaciones={n_pairs})\n")
         col_w = 16
         hdr = ["Par", "n", "MAE_A", "MAE_B", "W", "p", "p-corr", "r", "Sig?"]
         fmt = f"{{:<30}}{''.join(f'{{:>{col_w}}}' for _ in hdr[1:])}"
@@ -274,7 +299,7 @@ def main():
     # ── imprimir Bootstrap ─────────────────────────────────────────────────────
     if test_mode in ("bootstrap", "both"):
         print(f"\n{'='*60}")
-        print(f"BOOTSTRAP pareado (n={n_bootstrap:,}, Bonferroni α={alpha}/{n_pairs}={alpha_corrected:.4f})\n")
+        print(f"BOOTSTRAP pareado (n={n_bootstrap:,}, Holm step-down, α={alpha}, n_comparaciones={n_pairs})\n")
         col_w = 16
         hdr = ["Par", "n", "ΔMAE", "IC 95% lo", "IC 95% hi", "p", "p-corr", "Sig?"]
         fmt = f"{{:<30}}{''.join(f'{{:>{col_w}}}' for _ in hdr[1:])}"
@@ -300,7 +325,8 @@ def main():
             "experiments": {str(e): exp_configs[e] for e in exp_ids},
             "n_common": len(all_ids),
             "alpha": alpha,
-            "alpha_corrected": alpha_corrected,
+            "correction": "holm",
+            "n_comparaciones": n_pairs,
             "source": source,
             "test_mode": test_mode,
             "n_bootstrap": n_bootstrap if test_mode in ("bootstrap", "both") else None,

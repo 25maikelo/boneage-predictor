@@ -61,35 +61,39 @@ Variable cambiada: `BASE_MODEL_CHOICE` ∈ {resnet50, vgg16, densenet121, incept
 
 ## Pruebas estadísticas pareadas
 
-Método: **Wilcoxon signed-rank test** + **Bootstrap pareado** (n = 10,000 remuestreos).
-Corrección de comparaciones múltiples: **Bonferroni** (6 pares, α corregido = 0.05/6 = 0.0083).
+Método: **Wilcoxon signed-rank test** + **Bootstrap pareado** (n = 10,000 remuestreos).  
+Corrección de comparaciones múltiples: **Holm step-down** (6 pares, α = 0.05) — más potente que Bonferroni con el mismo control de FWER.  
 Las pruebas se realizan sobre la **intersección de IDs** comunes entre cada par de modelos.
+
+> ΔMAE = MAE(A) − MAE(B). Positivo = A es peor que B.  
+> Tamaño de efecto r: |r| > 0.1 pequeño · > 0.3 mediano · > 0.5 grande.  
+> Sig. = Wilcoxon / Bootstrap (ambos deben ser significativos para considerarse conclusivo).
 
 ### RSNA (n = 1,393 muestras comunes)
 
-| Par | ΔMAE (A−B) | IC 95% bootstrap | p (corregido) | Wilcoxon r | Significativo |
-|-----|:----------:|:----------------:|:-------------:|:----------:|:-------------:|
-| ResNet50 vs VGG16 | −21.0 m | [−22.3, −19.7] | < 0.001 | 0.887 | ✅ |
-| ResNet50 vs DenseNet121 | +2.0 m | [+1.4, +2.6] | < 0.001 | 0.603 | ✅ |
-| ResNet50 vs InceptionV3 | +2.6 m | [+1.9, +3.2] | < 0.001 | 0.614 | ✅ |
-| VGG16 vs DenseNet121 | +23.0 m | [+21.7, +24.3] | < 0.001 | 0.905 | ✅ |
-| VGG16 vs InceptionV3 | +23.6 m | [+22.3, +24.9] | < 0.001 | 0.915 | ✅ |
-| DenseNet121 vs InceptionV3 | +0.6 m | [−0.1, +1.2] | 0.387 | 0.530 | ❌ |
+| Par | ΔMAE | IC 95% | p Wilcoxon (Holm) | p Bootstrap (Holm) | r | Sig. |
+|-----|:----:|:------:|:-----------------:|:------------------:|:---:|:----:|
+| ResNet50 vs VGG16 | −21.0 m | [−22.3, −19.7] | < 0.001 | < 0.001 | 0.887 | ✅ ✅ |
+| ResNet50 vs DenseNet121 | +2.0 m | [+1.4, +2.6] | < 0.001 | < 0.001 | 0.603 | ✅ ✅ |
+| ResNet50 vs InceptionV3 | +2.6 m | [+1.9, +3.2] | < 0.001 | < 0.001 | 0.614 | ✅ ✅ |
+| VGG16 vs DenseNet121 | +23.0 m | [+21.7, +24.3] | < 0.001 | < 0.001 | 0.905 | ✅ ✅ |
+| VGG16 vs InceptionV3 | +23.6 m | [+22.3, +24.9] | < 0.001 | < 0.001 | 0.915 | ✅ ✅ |
+| **DenseNet121 vs InceptionV3** | **+0.59 m** | **[−0.05, +1.19]** | **0.050** | **0.065** | 0.530 | **✅ ❌** |
+
+> ⚠️ DenseNet121 vs InceptionV3: Wilcoxon y Bootstrap divergen. El IC bootstrap cruza el 0 y la diferencia (0.59 m) no tiene relevancia clínica — se interpreta como equivalencia práctica.
 
 ### MEX (n = 98 muestras comunes)
 
-| Par | ΔMAE (A−B) | IC 95% bootstrap | p (corregido) | Wilcoxon r | Significativo |
-|-----|:----------:|:----------------:|:-------------:|:----------:|:-------------:|
-| ResNet50 vs VGG16 | −11.5 m | [−16.6, −6.4] | 0.001 | 0.732 | ✅ |
-| ResNet50 vs DenseNet121 | −0.5 m | [−3.1, +2.1] | 4.255 | 0.506 | ❌ |
-| ResNet50 vs InceptionV3 | +0.3 m | [−2.7, +3.2] | 5.195 | 0.522 | ❌ |
-| VGG16 vs DenseNet121 | +11.0 m | [+5.8, +16.1] | < 0.001 | 0.736 | ✅ |
-| VGG16 vs InceptionV3 | +11.8 m | [+6.8, +16.6] | < 0.001 | 0.757 | ✅ |
-| DenseNet121 vs InceptionV3 | +0.8 m | [−1.7, +3.2] | 3.313 | 0.541 | ❌ |
+| Par | ΔMAE | IC 95% | p Wilcoxon (Holm) | p Bootstrap (Holm) | r | Sig. |
+|-----|:----:|:------:|:-----------------:|:------------------:|:---:|:----:|
+| ResNet50 vs VGG16 | −11.5 m | [−16.6, −6.4] | < 0.001 | < 0.001 | 0.732 | ✅ ✅ |
+| ResNet50 vs DenseNet121 | −0.5 m | [−3.1, +2.1] | 1.000 | 1.000 | 0.506 | ❌ ❌ |
+| ResNet50 vs InceptionV3 | +0.3 m | [−2.7, +3.2] | 1.000 | 1.000 | 0.522 | ❌ ❌ |
+| VGG16 vs DenseNet121 | +11.0 m | [+5.8, +16.1] | < 0.001 | < 0.001 | 0.736 | ✅ ✅ |
+| VGG16 vs InceptionV3 | +11.8 m | [+6.7, +16.6] | < 0.001 | < 0.001 | 0.757 | ✅ ✅ |
+| DenseNet121 vs InceptionV3 | +0.76 m | [−1.7, +3.2] | 1.000 | 1.000 | 0.541 | ❌ ❌ |
 
-> ΔMAE = MAE(A) − MAE(B). Valor positivo = A es peor que B.
-> Tamaño de efecto r: |r| > 0.1 pequeño, > 0.3 mediano, > 0.5 grande.
-> El menor n en MEX (98 vs 1,393) reduce el poder estadístico — por eso ResNet50 ya no se diferencia significativamente de DenseNet121/InceptionV3 en ese dataset.
+> El menor n en MEX (98 vs 1,393) reduce el poder estadístico: ResNet50, DenseNet121 e InceptionV3 son indistinguibles entre sí en este dataset.
 
 ---
 
@@ -97,11 +101,11 @@ Las pruebas se realizan sobre la **intersección de IDs** comunes entre cada par
 
 1. **VGG16 no es apto para esta tarea** — MAE 2.5× peor que los demás en RSNA, significativamente inferior en ambos datasets con efecto grande (r ≈ 0.73–0.92). Falla especialmente en edades extremas (0–6 y 12–19 años).
 
-2. **InceptionV3 y DenseNet121 son estadísticamente equivalentes** — la diferencia de 0.6 m en RSNA y 0.8 m en MEX no es significativa tras corrección de Bonferroni en ninguno de los dos datasets. El IC bootstrap cruza el 0 en ambos casos.
+2. **DenseNet121 e InceptionV3 son equivalentes** — la diferencia de 0.59 m en RSNA y 0.76 m en MEX no tiene relevancia clínica. En RSNA el Wilcoxon bordea el umbral (p = 0.050) pero el bootstrap no lo confirma (IC cruza 0); en MEX ambos tests coinciden en no-significancia. La elección de DenseNet121 sobre InceptionV3 se justifica por tiempo de entrenamiento (~10 h vs ~14 h) sin costo en rendimiento.
 
-3. **ResNet50 es significativamente peor que DenseNet121 e InceptionV3 en RSNA** (efecto mediano-grande, r ≈ 0.6), aunque en MEX la diferencia no alcanza significancia estadística (posiblemente por el menor n).
+3. **ResNet50 es significativamente peor que DenseNet121 e InceptionV3 en RSNA** (r ≈ 0.60, efecto mediano-grande). En MEX la diferencia no alcanza significancia estadística, atribuible al menor n (98 muestras).
 
-4. **InceptionV3 tardó el doble que DenseNet121** (~14 h vs ~10 h) por su mayor profundidad, sin ventaja estadística en rendimiento. DenseNet121 ofrece mejor equilibrio costo/rendimiento.
+4. **Ranking consolidado:** DenseNet121 ≈ InceptionV3 > ResNet50 >> VGG16.
 
 ---
 
@@ -109,6 +113,6 @@ Las pruebas se realizan sobre la **intersección de IDs** comunes entre cada par
 
 | Archivo | Descripción |
 |---------|-------------|
-| `docs/results/ablacion_backbones/2026-07-22_ablacion_backbones_rsna.json` | Resultados completos prueba pareada RSNA |
-| `docs/results/ablacion_backbones/2026-07-22_ablacion_backbones_mex.json` | Resultados completos prueba pareada MEX |
+| `experiments/paired/backbone_ablation_23_28.json` | Prueba pareada RSNA — corrección Holm |
+| `experiments/paired/backbone_ablation_23_28_mex.json` | Prueba pareada MEX — corrección Holm |
 | `src/11_paired_validation.py` | Script reutilizable de prueba pareada y ablación |

@@ -1,0 +1,6 @@
+{
+  "n_val": 2357,
+  "whole_hand_mae": 13.519477844238281,
+  "fusion_densenet121_mae": 13.133010864257812,
+  "delta_whole_hand_minus_fusion": 0.38646697998046875
+}

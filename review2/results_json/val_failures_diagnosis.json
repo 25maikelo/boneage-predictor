@@ -1,0 +1,170 @@
+{
+  "total": 1425,
+  "ok": 1393,
+  "failed": 32,
+  "reason_counts": {
+    "empty_segment": 32
+  },
+  "failed_detail": [
+    {
+      "id": "1386",
+      "reason": "empty_segment: thumb",
+      "boneage": 30.0
+    },
+    {
+      "id": "1401",
+      "reason": "empty_segment: thumb",
+      "boneage": 132.0
+    },
+    {
+      "id": "1421",
+      "reason": "empty_segment: thumb",
+      "boneage": 24.0
+    },
+    {
+      "id": "1908",
+      "reason": "empty_segment: pinky,middle",
+      "boneage": 120.0
+    },
+    {
+      "id": "2140",
+      "reason": "empty_segment: thumb",
+      "boneage": 150.0
+    },
+    {
+      "id": "2302",
+      "reason": "empty_segment: thumb",
+      "boneage": 204.0
+    },
+    {
+      "id": "2335",
+      "reason": "empty_segment: thumb",
+      "boneage": 168.0
+    },
+    {
+      "id": "2426",
+      "reason": "empty_segment: pinky,middle,thumb,wrist",
+      "boneage": 180.0
+    },
+    {
+      "id": "2459",
+      "reason": "empty_segment: thumb",
+      "boneage": 204.0
+    },
+    {
+      "id": "2981",
+      "reason": "empty_segment: wrist",
+      "boneage": 21.0
+    },
+    {
+      "id": "3131",
+      "reason": "empty_segment: pinky",
+      "boneage": 216.0
+    },
+    {
+      "id": "3326",
+      "reason": "empty_segment: pinky",
+      "boneage": 180.0
+    },
+    {
+      "id": "3404",
+      "reason": "empty_segment: pinky,middle,wrist",
+      "boneage": 180.0
+    },
+    {
+      "id": "3452",
+      "reason": "empty_segment: thumb",
+      "boneage": 138.0
+    },
+    {
+      "id": "3498",
+      "reason": "empty_segment: pinky,middle,thumb",
+      "boneage": 180.0
+    },
+    {
+      "id": "3575",
+      "reason": "empty_segment: pinky",
+      "boneage": 180.0
+    },
+    {
+      "id": "3625",
+      "reason": "empty_segment: thumb",
+      "boneage": 36.0
+    },
+    {
+      "id": "3683",
+      "reason": "empty_segment: thumb",
+      "boneage": 150.0
+    },
+    {
+      "id": "4022",
+      "reason": "empty_segment: thumb",
+      "boneage": 216.0
+    },
+    {
+      "id": "4119",
+      "reason": "empty_segment: pinky,middle",
+      "boneage": 36.0
+    },
+    {
+      "id": "7476",
+      "reason": "empty_segment: thumb",
+      "boneage": 108.0
+    },
+    {
+      "id": "7790",
+      "reason": "empty_segment: thumb",
+      "boneage": 162.0
+    },
+    {
+      "id": "8352",
+      "reason": "empty_segment: thumb",
+      "boneage": 36.0
+    },
+    {
+      "id": "9638",
+      "reason": "empty_segment: thumb",
+      "boneage": 150.0
+    },
+    {
+      "id": "9708",
+      "reason": "empty_segment: middle",
+      "boneage": 132.0
+    },
+    {
+      "id": "10601",
+      "reason": "empty_segment: thumb",
+      "boneage": 156.0
+    },
+    {
+      "id": "12110",
+      "reason": "empty_segment: thumb",
+      "boneage": 28.0
+    },
+    {
+      "id": "12814",
+      "reason": "empty_segment: pinky",
+      "boneage": 96.0
+    },
+    {
+      "id": "12868",
+      "reason": "empty_segment: thumb",
+      "boneage": 106.0
+    },
+    {
+      "id": "14116",
+      "reason": "empty_segment: thumb",
+      "boneage": 132.0
+    },
+    {
+      "id": "14290",
+      "reason": "empty_segment: thumb",
+      "boneage": 132.0
+    },
+    {
+      "id": "14767",
+      "reason": "empty_segment: pinky",
+      "boneage": 138.0
+    }
+  ]
+}

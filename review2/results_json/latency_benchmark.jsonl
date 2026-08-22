@@ -1,0 +1,4 @@
+{"experiment": 23, "backbone": "resnet50", "n_params": 96451973, "load_time_s": 41.168, "device": "GPU", "inference_latency_ms_mean": 241.281, "inference_latency_ms_std": 0.327, "peak_gpu_memory_mb": 1221.9}
+{"experiment": 26, "backbone": "vgg16", "n_params": 59387013, "load_time_s": 10.215, "device": "GPU", "inference_latency_ms_mean": 40.724, "inference_latency_ms_std": 0.16, "peak_gpu_memory_mb": 775.8}
+{"experiment": 27, "backbone": "densenet121", "n_params": 29202565, "load_time_s": 68.28, "device": "GPU", "inference_latency_ms_mean": 526.745, "inference_latency_ms_std": 1.472, "peak_gpu_memory_mb": 359.1}
+{"experiment": 28, "backbone": "inceptionv3", "n_params": 89312261, "load_time_s": 54.441, "device": "GPU", "inference_latency_ms_mean": 423.336, "inference_latency_ms_std": 0.446, "peak_gpu_memory_mb": 1113.6}

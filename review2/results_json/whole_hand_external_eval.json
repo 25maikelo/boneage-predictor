@@ -1,0 +1,14 @@
+{
+  "rsna_external": {
+    "processed": 1425,
+    "failed": 0,
+    "mae": 15.869805118493867,
+    "failed_detail": []
+  },
+  "mex_external": {
+    "processed": 100,
+    "failed": 0,
+    "mae": 23.976079521179198,
+    "failed_detail": []
+  }
+}

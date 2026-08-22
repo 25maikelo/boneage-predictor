@@ -1,0 +1,52 @@
+{
+  "n_total_annotated": 379,
+  "n_train": 303,
+  "n_val": 76,
+  "pixel_accuracy": 0.9693555002181794,
+  "per_class": {
+    "background": {
+      "class_id": 0,
+      "n_images_with_class": 76,
+      "mean_dice": 0.9827985167503357,
+      "std_dice": 0.006663895212113857,
+      "mean_iou": 0.966262698173523,
+      "std_iou": 0.012802992016077042
+    },
+    "pinky": {
+      "class_id": 1,
+      "n_images_with_class": 76,
+      "mean_dice": 0.7784502506256104,
+      "std_dice": 0.20040513575077057,
+      "mean_iou": 0.6711955070495605,
+      "std_iou": 0.21053820848464966
+    },
+    "middle": {
+      "class_id": 2,
+      "n_images_with_class": 76,
+      "mean_dice": 0.8905280232429504,
+      "std_dice": 0.11376620829105377,
+      "mean_iou": 0.8147395253181458,
+      "std_iou": 0.12127397209405899
+    },
+    "thumb": {
+      "class_id": 3,
+      "n_images_with_class": 76,
+      "mean_dice": 0.8636143207550049,
+      "std_dice": 0.1505672037601471,
+      "mean_iou": 0.7798606753349304,
+      "std_iou": 0.15269368886947632
+    },
+    "wrist": {
+      "class_id": 4,
+      "n_images_with_class": 76,
+      "mean_dice": 0.7694512605667114,
+      "std_dice": 0.17271769046783447,
+      "mean_iou": 0.6513895392417908,
+      "std_iou": 0.18900138139724731
+    }
+  },
+  "macro_dice_no_background": 0.8255109637975693,
+  "macro_iou_no_background": 0.7292963117361069,
+  "macro_dice_all_classes": 0.8569684743881225,
+  "macro_iou_all_classes": 0.7766895890235901
+}

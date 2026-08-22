@@ -309,7 +309,7 @@ def main():
     with timer("Inferencia sobre dataset mexicano"):
         for i, (_, row) in enumerate(df.iterrows()):
             sid = str(row["ID"])
-            real_age = float(row["real_age"])
+            bone_age_true = float(row["bone_age"])
             img_path = os.path.join(MEX_IMAGES_DIR, f"{sid}.png")
             gray = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
             if gray is None:
@@ -335,14 +335,14 @@ def main():
             except Exception as e:
                 failed.append((sid, f"predict: {e}")); continue
 
-            if not np.isnan(pred_age) and not np.isnan(real_age):
-                preds.append(pred_age); trues.append(real_age)
-                rows.append({"id": sid, "real_age": real_age, "pred_age": pred_age,
-                             "diff_months": abs(pred_age - real_age)})
+            if not np.isnan(pred_age) and not np.isnan(bone_age_true):
+                preds.append(pred_age); trues.append(bone_age_true)
+                rows.append({"id": sid, "bone_age": bone_age_true, "pred_age": pred_age,
+                             "diff_months": abs(pred_age - bone_age_true)})
                 n_seen += 1
                 candidate = {"id": sid, "eq": eq, "segments": segments,
-                             "row": row, "real_age": real_age, "pred_age": pred_age,
-                             "diff_months": abs(pred_age - real_age)}
+                             "row": row, "bone_age": bone_age_true, "pred_age": pred_age,
+                             "diff_months": abs(pred_age - bone_age_true)}
                 if len(candidates) < NUM_SAMPLE_RESULTS:
                     candidates.append(candidate)
                 else:
@@ -406,7 +406,7 @@ def main():
             heat = compute_saliency_map(model, inp)
             heat = cv2.resize(heat, (result.shape[1], result.shape[0]), interpolation=cv2.INTER_CUBIC)
             result = overlay_masked(result, heat)
-        text = (f"ID: {sid}\nReal: {item['real_age']:.1f} m\n"
+        text = (f"ID: {sid}\nEdad ósea (TW3): {item['bone_age']:.1f} m\n"
                 f"Predicción: {item['pred_age']:.1f} m\n"
                 f"Diferencia: {item['diff_months']:.1f} m")
         create_sample_table(text, result, os.path.join(OUTPUT_FOLDER, f"sample_result_{sid}.png"))
@@ -414,8 +414,8 @@ def main():
     if preds:
         plt.figure(figsize=(7, 5))
         plt.scatter(trues, preds, c="#325288", alpha=0.7, edgecolors="k", s=80)
-        plt.xlabel("Edad real (meses)"); plt.ylabel("Predicción (meses)")
-        plt.title("Dispersión: Edad Real vs Predicción (MEX)")
+        plt.xlabel("Edad ósea real, TW3 (meses)"); plt.ylabel("Predicción (meses)")
+        plt.title("Dispersión: Edad Ósea (TW3) vs Predicción (MEX)")
         plt.grid(alpha=0.3); plt.tight_layout()
         plt.savefig(os.path.join(OUTPUT_FOLDER, "scatter_pred_vs_real.png")); plt.close()
 

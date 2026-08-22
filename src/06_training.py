@@ -29,7 +29,7 @@ import json
 import shutil
 from sklearn.model_selection import train_test_split, KFold
 
-from config.paths import SEGMENTED_IMAGES_DIR, EXPERIMENTS_DIR, TRAINING_CSV
+from config.paths import SEGMENTED_IMAGES_DIR, EQUALIZED_IMAGES_DIR, EXPERIMENTS_DIR, TRAINING_CSV
 from config.experiment import load_experiment_config, get_experiment_output_dir
 from src.utils.losses import LOSS_MAP, dynamic_attention_loss
 from src.utils.timing import report_timing, setup_logging, timer
@@ -441,6 +441,51 @@ def fusion_data_generator(df, cfg, augment=False):
             yield (*inputs,), batch["boneage"].to_numpy(dtype="float32")
 
 
+def whole_hand_data_generator(df, cfg, augment=False):
+    """Generador para el baseline whole-hand: una sola imagen de mano completa
+    (recorte + CLAHE, sin segmentación) por paciente, misma interfaz que
+    custom_data_generator para reusar create_segment_model tal cual."""
+    from tensorflow.keras.preprocessing.image import ImageDataGenerator
+    folder = getattr(cfg, "WHOLE_HAND_FOLDER", EQUALIZED_IMAGES_DIR)
+    datagen = ImageDataGenerator(
+        rescale=cfg.AUG_RESCALE,
+        rotation_range=cfg.AUG_ROTATION_RANGE if augment else 0,
+        brightness_range=cfg.AUG_BRIGHTNESS_RANGE if augment else None,
+        zoom_range=cfg.AUG_ZOOM_RANGE if augment else 0,
+    )
+
+    def gen():
+        while True:
+            for i in range(0, len(df), cfg.BATCH_SIZE):
+                batch = df.iloc[i: i + cfg.BATCH_SIZE]
+                imgs, ages = [], batch["boneage"].to_numpy(dtype="float32")
+                for pid in batch["id"]:
+                    path = os.path.join(folder, f"{pid}.png")
+                    img = cv2.imread(path)
+                    if img is None:
+                        img = np.zeros((*cfg.IMAGE_SIZE, 3), dtype=np.uint8)
+                    else:
+                        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                        img = cv2.resize(img, cfg.IMAGE_SIZE)
+                    imgs.append(img)
+                imgs = next(datagen.flow(np.array(imgs, dtype="float32"),
+                                        batch_size=cfg.BATCH_SIZE, shuffle=False))
+                if cfg.USE_GENDER:
+                    genders = batch["gender"].to_numpy(dtype="float32").reshape(-1, 1)
+                    yield (imgs, genders), ages
+                else:
+                    yield imgs, ages
+
+    if cfg.USE_GENDER:
+        sig = ((tf.TensorSpec((None, *cfg.IMAGE_SIZE, 3), tf.float32),
+                tf.TensorSpec((None, 1), tf.float32)),
+               tf.TensorSpec((None,), tf.float32))
+    else:
+        sig = (tf.TensorSpec((None, *cfg.IMAGE_SIZE, 3), tf.float32),
+               tf.TensorSpec((None,), tf.float32))
+    return tf.data.Dataset.from_generator(gen, output_signature=sig)
+
+
 # ============================================================
 # ENTRENAMIENTO DE SEGMENTOS
 # ============================================================
@@ -823,6 +868,101 @@ def train_fusion(cfg, exp_dir):
 
 
 # ============================================================
+# ENTRENAMIENTO WHOLE-HAND (baseline sin segmentación, Comentario 15)
+# ============================================================
+def train_whole_hand(cfg, exp_dir):
+    """Baseline de un solo modelo (mismo backbone, mismos hiperparámetros)
+    entrenado sobre la mano completa (recorte + CLAHE, sin segmentación
+    anatómica), para aislar el efecto de la segmentación en 4 regiones.
+    Mismo split (random_state=42, TEST_SPLIT) que segmentos/fusión, así el
+    MAE queda directamente comparable con el experimento de fusión de
+    referencia sobre los mismos pacientes de validación."""
+    models_dir = os.path.join(exp_dir, "models")
+    model_path = os.path.join(models_dir, "whole_hand_model")
+    loss_fn = LOSS_MAP.get(cfg.LOSS_FUNCTION_NAME, dynamic_attention_loss)
+
+    if os.path.exists(model_path):
+        print("Modelo whole-hand ya entrenado, omitiendo.")
+        return
+
+    df = pd.read_csv(getattr(cfg, "DATASET_PATH", TRAINING_CSV))
+    df = df[(df["boneage"] >= cfg.AGE_RANGE[0]) & (df["boneage"] <= cfg.AGE_RANGE[1])]
+    if cfg.USE_GENDER:
+        df["gender"] = df["male"].astype(float)
+    train_df, val_df = train_test_split(df, test_size=cfg.TEST_SPLIT, random_state=42)
+
+    model = create_segment_model(cfg)
+    model.compile(optimizer=get_optimizer(cfg.OPTIMIZER_CHOICE, cfg.LEARNING_RATE),
+                  loss=loss_fn, metrics=["mae"])
+
+    train_ds = whole_hand_data_generator(train_df, cfg, augment=cfg.USE_AUGMENTATION)
+    val_ds = whole_hand_data_generator(val_df, cfg, augment=False)
+
+    # Fase 1: mismos hiperparámetros que la fase de segmento (NUM_LAYERS_UNFREEZE, LR, EPOCHS_SEGMENT)
+    ckpt_path = model_path + "_ckpt"
+    cbs = [
+        tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=4,
+                                          restore_best_weights=True),
+        tf.keras.callbacks.ReduceLROnPlateau(monitor="val_loss", factor=0.5,
+                                              patience=3, min_lr=1e-7, verbose=1),
+        SaveModelCallback(ckpt_path),
+    ]
+    print("Entrenando whole-hand (fase 1: backbone parcialmente descongelado)...")
+    with timer("Whole-hand fase 1"):
+        history = model.fit(
+            train_ds, validation_data=val_ds,
+            epochs=cfg.EPOCHS_SEGMENT,
+            steps_per_epoch=len(train_df) // cfg.BATCH_SIZE,
+            validation_steps=len(val_df) // cfg.BATCH_SIZE,
+            verbose=2, callbacks=cbs,
+        )
+    _move_model(ckpt_path, model_path)
+    plot_history(history, "Whole-Hand Fase 1",
+                 os.path.join(exp_dir, "training_history", "whole_hand_history.png"),
+                 total_epochs=cfg.EPOCHS_SEGMENT)
+    with open(os.path.join(exp_dir, "training_history", "whole_hand_history.json"), "w") as f:
+        json.dump({"history": {k: [float(v) for v in vals]
+                               for k, vals in history.history.items()},
+                   "total_epochs": cfg.EPOCHS_SEGMENT}, f, indent=2)
+
+    # Fase 2: fine-tuning con todo el backbone descongelado a LR/10, espejo de la
+    # fase de fine-tuning de la fusión (mismo patience/factor/min_lr).
+    if getattr(cfg, "FINE_TUNING_EPOCHS", 0) > 0:
+        model = load_model(model_path, custom_objects=LOSS_MAP)
+        for layer in model.layers:
+            layer.trainable = True
+        model.compile(optimizer=get_optimizer(cfg.OPTIMIZER_CHOICE, cfg.LEARNING_RATE / 10),
+                      loss=loss_fn, metrics=["mae"])
+        print("Fine-tuning whole-hand (backbone completo descongelado)...")
+        ft_ckpt = model_path + "_ft_ckpt"
+        cbs_ft = [
+            tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=4,
+                                              restore_best_weights=True),
+            tf.keras.callbacks.ReduceLROnPlateau(monitor="val_loss", factor=0.5,
+                                                  patience=3, min_lr=1e-7),
+            SaveModelCallback(ft_ckpt),
+        ]
+        with timer("Whole-hand fine-tuning"):
+            hist_ft = model.fit(
+                train_ds, validation_data=val_ds,
+                epochs=cfg.FINE_TUNING_EPOCHS,
+                steps_per_epoch=len(train_df) // cfg.BATCH_SIZE,
+                validation_steps=len(val_df) // cfg.BATCH_SIZE,
+                verbose=2, callbacks=cbs_ft,
+            )
+        _move_model(ft_ckpt, model_path)
+        plot_history(hist_ft, "Whole-Hand Fine-Tuning",
+                     os.path.join(exp_dir, "training_history", "whole_hand_ft.png"),
+                     total_epochs=cfg.FINE_TUNING_EPOCHS)
+        with open(os.path.join(exp_dir, "training_history", "whole_hand_ft.json"), "w") as f:
+            json.dump({"history": {k: [float(v) for v in vals]
+                                   for k, vals in hist_ft.history.items()},
+                       "total_epochs": cfg.FINE_TUNING_EPOCHS}, f, indent=2)
+
+    print("Whole-hand completado.")
+
+
+# ============================================================
 # ENTRENAMIENTO UNIFICADO (unified_cnn)
 # ============================================================
 def train_unified_cnn(cfg, exp_dir):
@@ -994,6 +1134,9 @@ def main():
     if model_type == "unified_cnn":
         with timer("Entrenamiento unificado"):
             train_unified_cnn(cfg, exp_dir)
+    elif model_type == "whole_hand":
+        with timer("Entrenamiento whole-hand"):
+            train_whole_hand(cfg, exp_dir)
     else:
         models_dir = os.path.join(exp_dir, "models")
         pendientes = [seg for seg in cfg.SEGMENTS_ORDER

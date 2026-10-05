@@ -124,10 +124,13 @@ Filtra el CSV de entrenamiento para conservar solo imágenes con los 4 segmentos
 **Uso:**
 `python src/06_training.py --experiment N`
 
-Entrena 4 modelos de segmento (uno por región anatómica) con K-Fold CV, luego construye y entrena el modelo de fusión. Soporta dos arquitecturas (ver [arquitecturas.md](../design/arquitecturas.md)):
+Entrena 4 modelos de segmento (uno por región anatómica) con K-Fold CV, luego construye y entrena el modelo de fusión. Soporta cinco modos vía `MODEL_TYPE` (ver [arquitecturas.md](../design/arquitecturas.md) para el detalle de cada uno):
 
-- `MODEL_TYPE = "simple_cnn"` — CNN desde cero con Flatten
-- `MODEL_TYPE = "backbone"` — backbone preentrenado (VGG16, DenseNet121, InceptionV3, ResNet50)
+- `"backbone"` — backbone preentrenado (VGG16, DenseNet121, InceptionV3, ResNet50)
+- `"simple_cnn"` — CNN desde cero con Flatten
+- `"backbone_vectors"` — como `backbone`, pero la fusión recibe el vector intermedio (256-dim) en vez del escalar
+- `"unified_cnn"` — las 4 ramas se entrenan end-to-end en una sola fase, sin segmento+fusión separados
+- `"whole_hand"` — una sola rama sobre la mano completa, sin segmentar (baseline de comparación, no usa las 4 regiones)
 
 **Fases:**
 1. **Segmentos** — `EPOCHS_SEGMENT` épocas × 5 folds por segmento (4 segmentos)

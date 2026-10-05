@@ -19,6 +19,12 @@
 
 > N/A = no aplica por diseño (p.ej. Backbone en simple_cnn). — = dato desconocido o faltante.
 
+> ⚠️ Las columnas **Val MEX** de los experimentos 23/26/27/28/33/34/36/37/39/40 mostradas abajo
+> usaban un bug ya corregido en `src/08_mex_validation.py` (comparaba contra edad cronológica en
+> vez de edad ósea TW3). Números recalculados en
+> [`experimentos_adicionales/analisis.md`](experimentos_adicionales/analisis.md); el resto de los
+> experimentos de esta tabla no se ha vuelto a validar contra MEX con el script corregido.
+
 ---
 
 ## Árbol de linaje
@@ -74,6 +80,10 @@
 44 (unified_cnn | raw recortado)  ← BASE unified_cnn
 ├── 45 (→ completo)
 └── 46 (→ balanceado)
+
+── Fase 9: baseline whole-hand ─────────────────────────────────────────────
+27 (comparación directa, mismo split/protocolo)
+└── 60 (whole_hand | sin segmentación)  ← aísla el efecto de segmentar en 4 regiones
 ```
 
 ---
@@ -166,6 +176,18 @@
 | 56 | 🟢 | `bbone_vec` | DenseNet121 | 224×224 | spatial | raw | 1–228 | ❌ | ❌ | 15.5 m | 18.3 m |
 | **57** | 🟢 | **`backbone`** | **DenseNet121** | **224×224** | **cropped** | **raw** | **1–228** | ✅ | ✅ | **10.7 m ★** | 17.0 m |
 | **58** | 🟢 | **`bbone_vec`** | **DenseNet121** | **224×224** | **cropped** | **raw** | **1–228** | ❌ | ✅ | 16.8 m | **15.0 m ★** |
+
+### Fase 9 — Baseline whole-hand, sin segmentación (60)
+
+| Exp | Estado | Tipo | Backbone | Img | Seg. | CSV | Edad (m) | FREEZE | Género | Val RSNA | Val MEX |
+|-----|--------|------|----------|-----|------|-----|----------|:------:|:------:|:--------:|:-------:|
+| 60 | 🟢 | `whole_hand` | DenseNet121 | 112×112 | N/A (mano completa) | balanced | 24–216 | N/A | ✅ | 15.87 m | 23.98 m |
+
+> Agregado 2026-08-07 para el Comentario 15 de la segunda ronda de revisión: mismo
+> split/protocolo/hiperparámetros que el exp 27 (`backbone`, su comparación directa), pero sin
+> segmentar en 4 regiones. Detalle completo, incluida la significancia estadística pareada contra
+> el exp 27, en
+> [`experimentos_adicionales/analisis.md`](experimentos_adicionales/analisis.md#15-ablación-insuficiente-falta-baseline-whole-hand).
 
 ### Tests rápidos (98–99)
 

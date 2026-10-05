@@ -37,18 +37,7 @@ Dense(1, linear, name="boneage_output")
 
 ### Extractor de características para fusión
 
-En lugar de usar la predicción escalar `boneage_output`, se construye un sub-modelo que termina en `backbone_features`:
-
-```python
-feature_extractor = tf.keras.models.Model(
-    inputs=seg_model.inputs[0],   # solo imagen (igual que CNN simple)
-    outputs=seg_model.get_layer("backbone_features").output,
-    name=f"feature_extractor_{seg}",
-)
-feature_extractor.trainable = False
-```
-
-Cada segmento aporta un vector de **256 dims**. Con 4 segmentos: **1,024 dims** de entrada a la fusión (vs 4 escalares en exp 34, vs ~50K en exp 33).
+En lugar de usar la predicción escalar `boneage_output`, se construye un sub-modelo que termina en la capa `backbone_features` (ver implementación real en `create_fusion_model_backbone_vectors`, `src/06_training.py`). Cada segmento aporta un vector de **256 dims**. Con 4 segmentos: **1,024 dims** de entrada a la fusión (vs 4 escalares en exp 34, vs ~50K en exp 33).
 
 ### Modelo de fusión
 
@@ -89,70 +78,11 @@ feature_extractor_wrist  → [256] ──┘
 
 ## Implementación
 
-### Cambio en `build_backbone_segment_model` (06_training.py)
-
-Agregar `name="backbone_features"` al Dense intermedio:
-
-```python
-# línea ~167 — actualmente:
-x = tf.keras.layers.Dense(cfg.DENSE_UNITS, activation="relu")(x)
-
-# propuesta:
-x = tf.keras.layers.Dense(cfg.DENSE_UNITS, activation="relu",
-                           name="backbone_features")(x)
-```
-
-### Nueva función `create_fusion_model_backbone_vectors`
-
-Análoga a `create_fusion_model_cnn` pero extrayendo `backbone_features` en lugar de `flatten_features`:
-
-```python
-def create_fusion_model_backbone_vectors(segment_paths, cfg, loss_fn):
-    feature_outputs = []
-    inputs = []
-    for seg, path in zip(cfg.SEGMENTS_ORDER, segment_paths):
-        seg_model = tf.keras.models.load_model(path, ...)
-        feature_extractor = tf.keras.models.Model(
-            inputs=seg_model.inputs[0],
-            outputs=seg_model.get_layer("backbone_features").output,
-            name=f"feature_extractor_{seg}",
-        )
-        feature_extractor.trainable = False
-        inp = tf.keras.layers.Input(shape=(*cfg.IMAGE_SIZE, 3), name=f"input_{seg}")
-        inputs.append(inp)
-        feature_outputs.append(feature_extractor(inp))
-
-    combined = tf.keras.layers.Concatenate()(feature_outputs)  # [1,024]
-
-    if cfg.USE_GENDER:
-        gender_in = tf.keras.layers.Input(shape=(1,), name="gender_input")
-        inputs.append(gender_in)
-        combined = tf.keras.layers.Concatenate()([combined, gender_in])
-
-    x = tf.keras.layers.Dense(512, activation="relu")(combined)
-    x = tf.keras.layers.Dropout(0.5)(x)
-    x = tf.keras.layers.Dense(256, activation="relu")(x)
-    x = tf.keras.layers.Dropout(0.3)(x)
-    out = tf.keras.layers.Dense(1, activation="linear", name="boneage_output")(x)
-    return tf.keras.models.Model(inputs=inputs, outputs=out,
-                                  name="fusion_model_backbone_vectors")
-```
-
-### Nuevo `MODEL_TYPE`
-
-Agregar `"backbone_vectors"` como tercer tipo en `config.py` y en el dispatch de `06_training.py`:
-
-```python
-MODEL_TYPE = "backbone_vectors"   # nuevo valor
-
-# en 06_training.py (~línea 644):
-if cfg.MODEL_TYPE == "simple_cnn":
-    fusion = create_fusion_model_cnn(seg_paths, cfg, loss_fn)
-elif cfg.MODEL_TYPE == "backbone_vectors":
-    fusion = create_fusion_model_backbone_vectors(seg_paths, cfg, loss_fn)
-else:
-    fusion = create_fusion_model(seg_paths, cfg, loss_fn)
-```
+Ya incorporada al pipeline como `MODEL_TYPE = "backbone_vectors"` (`src/06_training.py`:
+`create_fusion_model_backbone_vectors`, dispatch en `main()`). Ver
+[`arquitecturas.md`](arquitecturas.md#modo-3-backbone-vectors-model_type--backbone_vectors) para
+el diagrama y parámetros actuales; el código de este documento queda solo como contexto histórico
+de la propuesta original y puede haber divergido del código real.
 
 ---
 

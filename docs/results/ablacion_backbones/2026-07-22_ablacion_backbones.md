@@ -2,6 +2,18 @@
 
 > Objetivo: comparar cuatro arquitecturas de backbone manteniendo todo lo demás constante, usando datos balanceados e imágenes con información espacial completa (modo `spatial`).
 
+> ⚠️ **Nota de corrección (2026-08-07):** todos los números "MEX" de este documento (tabla de
+> validación, pruebas pareadas, conclusiones) se calcularon con un bug ya corregido en
+> `src/08_mex_validation.py` (comparaba contra `real_age`, edad cronológica, en vez de
+> `bone_age`, edad ósea TW3). Con los datos corregidos, **F-DenseNet121 pasa a tener el MAE más
+> bajo en MEX** (16.38 m, no F-InceptionV3 con 17.2 m como dice la tabla de abajo), aunque la
+> diferencia entre ambos sigue sin ser significativa, igual que aquí. Números recalculados y
+> pruebas pareadas actualizadas en
+> [`../experimentos_adicionales/analisis.md`](../experimentos_adicionales/analisis.md). La
+> conclusión 2 y el ranking consolidado de este documento se sostienen cualitativamente
+> (DenseNet121 ≈ InceptionV3, ambos mejores que ResNet50 y VGG16), pero el valor numérico citado
+> y el "mejor MAE" marcado con ★ en la tabla de MEX ya no son correctos.
+
 ---
 
 ## Configuración experimental

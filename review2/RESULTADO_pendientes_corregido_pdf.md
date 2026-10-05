@@ -175,3 +175,37 @@ orden, para no pisar números ya usados a medio camino (igual que con las tablas
 *(Nota: "HGR" (Hospital General Regional, "HGR 46") también aparece sin expandir, pero es parte
 de un nombre propio de institución, similar a "RSNA" mismo; se deja fuera de la lista principal
 por ser de menor prioridad.)*
+
+---
+
+### 13. Pie de Figura 8 (mapas de saliencia): genérico, no describe lo que muestra (Comentario 16)
+
+**Cambia esto:**
+> "Figure 8. Examples of bone age prediction using F-DenseNet121."
+
+**Por esto:**
+> "Figure 8. Illustrative vanilla-gradient saliency maps for three example patients (F-DenseNet121), showing gradient attention concentrated within the segmented anatomical regions."
+
+---
+
+### 14. Sección 3.3: párrafo redundante que menciona Table 14/15 antes de que aparezca Table 13
+
+**Elimina este párrafo completo** de la Sección 3.3 (va justo después del primer párrafo, antes de "The effectiveness of the fusion-based formulation was evaluated..."):
+> "To quantify statistical uncertainty, paired bootstrap resampling (10,000 iterations) was used to estimate 95% confidence intervals for the MAE differences between models. Additionally, pairwise comparisons were performed using a Wilcoxon signed-rank test with Holm correction for multiple testing. These results are reported in full in Table 14 and Table 15 (Section 3.5), including RMSE, median absolute error, bias, and stratification by sex and age group. These results confirm that, while small differences in MAE are observed, they are not statistically distinguishable given the available sample sizes, particularly for the external dataset."
+
+Todo su contenido está duplicado, con más precisión, en el párrafo de la Sección 3.5 que introduce las Tablas 14/15 (misma metodología, mismas columnas, misma conclusión con números exactos). Eliminarlo no rompe la transición entre párrafos ni pierde información.
+
+### 15. Sección 3.5: typo "reports additional reports additional"
+
+**Cambia esto:**
+> "Table 14 and Table 15 reports additional reports additional error statistics"
+
+**Por esto:**
+> "Table 14 and Table 15 report additional error statistics"
+
+### 16. Tabla 15: falta explicar qué significan ✅/❌ en la columna "Sig."
+
+**Decisión:** se conservan los emojis, se agrega la explicación en el pie de tabla.
+
+**Cambia el título de la Tabla 15 por esto** (agrega la explicación al final):
+> "Table 15. Pairwise statistical comparisons of backbone architectures using Wilcoxon signed-rank and bootstrap tests, with Holm correction. Sig. indicates whether the difference is statistically significant (✅) or not (❌) under both tests."

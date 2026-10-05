@@ -28,7 +28,8 @@ for ax, (name, exp) in zip(axes, EXPS.items()):
     trues = np.array(d["scatter"]["trues"])
     preds = np.array(d["scatter"]["preds"])
 
-    ax.scatter(trues, preds, alpha=0.6, s=25, color="#3b6ea5", edgecolor="none")
+    ax.scatter(trues, preds, alpha=0.6, s=25, color="#3b6ea5", edgecolor="none",
+               label="Individual patient")
     lims = [min(trues.min(), preds.min()) - 5, max(trues.max(), preds.max()) + 5]
     ax.plot(lims, lims, "k--", lw=1.2, label="Identity (y=x)")
 

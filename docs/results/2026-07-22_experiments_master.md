@@ -44,13 +44,13 @@
 29 (simple_cnn | raw recortado | con género)
 └── 30 (− género)
     └── 31 (+ género, intento fix)
-        └── 33 [fix bug fusión]  ← BASE simple_cnn
+        └── 33 [fix entrenamiento fusión]  ← BASE simple_cnn
             ├── 36 (→ completo)
             │   └── 42 (+ FREEZE=False)
             └── 39 (→ balanceado)
 
 27 → 32 [+ CV + rutas actualizadas]
-    └── 34 [fix bug fusión]  ← BASE backbone escalar
+    └── 34 [fix entrenamiento fusión]  ← BASE backbone escalar
         ├── 37 (→ completo)  ← BASE backbone completo
         │   ├── 47 (− género)
         │   ├── 49 (→ LR=1e-4, fusión 10ep)
@@ -202,13 +202,15 @@ Exps 00–16 sin `config.py` — no ejecutables; los modelos de 03–16 existen 
 Exps 17–22 sin `MODEL_TYPE`, `SEGMENT_MODE`, `DATASET_PATH`, `FREEZE_EXTRACTORS`, `SEGMENTATION_MODEL` — no ejecutables sin añadir esos 5 campos.  
 `.keras` de 17/18/22 son formato Keras 3.x (ZIP), incompatibles con `boneage_gpu` (Keras 2.10).
 
-### Deuda técnica
+### Experimentos de exploración temprana, cerrados sin completar
 
-| Exp | Problema | Acción recomendada |
-|-----|----------|--------------------|
-| 17–22 | 5 campos faltantes + modelos Keras 3.x incompatibles | Añadir campos → reentrenar si se necesitan resultados |
-| 24 | Val sin `plot_data.json` (script antiguo) | Re-correr `07_validation.py` actualizado |
-| 25 | Sin validación | Correr `07_validation.py` + `08_mex_validation.py` |
-| 29 | Modelos solo en Windows, val sin `plot_data.json` | Migrar modelos o reentrenar → re-validar |
-| 31–32 | Modelos CV; validación nunca ejecutada | Correr `07_validation.py` + `08_mex_validation.py` |
-| 30 | MAE ~62K m (desbordado) | Descartar — bug conocido por ausencia de género |
+Exps 17–32: fase exploratoria inicial, superada por las fases 1–9 (23–60), que cubren las mismas
+preguntas con configuración completa y validación real. No se completará retroactivamente:
+
+| Exp | Estado | Motivo |
+|-----|--------|--------|
+| 17–22 | Incompletos | Faltan 5 campos de config; modelos Keras 3.x incompatibles con el entorno actual |
+| 24–25 | Sin validación | Nunca se corrió `07_validation.py`/`08_mex_validation.py` |
+| 29 | Sin validación | Modelos solo en logs de Windows (script antiguo) |
+| 31–32 | Sin validación | Modelos de CV existen, validación nunca ejecutada |
+| 30 | Descartado | MAE ~62K m (desbordado) por ausencia de género en la config |

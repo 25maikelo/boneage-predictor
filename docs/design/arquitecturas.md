@@ -1,6 +1,6 @@
 # Arquitecturas de Entrenamiento
 
-El pipeline soporta cuatro modos de entrenamiento controlados por `MODEL_TYPE` en el `config.py` del experimento.
+El pipeline soporta cinco modos de entrenamiento controlados por `MODEL_TYPE` en el `config.py` del experimento.
 
 ---
 
@@ -159,23 +159,62 @@ input_wrist  (H,W,3) ──► [Conv→BN→ReLU→Pool] × 4 ──► Flatten 
 
 ---
 
+## Modo 5: Whole-Hand (`MODEL_TYPE = "whole_hand"`)
+
+Baseline sin segmentación anatómica, agregado para el Comentario 15 de la segunda ronda de
+revisión (aislar el efecto de la segmentación en 4 regiones). Una sola rama backbone recibe la
+mano completa (recorte + CLAHE, sin segmentar) en vez de los 4 segmentos. No hay fusión: es
+funcionalmente un `create_segment_model` (igual arquitectura que el Modo 1) aplicado a una única
+entrada de "segmento" que es la mano entera.
+
+```
+Entrada: (H, W, 3)  [imagen de mano completa, data/images/equalized/]
+    ↓
+Backbone preentrenado (mismo que Modo 1, WEIGHTS=None en los experimentos usados)
+    ├─ include_top=False
+    └─ últimas NUM_LAYERS_UNFREEZE capas entrenables (fase 1)
+    ↓
+GlobalAveragePooling2D
+    ↓
+[Concatenate(género)]       ← solo si USE_GENDER=True
+    ↓
+Dense(DENSE_UNITS, relu)
+    ↓
+Dropout(DROPOUT_RATE)
+    ↓
+Dense(1, linear)  ──────── predicción de edad ósea (meses)
+```
+
+Entrenamiento en dos fases (`train_whole_hand` en `src/06_training.py`), espejo del protocolo de
+fusión para que la comparación sea controlada: fase 1 igual a la fase de segmento del Modo 1
+(`NUM_LAYERS_UNFREEZE` capas descongeladas, `EPOCHS_SEGMENT` épocas); fase 2 de fine-tuning con
+todo el backbone descongelado a `LEARNING_RATE/10` (`FINE_TUNING_EPOCHS` épocas). Mismo split
+(`random_state=42`), mismo dataset balanceado, misma función de pérdida que el experimento de
+fusión de referencia. Ver experimento 60 y
+[`docs/results/experimentos_adicionales/analisis.md`](../results/experimentos_adicionales/analisis.md#15-ablación-insuficiente-falta-baseline-whole-hand)
+para el resultado (la segmentación aporta poco en validación interna pero significativamente bajo
+distribution shift externo).
+
+---
+
 ## Comparativa
 
-| Aspecto | backbone | simple_cnn | backbone_vectors | unified_cnn |
-|---|---|---|---|---|
-| Info. a fusión | 4 escalares | 4 × 12K flatten | 4 × 256 vectores | — (end-to-end) |
-| Fases de entrenamiento | 3 (seg + fusión + ft) | 3 (seg + fusión + ft) | 3 (seg + fusión + ft) | 1 (todo junto) |
-| Pesos iniciales | ImageNet (opcional) | Desde cero | ImageNet (opcional) | Desde cero |
-| Parámetros por segmento | ~7M (DenseNet121) | ~3–5M | ~7M (DenseNet121) | ~3–5M |
-| FREEZE_EXTRACTORS | N/A | Sí | Sí | N/A |
-| Soporte USE_GENDER | Sí | Sí | Sí | Sí |
+| Aspecto | backbone | simple_cnn | backbone_vectors | unified_cnn | whole_hand |
+|---|---|---|---|---|---|
+| Info. a fusión | 4 escalares | 4 × 12K flatten | 4 × 256 vectores | — (end-to-end) | — (sin fusión, 1 rama) |
+| Fases de entrenamiento | 3 (seg + fusión + ft) | 3 (seg + fusión + ft) | 3 (seg + fusión + ft) | 1 (todo junto) | 2 (entrenamiento + ft) |
+| Pesos iniciales | ImageNet (opcional) | Desde cero | ImageNet (opcional) | Desde cero | ImageNet (opcional) |
+| Parámetros por segmento | ~7M (DenseNet121) | ~3–5M | ~7M (DenseNet121) | ~3–5M | ~7M (DenseNet121) |
+| FREEZE_EXTRACTORS | N/A | Sí | Sí | N/A | N/A |
+| Soporte USE_GENDER | Sí | Sí | Sí | Sí | Sí |
+| Entrada | 4 segmentos | 4 segmentos | 4 segmentos | 4 segmentos | mano completa |
 
 ---
 
 ## Parámetros de Configuración
 
 ```python
-MODEL_TYPE          = "simple_cnn"   # "simple_cnn" | "backbone" | "backbone_vectors" | "unified_cnn"
+MODEL_TYPE          = "simple_cnn"   # "simple_cnn" | "backbone" | "backbone_vectors" | "unified_cnn" | "whole_hand"
 
 # Solo para simple_cnn, backbone_vectors y unified_cnn
 CNN_FILTERS         = [32, 64, 128, 256]

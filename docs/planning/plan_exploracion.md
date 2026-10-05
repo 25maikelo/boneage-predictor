@@ -1,5 +1,9 @@
 # Plan de Exploración — Post Fase 5
 
+> **Completado** (2026-07-22). Este plan guió los experimentos 47–56; resultados y conclusión en
+> [`results/2026-06-18_optimizacion.md`](../results/2026-06-18_optimizacion.md). Se conserva como
+> referencia histórica de los criterios de priorización usados, no como plan activo.
+
 ## Objetivo
 
 Una vez completados los experimentos 33–43, el objetivo es identificar la combinación óptima de arquitectura, dataset y hiperparámetros para maximizar el rendimiento en validación clínica (MAE en RSNA y MEX).

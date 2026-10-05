@@ -1,7 +1,12 @@
 # Experimentos de Optimización — Fase 6 (Exps 47+)
 
-> Documento vivo: se llena a medida que completan los experimentos.
-> Baselines: **Exp 37** (`backbone`, completo) y **Exp 43** (`backbone_vectors` libre, completo) — todos los experimentos nuevos usan `AGE_RANGE=(1,228)` para que ambas arquitecturas sean comparables sobre el mismo dataset.
+> **Concluido** (2026-07-22): 12 experimentos completados (47–56). Baselines: **Exp 37**
+> (`backbone`, completo) y **Exp 43** (`backbone_vectors` libre, completo); todos los
+> experimentos nuevos usan `AGE_RANGE=(1,228)` para que ambas arquitecturas sean comparables
+> sobre el mismo dataset. Conclusión: Exp 55 (224×224) gana en RSNA (13.4m) pero Exp 37 (112×112)
+> sigue siendo la configuración más equilibrada priorizando MEX, y es la que se usó como
+> referencia en la comparación de backbones posterior
+> ([`results/ablacion_backbones/`](ablacion_backbones/2026-07-22_ablacion_backbones.md)).
 
 ---
 

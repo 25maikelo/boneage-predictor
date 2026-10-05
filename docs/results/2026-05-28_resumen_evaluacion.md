@@ -3,6 +3,15 @@
 > Actualizado: 2026-04-29 · Scripts 07 (val estándar), 08 (mex-validation), 09 (análisis de desempeño), 10 (análisis por rango de edad)
 > Val estándar: 1,393 imágenes · Mex-validation: 98 imágenes
 
+> ⚠️ **Nota de corrección (2026-08-07):** las columnas "Mex MAE" de este documento se calcularon
+> con un bug ya corregido en `src/08_mex_validation.py` (comparaba contra `real_age`, edad
+> cronológica, en vez de `bone_age`, edad ósea TW3). Los valores aquí quedaron desactualizados.
+> Para los experimentos 23/26/27/28/33/34/36/37/39/40 ya existen números recalculados en
+> [`results/experimentos_adicionales/analisis.md`](experimentos_adicionales/analisis.md) y
+> [`results/ablacion_backbones/2026-07-22_ablacion_backbones.md`](ablacion_backbones/2026-07-22_ablacion_backbones.md).
+> El resto de los experimentos de este documento no se han vuelto a validar contra MEX con el
+> script corregido. "Val estándar"/MAE RSNA no están afectados por este bug.
+
 ---
 
 ## 1. Resultados globales

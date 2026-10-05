@@ -2,6 +2,15 @@
 
 > 14 experimentos completados · 4 arquitecturas · 3 datasets · 2026-04-29
 
+> ⚠️ **Nota de corrección (2026-08-07):** las columnas "Mex MAE" de este documento se calcularon
+> con un bug ya corregido en `src/08_mex_validation.py` (comparaba contra `real_age`, edad
+> cronológica, en vez de `bone_age`, edad ósea TW3). Los valores aquí quedaron desactualizados.
+> Para los experimentos 23/26/27/28/33/34/36/37/39/40 ya existen números recalculados en
+> [`results/experimentos_adicionales/analisis.md`](experimentos_adicionales/analisis.md) y
+> [`results/ablacion_backbones/2026-07-22_ablacion_backbones.md`](ablacion_backbones/2026-07-22_ablacion_backbones.md).
+> El resto de los experimentos de este documento (35/38/41/42/43, etc.) no se han vuelto a
+> validar contra MEX con el script corregido.
+
 ---
 
 ## Arquitecturas evaluadas

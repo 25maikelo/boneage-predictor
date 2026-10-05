@@ -1,11 +1,37 @@
 # Experimentos de Optimización — Fase 6 (Exps 47+)
 
+> ⚠️ **Nota de corrección (2026-10-05):** las columnas "Mex MAE" de este documento se calcularon
+> con el mismo bug de `src/08_mex_validation.py` corregido en otros documentos de `results/`
+> (comparaba contra `real_age` en vez de `bone_age`). Ya revalidado; números reales:
+>
+> | Exp | Mex MAE (tabla, con bug) | Mex MAE (recalculado) |
+> |---|:---:|:---:|
+> | 34 | 17.6 m | 16.82 m |
+> | 37 | 16.7 m | 18.37 m |
+> | 43 | 18.5 m | 20.97 m |
+> | 47 | 16.9 m | **18.27 m** |
+> | 48 | 16.2 m | **18.97 m** |
+> | 49 | 17.0 m | **18.62 m** |
+> | 50 | 16.5 m | **18.46 m** |
+> | 51 | 16.1 m | **19.49 m** |
+> | 52 | 20.0 m | **25.04 m** |
+> | 53 | 17.1 m | **17.45 m** |
+> | 55 | 17.4 m | **15.03 m** |
+> | 56 | 18.3 m | **16.00 m** |
+>
+> **Esto cambia la conclusión original:** con los números corregidos, **Exp 55 (224×224) pasa a
+> ser el mejor tanto en RSNA (13.4m) como en MEX (15.03m)**, no solo en RSNA como se creía. La
+> conclusión original (que recomendaba Exp 37/112×112 por "equilibrio" con MEX) ya no se sostiene
+> con los datos corregidos. No se revisó si esto debería cambiar la elección de Exp 37 como
+> referencia para la comparación de backbones posterior (`ablacion_backbones/`), que depende de
+> otro eje de decisión (arquitectura de backbone, no tamaño de imagen).
+
 > **Concluido** (2026-07-22): 12 experimentos completados (47–56). Baselines: **Exp 37**
 > (`backbone`, completo) y **Exp 43** (`backbone_vectors` libre, completo); todos los
 > experimentos nuevos usan `AGE_RANGE=(1,228)` para que ambas arquitecturas sean comparables
-> sobre el mismo dataset. Conclusión: Exp 55 (224×224) gana en RSNA (13.4m) pero Exp 37 (112×112)
-> sigue siendo la configuración más equilibrada priorizando MEX, y es la que se usó como
-> referencia en la comparación de backbones posterior
+> sobre el mismo dataset. Conclusión original (ver nota de corrección arriba, ya superada):
+> Exp 55 (224×224) ganaba en RSNA (13.4m) pero Exp 37 (112×112) parecía más equilibrado
+> priorizando MEX, y por eso se usó como referencia en la comparación de backbones posterior
 > ([`results/ablacion_backbones/`](ablacion_backbones/2026-07-22_ablacion_backbones.md)).
 
 ---
@@ -148,4 +174,4 @@
 | **55** | backbone, 224×224 | **13.9 m** | **8.1 m** | **13.4 m** 🥇 | 17.4 m |
 | **56** | bbone_vec, 224×224 | 16.0 m | 12.9 m | 15.5 m | 18.3 m |
 
-**Mejor RSNA:** Exp 55 (13.4m). **Mejor MEX:** Exp 51 (16.1m). Si se prioriza generalización clínica (MEX) sobre RSNA, Exp 37 (112×112) sigue siendo la opción más equilibrada.
+**Mejor RSNA:** Exp 55 (13.4m). **Mejor MEX (recalculado):** también Exp 55 (15.03m), ver nota de corrección al inicio del documento. Con los números corregidos, Exp 55 ya no requiere elegir entre RSNA y MEX: gana en ambos.

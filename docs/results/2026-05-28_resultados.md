@@ -15,9 +15,12 @@
 > | 41 | 27.3 m | **30.17 m** |
 > | 42 | 20.0 m | **25.40 m** |
 > | 43 | 18.5 m | **20.97 m** |
+> | 44 | 16.9 m | **20.04 m** |
+> | 45 | 21.0 m | **26.29 m** |
+> | 46 | 21.9 m | **23.86 m** |
 >
-> Los experimentos 44/45/46 (`unified_cnn`) todavía no se han vuelto a validar contra MEX con el
-> script corregido.
+> Con esto, todos los experimentos de este documento ya tienen su MAE de MEX recalculado con el
+> script corregido (2026-10-05).
 
 ---
 

@@ -1,8 +1,11 @@
 # Experimentos y análisis adicionales para el manuscrito
 
-> Documentación de cierre de un conjunto de experimentos y análisis adicionales realizados sobre
-> el manuscrito *A Multi-Segment Fusion Architecture for Bone Age Estimation* (revista
-> *Technologies*, MDPI), en respuesta a los 20 comentarios de la segunda ronda de revisión.
+> **El artículo ya fue publicado.** Este documento queda como registro histórico de cierre de un
+> conjunto de experimentos y análisis adicionales realizados sobre el manuscrito *A Multi-Segment
+> Fusion Architecture for Bone Age Estimation* (revista *Technologies*, MDPI), en respuesta a los
+> 20 comentarios de la segunda ronda de revisión. No describe trabajo pendiente: el ciclo de
+> revisión ya cerró con la publicación, independientemente del estado en que haya quedado cada
+> punto a continuación.
 > Todos los números citados aquí están verificados contra el código y los datos del proyecto: no
 > hay cifras inventadas. Material de respaldo (figuras, scripts, resultados numéricos crudos) en
 > las subcarpetas de este mismo directorio, listadas al final.
@@ -11,16 +14,16 @@
 
 | # | Tema | Estado |
 |---|---|---|
-| 1 | Limpieza general / versión sin tracked changes | 🔒 Bloqueado: requiere el `.docx` fuente |
+| 1 | Limpieza general / versión sin tracked changes | 🗄️ Cerrado sin aplicar: no se dispuso del `.docx` fuente |
 | 2 | Diagrama de flujo de participantes | ✅ Resuelto |
 | 3 | Distribución antes/después del balanceo + umbral de 50 | ✅ Resuelto |
 | 4 | Terminología TW3 vs. edad cronológica (Figura 8) | ✅ Resuelto |
-| 5 | Confiabilidad inter-observador (estándar mexicano) | ⏳ Requiere trabajo clínico real |
+| 5 | Confiabilidad inter-observador (estándar mexicano) | 🗄️ Cerrado sin realizar: requería trabajo clínico real |
 | 6 | Representatividad de la cohorte mexicana | ✅ Resuelto |
 | 7 | Estadística externa incompleta (IC, RMSE, sesgo, estratificación) | ✅ Resuelto |
 | 8 | Gráficos de dispersión + colapso de F-VGG16 | ✅ Resuelto |
 | 9 | Validación de segmentación (split real + Dice/IoU por clase) | ✅ Resuelto (con limitación declarada) |
-| 10 | Segmentación no probada en imágenes mexicanas | ⏳ Requiere trabajo manual real |
+| 10 | Segmentación no probada en imágenes mexicanas | 🗄️ Cerrado sin realizar: requería trabajo manual real |
 | 11 | Asociación TW3 exagerada | ✅ Ya resuelto en el manuscrito, solo faltaba la respuesta |
 | 12 | Fuga de datos en el entrenamiento de fusión | ✅ Resuelto (declaración de limitación, sin reentrenar) |
 | 13 | Función de pérdida sin definición matemática | ✅ Resuelto |
@@ -29,8 +32,8 @@
 | 16 | Mapas de saliencia sin reproducibilidad | ✅ Resuelto (reencuadrado como ilustrativo) |
 | 17 | Tabla 10 no comparable con la literatura | ✅ Ya resuelto en el manuscrito, solo faltaba la respuesta |
 | 18 | Declaración de ética inaceptable | ✅ Resuelto |
-| 19 | Limpieza editorial completa | 🔒 Bloqueado: requiere el `.docx` fuente |
-| 20 | Decisión general | ⏳ Se redacta al cerrar 1, 5, 10, 19 |
+| 19 | Limpieza editorial completa | 🗄️ Cerrado sin aplicar: no se dispuso del `.docx` fuente |
+| 20 | Decisión general | 🗄️ Cerrado por publicación (ver nota arriba) |
 
 ---
 
@@ -50,8 +53,11 @@ Respuesta 14 contestaba al Comentario 13 por error, dejando el 14 efectivamente 
 Corregido al redactar las respuestas de este análisis.
 
 **Hallazgo #3: Artefacto de fusión de texto**: *"inspired based by theon the Tanner–Whitehouse 3
-(TW3) technique"* (pág. 3), evidencia en vivo de que la limpieza editorial del Comentario 19
-sigue pendiente. Bloqueado junto con #1 y #19 por falta del `.docx` fuente.
+(TW3) technique"* (pág. 3 del PDF revisado en ese momento), evidencia de que la limpieza
+editorial del Comentario 19 estaba incompleta en ese borrador. No se verificó si llegó a
+corregirse en el texto final publicado (no se dispuso del `.docx` fuente para aplicarlo
+directamente); dado que el artículo ya está publicado, queda como nota histórica, no como
+pendiente.
 
 ---
 
@@ -166,25 +172,31 @@ claims").
 
 ---
 
-## Comentarios bloqueados o diferidos
+## Comentarios que quedaron cerrados sin aplicar
 
-- **#1 y #19** (limpieza general/editorial): bloqueados porque solo se dispuso del PDF exportado
-  del manuscrito, nunca del `.docx` fuente; no es posible aceptar cambios de Word ni hacer
-  búsqueda de texto completo de forma confiable sobre un PDF.
-- **#5** (confiabilidad inter-observador): requiere que los dos lectores clínicos existentes
-  (radiólogo y médico) califiquen independientemente un subconjunto y se calcule kappa/ICC,
-  trabajo clínico real, no analítico.
-- **#10** (segmentación en imágenes mexicanas): requiere anotación manual de ~20–30 imágenes
-  mexicanas en LabelMe por una persona, el ítem más costoso en tiempo de todo este análisis.
-- **#20** (decisión general): es la síntesis de cierre, se redacta una vez resueltos o declarados
-  como diferidos los puntos 1, 5, 10 y 19.
+Con el artículo ya publicado, estos puntos ya no son trabajo pendiente; se documentan solo para
+dejar registro de por qué no se llegaron a aplicar durante el análisis:
+
+- **#1 y #19** (limpieza general/editorial): no se dispuso del `.docx` fuente del manuscrito,
+  solo del PDF exportado; no era posible aceptar cambios de Word ni hacer búsqueda de texto
+  completo de forma confiable sobre un PDF.
+- **#5** (confiabilidad inter-observador): hubiera requerido que los dos lectores clínicos
+  existentes (radiólogo y médico) califiquen independientemente un subconjunto y se calcule
+  kappa/ICC, trabajo clínico real, no analítico.
+- **#10** (segmentación en imágenes mexicanas): hubiera requerido anotación manual de ~20–30
+  imágenes mexicanas en LabelMe por una persona, el ítem más costoso en tiempo de todo este
+  análisis.
+- **#20** (decisión general): era la síntesis de cierre que se redactaría una vez resueltos los
+  puntos 1, 5, 10 y 19; la publicación del artículo cierra el ciclo sin necesidad de esa síntesis.
 
 ---
 
-## Correcciones de texto identificadas sobre el manuscrito editado
+## Correcciones de texto identificadas sobre el manuscrito editado (histórico)
 
 Al revisar una versión del manuscrito ya editada con los cambios de arriba se identificaron 16
-correcciones puntuales adicionales, con ubicación exacta y texto listo para insertar:
+correcciones puntuales adicionales, con ubicación exacta y texto listo para insertar. El artículo
+ya se publicó, así que esta lista no es trabajo pendiente; queda como registro de lo que se
+detectó en ese momento, sin confirmación de si cada punto llegó a aplicarse en la versión final:
 
 1. **Abstract**: todavía cita a F-InceptionV3 como el de mejor desempeño externo; corregir a
    "statistically indistinguishable" entre F-DenseNet121 y F-InceptionV3.

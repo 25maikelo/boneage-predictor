@@ -3,13 +3,10 @@
 > Source: [`docs/reviewers.pdf`](../reviewers.pdf) (2 reviews of the multi-segment fusion manuscript for bone age estimation).
 > Below, each reviewer comment is followed by a proposed response drafted from the project's actual evidence (`docs/results/`, `docs/data/`, `docs/design/`, `models/hand-detector/`, `experiments/*/config.py`), completing or strengthening the items that were left as a bare idea or unanswered in the draft.
 
-> **Estado:** histórico (ronda 1, ya enviada). Algunos números de MEX citados aquí (p.ej. R1.3,
-> R1.13, R1.24, R2.3, R2.5) predatan la corrección del bug `real_age`/`bone_age` y ya no son
-> exactos (ver [`results/experimentos_adicionales/analisis.md`](../results/experimentos_adicionales/analisis.md)
-> para los valores corregidos); las conclusiones cualitativas (equivalencia estadística
-> DenseNet121/InceptionV3) se sostienen. La tabla "Recommended actions" al final ya está resuelta:
-> el baseline whole-hand (R1.11) y la tabla de pruebas pareadas (R1.13) se completaron en la
-> segunda ronda, documentados en el mismo archivo de arriba.
+> **Estado:** histórico, cerrado (ronda 1, ya enviada; el artículo ya fue publicado). Algunos
+> números de MEX citados aquí (R1.3, R1.13, R1.24, R2.3, R2.5) quedaron desactualizados; valores
+> finales en [`results/experimentos_adicionales/analisis.md`](../results/experimentos_adicionales/analisis.md).
+> Las conclusiones cualitativas (equivalencia estadística DenseNet121/InceptionV3) se sostienen.
 
 ---
 

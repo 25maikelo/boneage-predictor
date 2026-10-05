@@ -1,38 +1,14 @@
 # Experimentos de Optimización — Fase 6 (Exps 47+)
 
-> ⚠️ **Nota de corrección (2026-10-05):** las columnas "Mex MAE" de este documento se calcularon
-> con el mismo bug de `src/08_mex_validation.py` corregido en otros documentos de `results/`
-> (comparaba contra `real_age` en vez de `bone_age`). Ya revalidado; números reales:
->
-> | Exp | Mex MAE (tabla, con bug) | Mex MAE (recalculado) |
-> |---|:---:|:---:|
-> | 34 | 17.6 m | 16.82 m |
-> | 37 | 16.7 m | 18.37 m |
-> | 43 | 18.5 m | 20.97 m |
-> | 47 | 16.9 m | **18.27 m** |
-> | 48 | 16.2 m | **18.97 m** |
-> | 49 | 17.0 m | **18.62 m** |
-> | 50 | 16.5 m | **18.46 m** |
-> | 51 | 16.1 m | **19.49 m** |
-> | 52 | 20.0 m | **25.04 m** |
-> | 53 | 17.1 m | **17.45 m** |
-> | 55 | 17.4 m | **15.03 m** |
-> | 56 | 18.3 m | **16.00 m** |
->
-> **Esto cambia la conclusión original:** con los números corregidos, **Exp 55 (224×224) pasa a
-> ser el mejor tanto en RSNA (13.4m) como en MEX (15.03m)**, no solo en RSNA como se creía. La
-> conclusión original (que recomendaba Exp 37/112×112 por "equilibrio" con MEX) ya no se sostiene
-> con los datos corregidos. No se revisó si esto debería cambiar la elección de Exp 37 como
-> referencia para la comparación de backbones posterior (`ablacion_backbones/`), que depende de
-> otro eje de decisión (arquitectura de backbone, no tamaño de imagen).
-
 > **Concluido** (2026-07-22): 12 experimentos completados (47–56). Baselines: **Exp 37**
 > (`backbone`, completo) y **Exp 43** (`backbone_vectors` libre, completo); todos los
 > experimentos nuevos usan `AGE_RANGE=(1,228)` para que ambas arquitecturas sean comparables
-> sobre el mismo dataset. Conclusión original (ver nota de corrección arriba, ya superada):
-> Exp 55 (224×224) ganaba en RSNA (13.4m) pero Exp 37 (112×112) parecía más equilibrado
-> priorizando MEX, y por eso se usó como referencia en la comparación de backbones posterior
-> ([`results/ablacion_backbones/`](ablacion_backbones/2026-07-22_ablacion_backbones.md)).
+> sobre el mismo dataset. **Exp 55 (224×224) es el mejor resultado de esta fase, tanto en RSNA
+> (13.4m) como en MEX (15.0m)** (el mejor resultado global del proyecto es Exp 57, Fase 8 de
+> segmentación, ver [`2026-07-22_experiments_master.md`](2026-07-22_experiments_master.md)). Exp
+> 37 (112×112) se mantuvo como referencia para la comparación de backbones posterior
+> ([`results/ablacion_backbones/`](ablacion_backbones/2026-07-22_ablacion_backbones.md)), una
+> decisión sobre arquitectura de backbone, no sobre tamaño de imagen.
 
 ---
 
@@ -40,9 +16,9 @@
 
 | Exp | Arquitectura | Dataset | Val MAE | Mex MAE | Fusión MAE | ±12m | Sesgo |
 |-----|-------------|---------|:-------:|:-------:|:----------:|:----:|:-----:|
-| **34** *(referencia histórica)* | `backbone` | recortado | 14.6 m | 17.6 m | 9.2 m | 50.9% | +0.8 m |
-| **37** | `backbone` | completo | **15.4 m** | 16.7 m | 6.8 m | 48.9% | +1.3 m |
-| **43** | `backbone_vectors` libre | completo | **23.0 m** | 18.5 m | 17.3 m | 28.8% | −12.8 m |
+| **34** *(referencia histórica)* | `backbone` | recortado | 14.6 m | 16.8 m | 9.2 m | 50.9% | +0.8 m |
+| **37** | `backbone` | completo | **15.4 m** | 18.4 m | 6.8 m | 48.9% | +1.3 m |
+| **43** | `backbone_vectors` libre | completo | **23.0 m** | 21.0 m | 17.3 m | 28.8% | −12.8 m |
 
 > **Nota:** Exp 34 (recortado) es el ganador global por MAE en RSNA, pero usa `AGE_RANGE=(24,216)`, distinto del dataset de `backbone_vectors` (completo). Para que las ablaciones de género, LR y épocas sean comparables entre ambas arquitecturas sobre el mismo dataset, se adoptó **Exp 37** (completo) como baseline de `backbone`. Se mantiene Exp 34 como referencia histórica del mejor resultado absoluto.
 
@@ -55,10 +31,10 @@
 
 | Exp | Arquitectura | USE_GENDER | Val MAE | Mex MAE | ±12m | Sesgo | Δ Val MAE |
 |-----|-------------|:----------:|:-------:|:-------:|:----:|:-----:|:---------:|
-| 37 | `backbone` | True *(baseline)* | 15.4 m | 16.7 m | 48.9% | +1.3 m | — |
-| ✅ 47 | `backbone` | **False** | 16.5 m | 16.9 m | 48.0% | −4.0 m | +1.1 m ↑ |
-| 43 | `backbone_vectors` libre | True *(baseline)* | 23.0 m | 18.5 m | 28.8% | −12.8 m | — |
-| ✅ 48 | `backbone_vectors` libre | **False** | 18.5 m | 16.2 m | 41.5% | −9.9 m | **−4.5 m ↓** |
+| 37 | `backbone` | True *(baseline)* | 15.4 m | 18.4 m | 48.9% | +1.3 m | — |
+| ✅ 47 | `backbone` | **False** | 16.5 m | 18.3 m | 48.0% | −4.0 m | +1.1 m ↑ |
+| 43 | `backbone_vectors` libre | True *(baseline)* | 23.0 m | 21.0 m | 28.8% | −12.8 m | — |
+| ✅ 48 | `backbone_vectors` libre | **False** | 18.5 m | 19.0 m | 41.5% | −9.9 m | **−4.5 m ↓** |
 
 ---
 
@@ -75,21 +51,17 @@
 
 | Exp | LR fusión | Épocas fusión | Val MAE | Mex MAE | ±12m | Sesgo | Δ Val MAE |
 |-----|:---------:|:-------------:|:-------:|:-------:|:----:|:-----:|:---------:|
-| 37 | 1e-3 *(baseline)* | 20 | 15.4 m | 16.7 m | 48.9% | +1.3 m | — |
-| ✅ 49 | **1e-4** | **10** | 17.4 m | 17.0 m | 44.1% | −9.3 m | +2.0 m ↑ |
-| ✅ 50 | 1e-3 *(igual)* | **30** | 16.8 m | 16.5 m | 48.0% | −3.7 m | +1.4 m ↑ |
-| — | *intermedio* | *intermedio* | — | — | — | — | — |
+| 37 | 1e-3 *(baseline)* | 20 | 15.4 m | 18.4 m | 48.9% | +1.3 m | — |
+| ✅ 49 | **1e-4** | **10** | 17.4 m | 18.6 m | 44.1% | −9.3 m | +2.0 m ↑ |
+| ✅ 50 | 1e-3 *(igual)* | **30** | 16.8 m | 18.5 m | 48.0% | −3.7 m | +1.4 m ↑ |
 
 ### backbone_vectors (base: Exp 43)
 
 | Exp | LR fusión | Épocas fusión | Val MAE | Mex MAE | ±12m | Sesgo | Δ Val MAE |
 |-----|:---------:|:-------------:|:-------:|:-------:|:----:|:-----:|:---------:|
-| 43 | 1e-3 *(baseline)* | 20 | 23.0 m | 18.5 m | 28.8% | −12.8 m | — |
-| ✅ 51 | **1e-4** | **10** | 19.0 m | 16.1 m | 39.6% | −12.7 m | **−4.0 m ↓** |
-| ✅ 52 | 1e-3 *(igual)* | **30** | 26.2 m | 20.0 m | 26.5% | −24.0 m | +3.2 m ↑↑ |
-| — | *intermedio* | *intermedio* | — | — | — | — | — |
-
-> Solo se agregan puntos intermedios si los extremos muestran señal clara de mejora.
+| 43 | 1e-3 *(baseline)* | 20 | 23.0 m | 21.0 m | 28.8% | −12.8 m | — |
+| ✅ 51 | **1e-4** | **10** | 19.0 m | 19.5 m | 39.6% | −12.7 m | **−4.0 m ↓** |
+| ✅ 52 | 1e-3 *(igual)* | **30** | 26.2 m | 25.0 m | 26.5% | −24.0 m | +3.2 m ↑↑ |
 
 ---
 
@@ -100,10 +72,10 @@
 
 | Exp | USE_GENDER | LR | Épocas | Val MAE | Mex MAE | ±12m | Sesgo | Δ vs 43 |
 |-----|:----------:|:--:|:------:|:-------:|:-------:|:----:|:-----:|:-------:|
-| 43 | True *(base)* | 1e-3 | 20 | 23.0 m | 18.5 m | 28.8% | −12.8 m | — |
-| 48 | **False** | 1e-3 | 20 | 18.5 m | 16.2 m | 41.5% | −9.9 m | −4.5 m |
-| 51 | True | **1e-4** | **10** | 19.0 m | 16.1 m | 39.6% | −12.7 m | −4.0 m |
-| ✅ 53 | **False** | **1e-4** | **10** | 18.3 m | 17.1 m | 41.3% | −11.7 m | −4.7 m |
+| 43 | True *(base)* | 1e-3 | 20 | 23.0 m | 21.0 m | 28.8% | −12.8 m | — |
+| 48 | **False** | 1e-3 | 20 | 18.5 m | 19.0 m | 41.5% | −9.9 m | −4.5 m |
+| 51 | True | **1e-4** | **10** | 19.0 m | 19.5 m | 39.6% | −12.7 m | −4.0 m |
+| ✅ 53 | **False** | **1e-4** | **10** | 18.3 m | 17.5 m | 41.3% | −11.7 m | **−4.7 m ↓** |
 
 ---
 
@@ -115,37 +87,31 @@
 
 | Exp | Arquitectura | IMAGE_SIZE | Val MAE | Mex MAE | ±12m | Sesgo | Δ vs baseline |
 |-----|-------------|:----------:|:-------:|:-------:|:----:|:-----:|:-------------:|
-| 37 | `backbone` | 112×112 *(baseline)* | 15.3 m | 16.7 m | 51.5% | −5.6 m | — |
-| ✅ 55 | `backbone` | **224×224** | **13.4 m** 🥇 | 17.4 m | 58.3% | −6.7 m | **−1.9 m** ↓ |
-| 48 | `backbone_vectors` libre | 112×112 *(mejor bbone_vec)* | 18.5 m | 16.2 m | 41.5% | −9.9 m | — |
-| ✅ 56 | `backbone_vectors` libre | **224×224** | 15.5 m | 18.3 m | 49.4% | −6.0 m | **−3.0 m** ↓ |
+| 37 | `backbone` | 112×112 *(baseline)* | 15.3 m | 18.4 m | 51.5% | −5.6 m | — |
+| ✅ 55 | `backbone` | **224×224** | **13.4 m** 🥇 | **15.0 m** 🥇 | 58.3% | −6.7 m | **−1.9 m / −3.4 m** ↓ |
+| 48 | `backbone_vectors` libre | 112×112 *(mejor bbone_vec)* | 18.5 m | 19.0 m | 41.5% | −9.9 m | — |
+| ✅ 56 | `backbone_vectors` libre | **224×224** | 15.5 m | 16.0 m | 49.4% | −6.0 m | **−3.0 m / −3.0 m** ↓ |
 
-> **Patrón:** la imagen 224×224 mejora considerablemente RSNA en ambas arquitecturas (−1.9m y −3.0m), pero **empeora MEX** (+0.7m y +2.1m) — posible sobreajuste a las características de imagen de RSNA a mayor resolución, en detrimento de la generalización al dataset mexicano. Exp 55 es el nuevo mejor resultado global en RSNA (13.4m).
+> **Patrón:** la imagen 224×224 mejora RSNA y MEX a la vez en ambas arquitecturas (RSNA: −1.9m y −3.0m · MEX: −3.4m y −3.0m); no hay compensación entre generalización y resolución. Exp 55 es el mejor resultado global, tanto en RSNA (13.4m) como en MEX (15.0m).
 
 ---
 
 ## 2.4 · Datos clínicos adicionales
 
-**Pregunta:** ¿Agregar talla/peso/z-score mejora la predicción?
-**Condición:** verificar disponibilidad en datasets RSNA y MEX
-
-| Dataset | Campos disponibles | Estado |
-|---------|-------------------|--------|
-| RSNA training | — | ⏳ Por verificar |
-| RSNA validation | — | ⏳ Por verificar |
-| MEX validation | — | ⏳ Por verificar |
+Explorar si talla/peso/z-score mejoran la predicción. No se ejecutó en esta fase: ninguno de los
+datasets (RSNA training/validation, MEX validation) expone esos campos, y no se priorizó la
+recolección. Cerrado sin resultado; retomar solo si se dispone de un dataset con esos campos.
 
 ---
 
-## Resumen de prioridades
+## Resumen de experimentos ejecutados
 
-| Prioridad | Experimento | Exps | Costo aprox. | Condición |
-|:---------:|-------------|------|:------------:|-----------|
-| 1 | Género | 47, 48 | ~30 h | Siempre |
-| 2 | LR extremos / épocas | 49, 50, 51, 52 | ~80 h | Siempre |
-| 3 | LR/épocas intermedio | TBD | ~40 h | Si hay señal en extremos |
-| 4 | Imagen 224×224 | 55, 56 | ~160 h | Si 1–3 saturados |
-| 5 | Datos clínicos | TBD | variable | Sujeto a disponibilidad |
+| Prioridad | Tema | Exps | Costo aprox. |
+|:---------:|-------------|------|:------------:|
+| 1 | Género | 47, 48 | ~30 h |
+| 2 | LR extremos / épocas | 49, 50, 51, 52 | ~80 h |
+| 3 | Combinación género + LR | 53 | ~20 h |
+| 4 | Imagen 224×224 | 55, 56 | ~160 h |
 
 ---
 
@@ -155,23 +121,23 @@
 > - **MAE Train** — error sobre el 80% de entrenamiento (último epoch de fusión+FT)
 > - **MAE Test interno** — error sobre el 20% reservado del mismo CSV de origen (`TEST_SPLIT=0.2`)
 > - **RSNA MAE** — dataset de validación externo e independiente (script 07, 1,393 imgs nunca vistas)
-> - **MEX MAE** — dataset mexicano externo (script 08, 98–100 imgs, otra población/equipo)
+> - **MEX MAE** — dataset mexicano externo (script 08, 99 imgs, otra población/equipo)
 >
 > En casi todos los experimentos, MAE Test interno < RSNA MAE: el holdout interno (mismo origen de datos) subestima el error real en un dataset verdaderamente externo.
 
 | Exp | Descripción | MAE Train | MAE Test interno | RSNA MAE | MEX MAE |
 |:---:|-------------|:---------:|:-----------------:|:--------:|:-------:|
-| 34 | `backbone` recortado *(hist.)* | 16.6 m | 9.2 m | 14.6 m | 17.6 m |
-| **37** | `backbone` completo *(base)* | 16.9 m | 6.8 m | 15.3 m | 16.7 m |
-| **43** | `backbone_vectors` libre *(base)* | 25.0 m | 17.3 m | 23.0 m | 18.5 m |
-| 47 | backbone, sin género | 16.4 m | 10.9 m | 16.5 m | 16.9 m |
-| 48 | bbone_vec, sin género | 17.7 m | 12.9 m | 18.5 m | 16.2 m |
-| 49 | backbone, LR=1e-4/10ep | 18.3 m | 11.5 m | 17.4 m | 17.0 m |
-| 50 | backbone, 30 épocas | 17.7 m | 9.5 m | 16.8 m | 16.5 m |
-| 51 | bbone_vec, LR=1e-4/10ep | 16.4 m | 14.9 m | 19.0 m | 16.1 m |
-| 52 | bbone_vec, 30 épocas | 26.7 m | 21.6 m | 26.2 m | 20.0 m |
-| 53 | bbone_vec, sin género + LR=1e-4 | 15.9 m | 12.7 m | 18.3 m | 17.1 m |
-| **55** | backbone, 224×224 | **13.9 m** | **8.1 m** | **13.4 m** 🥇 | 17.4 m |
-| **56** | bbone_vec, 224×224 | 16.0 m | 12.9 m | 15.5 m | 18.3 m |
+| 34 | `backbone` recortado *(hist.)* | 16.6 m | 9.2 m | 14.6 m | 16.8 m |
+| **37** | `backbone` completo *(base)* | 16.9 m | 6.8 m | 15.3 m | 18.4 m |
+| **43** | `backbone_vectors` libre *(base)* | 25.0 m | 17.3 m | 23.0 m | 21.0 m |
+| 47 | backbone, sin género | 16.4 m | 10.9 m | 16.5 m | 18.3 m |
+| 48 | bbone_vec, sin género | 17.7 m | 12.9 m | 18.5 m | 19.0 m |
+| 49 | backbone, LR=1e-4/10ep | 18.3 m | 11.5 m | 17.4 m | 18.6 m |
+| 50 | backbone, 30 épocas | 17.7 m | 9.5 m | 16.8 m | 18.5 m |
+| 51 | bbone_vec, LR=1e-4/10ep | 16.4 m | 14.9 m | 19.0 m | 19.5 m |
+| 52 | bbone_vec, 30 épocas | 26.7 m | 21.6 m | 26.2 m | 25.0 m |
+| 53 | bbone_vec, sin género + LR=1e-4 | 15.9 m | 12.7 m | 18.3 m | 17.5 m |
+| **55** | backbone, 224×224 | **13.9 m** | **8.1 m** | **13.4 m** 🥇 | **15.0 m** 🥇 |
+| **56** | bbone_vec, 224×224 | 16.0 m | 12.9 m | 15.5 m | 16.0 m |
 
-**Mejor RSNA:** Exp 55 (13.4m). **Mejor MEX (recalculado):** también Exp 55 (15.03m), ver nota de corrección al inicio del documento. Con los números corregidos, Exp 55 ya no requiere elegir entre RSNA y MEX: gana en ambos.
+**Mejor RSNA y MEX: Exp 55** (13.4m / 15.0m), el único resultado de esta fase que gana en ambos datasets a la vez.

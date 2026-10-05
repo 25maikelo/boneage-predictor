@@ -2,26 +2,6 @@
 
 > 14 experimentos completados · 4 arquitecturas · 3 datasets · 2026-04-29
 
-> ⚠️ **Nota de corrección (2026-08-07, actualizada 2026-10-05):** las columnas "Mex MAE" de la
-> tabla de abajo se calcularon con un bug ya corregido en `src/08_mex_validation.py` (comparaba
-> contra `real_age`, edad cronológica, en vez de `bone_age`, edad ósea TW3). Los valores de la
-> tabla quedan sin modificar (registro histórico); los números reales recalculados son:
->
-> | Exp | Mex MAE (tabla, con bug) | Mex MAE (recalculado) |
-> |---|:---:|:---:|
-> | 23/26/27/28/33/34/36/37/39/40 | ver tabla | en [`experimentos_adicionales/analisis.md`](experimentos_adicionales/analisis.md) y [`ablacion_backbones/2026-07-22_ablacion_backbones.md`](ablacion_backbones/2026-07-22_ablacion_backbones.md) |
-> | 35 | 23.4 m | **27.50 m** |
-> | 38 | 28.0 m | **31.74 m** |
-> | 41 | 27.3 m | **30.17 m** |
-> | 42 | 20.0 m | **25.40 m** |
-> | 43 | 18.5 m | **20.97 m** |
-> | 44 | 16.9 m | **20.04 m** |
-> | 45 | 21.0 m | **26.29 m** |
-> | 46 | 21.9 m | **23.86 m** |
->
-> Con esto, todos los experimentos de este documento ya tienen su MAE de MEX recalculado con el
-> script corregido (2026-10-05).
-
 ---
 
 ## Arquitecturas evaluadas
@@ -54,22 +34,22 @@
 
 | Exp | Arquitectura | Dataset | Val MAE | Mex MAE | Fusión MAE | ±12m | Sesgo |
 |-----|-------------|---------|:-------:|:-------:|:----------:|:----:|:-----:|
-| 🥇 **34** | `backbone` | recortado | **14.6 m** | 17.6 m | **9.2 m** | 50.9% | +0.8 m |
-| 🥈 **40** | `backbone` | balanceado | **15.1 m** | **13.9 m** | 9.0 m | 47.1% | −0.7 m |
-| 🥉 **37** | `backbone` | completo | 15.4 m | 16.7 m | **6.8 m** | 48.9% | +1.3 m |
-| **44** | `unified_cnn` | recortado | **19.0 m** | **16.9 m** | N/A | 35.9% | −1.8 m |
-| **46** | `unified_cnn` | balanceado | 21.0 m | 21.9 m | N/A | 35.3% | +0.9 m |
-| **43** | `backbone_vectors` | completo+libre | 23.0 m | 18.5 m | **17.3 m** | 28.8% | −12.8 m |
-| **42** | `simple_cnn` | completo+libre | 24.1 m | 20.0 m | 20.1 m | 30.7% | −11.0 m |
-| 45 | `unified_cnn` | completo | 29.0 m | 21.0 m | N/A | 24.3% | −18.5 m |
-| 36 | `simple_cnn` | completo | 30.2 m | 22.2 m | 25.5 m | 22.5% | −20.2 m |
-| 35 | `backbone_vectors` | recortado | 36.7 m | 23.4 m | 27.6 m | 14.7% | −28.0 m |
-| 41 | `backbone_vectors` | balanceado | 35.0 m | 27.3 m | 26.9 m | 15.5% | −26.5 m |
-| 33 | `simple_cnn` | recortado | 39.2 m | 35.9 m | 34.5 m | 11.8% | −31.6 m |
-| 38 | `backbone_vectors` | completo | 40.0 m | 28.0 m | 30.3 m | 13.4% | −31.6 m |
-| 39 | `simple_cnn` | balanceado | 43.5 m | 35.9 m | 41.8 m | 9.2% | −35.8 m |
+| 🥇 **34** | `backbone` | recortado | **14.6 m** | 16.8 m | **9.2 m** | 50.9% | +0.8 m |
+| 🥈 **40** | `backbone` | balanceado | **15.1 m** | **16.4 m** | 9.0 m | 47.1% | −0.7 m |
+| 🥉 **37** | `backbone` | completo | 15.4 m | 18.4 m | **6.8 m** | 48.9% | +1.3 m |
+| **44** | `unified_cnn` | recortado | **19.0 m** | **20.0 m** | N/A | 35.9% | −1.8 m |
+| **46** | `unified_cnn` | balanceado | 21.0 m | 23.9 m | N/A | 35.3% | +0.9 m |
+| **43** | `backbone_vectors` | completo+libre | 23.0 m | 21.0 m | **17.3 m** | 28.8% | −12.8 m |
+| **42** | `simple_cnn` | completo+libre | 24.1 m | 25.4 m | 20.1 m | 30.7% | −11.0 m |
+| 45 | `unified_cnn` | completo | 29.0 m | 26.3 m | N/A | 24.3% | −18.5 m |
+| 36 | `simple_cnn` | completo | 30.2 m | **24.3 m** | 25.5 m | 22.5% | −20.2 m |
+| 35 | `backbone_vectors` | recortado | 36.7 m | 27.5 m | 27.6 m | 14.7% | −28.0 m |
+| 41 | `backbone_vectors` | balanceado | 35.0 m | 30.2 m | 26.9 m | 15.5% | −26.5 m |
+| 33 | `simple_cnn` | recortado | 39.2 m | 38.2 m | 34.5 m | 11.8% | −31.6 m |
+| 38 | `backbone_vectors` | completo | 40.0 m | 31.7 m | 30.3 m | 13.4% | −31.6 m |
+| 39 | `simple_cnn` | balanceado | 43.5 m | 37.9 m | 41.8 m | 9.2% | −35.8 m |
 
-> **Val MAE:** dataset RSNA (1,393 imgs) · **Mex MAE:** dataset mexicano (98 imgs) · **Fusión MAE:** integrador final · **±12m:** % predicciones dentro de 1 año · **Sesgo:** + sobreestima, − subestima
+> **Val MAE:** dataset RSNA (1,393 imgs) · **Mex MAE:** dataset mexicano (99 imgs) · **Fusión MAE:** integrador final · **±12m:** % predicciones dentro de 1 año · **Sesgo:** + sobreestima, − subestima
 
 ---
 

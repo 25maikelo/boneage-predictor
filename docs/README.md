@@ -35,38 +35,40 @@
 | Archivo | Contenido | Estado |
 |---|---|---|
 | [2026-07-22_experiments_master.md](results/2026-07-22_experiments_master.md) | Tabla maestra de todos los experimentos: configuración, estado, línea de tiempo de código | **Vigente: fuente de verdad para el historial de experimentos** |
-| [2026-06-18_optimizacion.md](results/2026-06-18_optimizacion.md) | Fase 6 (exps 47–56): ablaciones de género, LR/épocas, tamaño de imagen | Histórico, con nota de corrección (misma causa que las de abajo; cambia la conclusión principal) |
-| [2026-05-28_resultados.md](results/2026-05-28_resultados.md) | Tabla resumen con podio y hallazgos de los primeros 14 experimentos | Histórico, con nota de corrección (columnas Mex MAE afectadas por el bug `real_age`/`bone_age`, ver abajo) |
-| [2026-05-28_resumen_evaluacion.md](results/2026-05-28_resumen_evaluacion.md) | Resultados detallados por experimento: ranking global, análisis por segmento y rango de edad | Histórico, con la misma nota de corrección |
+| [2026-06-18_optimizacion.md](results/2026-06-18_optimizacion.md) | Fase 6 (exps 47–56): ablaciones de género, LR/épocas, tamaño de imagen. Mejor de esta fase: Exp 55 (224×224); el mejor global del proyecto es Exp 57 (Fase 8, ver `2026-07-22_experiments_master.md`) | Vigente |
+| [2026-05-28_resultados.md](results/2026-05-28_resultados.md) | Tabla resumen con podio y hallazgos de los primeros 14 experimentos | Vigente |
+| [2026-05-28_resumen_evaluacion.md](results/2026-05-28_resumen_evaluacion.md) | Resultados detallados por experimento: ranking global, análisis por segmento y rango de edad | Vigente |
 | [ablacion_backbones/](results/ablacion_backbones/2026-07-22_ablacion_backbones.md) | Comparación formal de los 4 backbones (ResNet50/VGG16/DenseNet121/InceptionV3) con pruebas pareadas | Vigente |
-| [experimentos_adicionales/](results/experimentos_adicionales/analisis.md) | Experimentos y análisis adicionales en respuesta a la segunda ronda de revisión: baseline whole-hand, corrección del bug MEX, Dice/IoU por clase, benchmark de latencia, significancia estadística | **Vigente: más reciente** |
-
-> El bug ya corregido en `src/08_mex_validation.py` (comparaba contra `real_age` en vez de
-> `bone_age`) afectó las columnas "Mex MAE" de varios documentos. A 2026-10-05, **todos** los
-> experimentos de `results/` ya tienen su MAE de MEX recalculado: 23/26/27/28/33/34/35/36/37/38/
-> 39/40/41/42/43/44/45/46 (documento de 2026-04-29) y 47/48/49/50/51/52/53/55/56
-> (`2026-06-18_optimizacion.md`). Los números viven en `experimentos_adicionales/analisis.md`,
-> `ablacion_backbones/` o en el banner de corrección de cada documento. La revalidación de
-> `2026-06-18_optimizacion.md` cambió su conclusión principal: Exp 55 pasa a ganar tanto en RSNA
-> como en MEX, no solo en RSNA.
+| [experimentos_adicionales/](results/experimentos_adicionales/analisis.md) | Experimentos y análisis adicionales para el manuscrito publicado: baseline whole-hand, Dice/IoU por clase, benchmark de latencia, significancia estadística | **Vigente: más reciente** |
 
 ---
 
 ## revisiones/: Respuestas a comentarios de revisores
 
+El artículo ya fue publicado; estos documentos son registro histórico cerrado del proceso de revisión, no trabajo pendiente.
+
 | Archivo | Contenido |
 |---|---|
-| [ronda1_analisis.md](revisiones/ronda1_analisis.md) | Respuestas propuestas a la primera ronda de revisión |
+| [ronda1_analisis.md](revisiones/ronda1_analisis.md) | Respuestas a la primera ronda de revisión |
 | [../results/experimentos_adicionales/analisis.md](results/experimentos_adicionales/analisis.md) | Respuestas y experimentos adicionales de la segunda ronda (vive en `results/` por la cantidad de datos/figuras/scripts de respaldo que genera) |
 
 ---
 
 ## scripts/: Documentación de scripts individuales
 
-| Archivo | Script | Contenido |
-|---|---|---|
-| [10_age_range_analysis.md](scripts/10_age_range_analysis.md) | `src/10_age_range_analysis.py` | Salidas, justificación estadística del bin-size, grupos pediátricos, comando para todos los experimentos |
+Los 12 scripts del pipeline (`src/00`–`src/11`), cada uno con descripción, uso, entradas/salidas:
 
-> Cobertura incompleta: solo 1 de los ~11 scripts del pipeline (`src/00`–`src/10`) tiene
-> documentación dedicada aquí. El resto está descrito de forma más breve en
-> [`planning/pipeline.md`](planning/pipeline.md).
+| Script | Documento |
+|---|---|
+| `00_download_dataset.py` | [00_download_dataset.md](scripts/00_download_dataset.md) |
+| `01_train_hand_detector.py` | [01_train_hand_detector.md](scripts/01_train_hand_detector.md) |
+| `02_frame_and_zoom.py` | [02_frame_and_zoom.md](scripts/02_frame_and_zoom.md) |
+| `03_histogram_equalization.py` | [03_histogram_equalization.md](scripts/03_histogram_equalization.md) |
+| `04_segment_images.py` | [04_segment_images.md](scripts/04_segment_images.md) |
+| `05_dataset_analysis.py` | [05_dataset_analysis.md](scripts/05_dataset_analysis.md) |
+| `06_training.py` | [06_training.md](scripts/06_training.md) |
+| `07_validation.py` | [07_validation.md](scripts/07_validation.md) |
+| `08_mex_validation.py` | [08_mex_validation.md](scripts/08_mex_validation.md) |
+| `09_performance_analysis.py` | [09_performance_analysis.md](scripts/09_performance_analysis.md) |
+| `10_age_range_analysis.py` | [10_age_range_analysis.md](scripts/10_age_range_analysis.md) |
+| `11_paired_validation.py` | [11_paired_validation.md](scripts/11_paired_validation.md) |

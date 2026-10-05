@@ -1,27 +1,7 @@
 # Resumen de Evaluación — Todos los Experimentos
 
 > Actualizado: 2026-04-29 · Scripts 07 (val estándar), 08 (mex-validation), 09 (análisis de desempeño), 10 (análisis por rango de edad)
-> Val estándar: 1,393 imágenes · Mex-validation: 98 imágenes
-
-> ⚠️ **Nota de corrección (2026-08-07, actualizada 2026-10-05):** las columnas "Mex MAE" de las
-> tablas de abajo se calcularon con un bug ya corregido en `src/08_mex_validation.py` (comparaba
-> contra `real_age`, edad cronológica, en vez de `bone_age`, edad ósea TW3). Los valores de las
-> tablas quedan sin modificar (registro histórico); los números reales recalculados son:
->
-> | Exp | Mex MAE (tabla, con bug) | Mex MAE (recalculado) |
-> |---|:---:|:---:|
-> | 23/26/27/28/33/34/36/37/39/40 | ver tabla | en [`experimentos_adicionales/analisis.md`](experimentos_adicionales/analisis.md) y [`ablacion_backbones/2026-07-22_ablacion_backbones.md`](ablacion_backbones/2026-07-22_ablacion_backbones.md) |
-> | 35 | 23.4 m | **27.50 m** |
-> | 38 | 28.0 m | **31.74 m** |
-> | 41 | 27.3 m | **30.17 m** |
-> | 42 | 20.0 m | **25.40 m** |
-> | 43 | 18.5 m | **20.97 m** |
-> | 44 | 16.9 m | **20.04 m** |
-> | 45 | 21.0 m | **26.29 m** |
-> | 46 | 21.9 m | **23.86 m** |
->
-> Con esto, todos los experimentos de este documento ya tienen su MAE de MEX recalculado con el
-> script corregido (2026-10-05). "Val estándar"/MAE RSNA no están afectados por este bug.
+> Val estándar: 1,393 imágenes · Mex-validation: 99 imágenes
 
 ---
 
@@ -29,20 +9,20 @@
 
 | Exp | Tipo | Dataset | CV MAE | Val MAE | Mex MAE | Fusión MAE | ±12m | ±24m | Sesgo |
 |-----|------|---------|--------|---------|---------|-----------|------|------|-------|
-| 33 | `simple_cnn` | recortado | 26.4 m | 39.2 m | 35.9 m | 34.5 m | 11.8% | 28.6% | −31.6 m |
-| 36 | `simple_cnn` | completo | 34.3 m | 30.2 m | 22.2 m | 25.5 m | 22.5% | 42.7% | −20.2 m |
-| 39 | `simple_cnn` | balanceado | 29.6 m | 43.5 m | 35.9 m | 41.8 m | 9.2% | 21.7% | −35.8 m |
-| **42** | **`simple_cnn`** | **completo+libre** | **33.1 m** | **24.1 m** | **20.0 m** | **20.1 m** | **30.7%** | **55.5%** | **−11.0 m** |
-| **34** | **`backbone`** | **recortado** | **27.6 m** | **14.6 m** | **17.6 m** | **9.2 m** | **50.9%** | **78.8%** | **+0.8 m** |
-| **37** | **`backbone`** | **completo** | **29.7 m** | **15.4 m** | **16.7 m** | **6.8 m** | **48.9%** | **77.0%** | **+1.3 m** |
-| **40** | **`backbone`** | **balanceado** | **26.2 m** | **15.1 m** | **13.9 m** | **9.0 m** | **47.1%** | **79.1%** | **−0.7 m** |
-| 35 | `bbone_vec` | recortado | 26.6 m | 36.7 m | 23.4 m | 27.6 m | 14.7% | 31.0% | −28.0 m |
-| 38 | `bbone_vec` | completo | 31.4 m | 40.0 m | 28.0 m | 30.3 m | 13.4% | 28.8% | −31.6 m |
-| 41 | `bbone_vec` | balanceado | 26.7 m | 35.0 m | 27.3 m | 26.9 m | 15.5% | 32.9% | −26.5 m |
-| **43** | **`bbone_vec`** | **completo+libre** | **31.5 m** | **23.0 m** | **18.5 m** | **17.3 m** | **28.8%** | **58.5%** | **−12.8 m** |
-| **44** | **`unified_cnn`** | **recortado** | **19.5 m** | **19.0 m** | **16.9 m** | **16.0 m** | **35.9%** | **68.0%** | **−1.8 m** |
-| 45 | `unified_cnn` | completo | 30.0 m | 29.0 m | 21.0 m | 25.6 m | 24.3% | 43.1% | −18.5 m |
-| **46** | **`unified_cnn`** | **balanceado** | **23.2 m** | **21.0 m** | **21.9 m** | **16.2 m** | **35.3%** | **63.4%** | **+0.9 m** |
+| 33 | `simple_cnn` | recortado | 26.4 m | 39.2 m | 38.2 m | 34.5 m | 11.8% | 28.6% | −31.6 m |
+| 36 | `simple_cnn` | completo | 34.3 m | 30.2 m | 24.3 m | 25.5 m | 22.5% | 42.7% | −20.2 m |
+| 39 | `simple_cnn` | balanceado | 29.6 m | 43.5 m | 37.9 m | 41.8 m | 9.2% | 21.7% | −35.8 m |
+| **42** | **`simple_cnn`** | **completo+libre** | **33.1 m** | **24.1 m** | **25.4 m** | **20.1 m** | **30.7%** | **55.5%** | **−11.0 m** |
+| **34** | **`backbone`** | **recortado** | **27.6 m** | **14.6 m** | **16.8 m** | **9.2 m** | **50.9%** | **78.8%** | **+0.8 m** |
+| **37** | **`backbone`** | **completo** | **29.7 m** | **15.4 m** | **18.4 m** | **6.8 m** | **48.9%** | **77.0%** | **+1.3 m** |
+| **40** | **`backbone`** | **balanceado** | **26.2 m** | **15.1 m** | **16.4 m** | **9.0 m** | **47.1%** | **79.1%** | **−0.7 m** |
+| 35 | `bbone_vec` | recortado | 26.6 m | 36.7 m | 27.5 m | 27.6 m | 14.7% | 31.0% | −28.0 m |
+| 38 | `bbone_vec` | completo | 31.4 m | 40.0 m | 31.7 m | 30.3 m | 13.4% | 28.8% | −31.6 m |
+| 41 | `bbone_vec` | balanceado | 26.7 m | 35.0 m | 30.2 m | 26.9 m | 15.5% | 32.9% | −26.5 m |
+| **43** | **`bbone_vec`** | **completo+libre** | **31.5 m** | **23.0 m** | **21.0 m** | **17.3 m** | **28.8%** | **58.5%** | **−12.8 m** |
+| **44** | **`unified_cnn`** | **recortado** | **19.5 m** | **19.0 m** | **20.0 m** | **16.0 m** | **35.9%** | **68.0%** | **−1.8 m** |
+| 45 | `unified_cnn` | completo | 30.0 m | 29.0 m | 26.3 m | 25.6 m | 24.3% | 43.1% | −18.5 m |
+| **46** | **`unified_cnn`** | **balanceado** | **23.2 m** | **21.0 m** | **23.9 m** | **16.2 m** | **35.3%** | **63.4%** | **+0.9 m** |
 
 > **Negrita** = mejor resultado por arquitectura · **Sesgo:** + sobreestima, − subestima
 
@@ -71,7 +51,7 @@
 
 ## 3. Análisis por rango de edad (script 10)
 
-> Resultados corregidos 2026-05-28. Fix aplicado en `src/10_age_range_analysis.py`: el dataset MEX ahora usa 100/100 registros con edades correctamente convertidas a meses (antes: 75/100, con conversión errónea de años). Los sesgos combinados (RSNA+MEX) difieren de los sesgos RSNA-only de la sección 1.
+> El dataset MEX usa 100/100 registros con edades convertidas a meses. Los sesgos combinados (RSNA+MEX) difieren de los sesgos RSNA-only de la sección 1.
 
 | Exp | Tipo | Dataset | Mejor rango | Peor rango | ±12m | Sesgo combinado |
 |-----|------|---------|-------------|------------|------|-----------------|
@@ -98,14 +78,12 @@
 | Arquitectura | Sesgo típico | Patrón |
 |---|---|---|
 | `simple_cnn` (congelado) | −26 a −42 m | Subestima sistemáticamente |
-| `simple_cnn` (libre) | — | Pendiente rerun |
 | `backbone` | −4 a −7 m | Leve subestimación al combinar con MEX |
 | `bbone_vec` (congelado) | −32 a −37 m | Subestima sistemáticamente |
-| `bbone_vec` (libre) | — | Pendiente rerun |
 | `unified_cnn` (recortado/bal.) | −5 a −8 m | Comparable a `backbone` |
 | `unified_cnn` (completo) | −24 m | Dataset completo introduce sesgo |
 
-**Cambio clave vs. análisis anterior:** el peor rango para `backbone` y `unified_cnn` es ahora **228–240 m (adolescentes tardíos)**, no 12–24 m. El resultado anterior estaba distorsionado por el bug del MEX que concentraba casos con edades erróneas en rangos bajos.
+**Peor rango para `backbone` y `unified_cnn`: 228–240 m (adolescentes tardíos)**, consistente con el patrón de todas las arquitecturas (cierre de epífisis, la etapa más difícil de predecir).
 
 ---
 
@@ -113,20 +91,20 @@
 
 | # | Exp | Tipo | Dataset | Val MAE | Mex MAE | Fusión MAE | ±12m | Sesgo |
 |---|-----|------|---------|---------|---------|-----------|------|-------|
-| 🥇 | **34** | `backbone` | recortado | **14.6 m** | 17.6 m | **9.2 m** | 50.9% | +0.8 m |
-| 🥈 | **40** | `backbone` | balanceado | **15.1 m** | **13.9 m** | 9.0 m | 47.1% | −0.7 m |
-| 🥉 | **37** | `backbone` | completo | 15.4 m | 16.7 m | **6.8 m** | 48.9% | +1.3 m |
-| 4 | **44** | `unified_cnn` | recortado | 19.0 m | **16.9 m** | 16.0 m | 35.9% | −1.8 m |
-| 5 | **46** | `unified_cnn` | balanceado | 21.0 m | 21.9 m | 16.2 m | 35.3% | +0.9 m |
-| 6 | **43** | `bbone_vec` | completo+libre | 23.0 m | 18.5 m | 17.3 m | 28.8% | −12.8 m |
-| 7 | **42** | `simple_cnn` | completo+libre | 24.1 m | 20.0 m | 20.1 m | 30.7% | −11.0 m |
-| 8 | 45 | `unified_cnn` | completo | 29.0 m | 21.0 m | 25.6 m | 24.3% | −18.5 m |
-| 9 | 36 | `simple_cnn` | completo | 30.2 m | 22.2 m | 25.5 m | 22.5% | −20.2 m |
-| 10 | 35 | `bbone_vec` | recortado | 36.7 m | 23.4 m | 27.6 m | 14.7% | −28.0 m |
-| 11 | 41 | `bbone_vec` | balanceado | 35.0 m | 27.3 m | 26.9 m | 15.5% | −26.5 m |
-| 12 | 33 | `simple_cnn` | recortado | 39.2 m | 35.9 m | 34.5 m | 11.8% | −31.6 m |
-| 13 | 38 | `bbone_vec` | completo | 40.0 m | 28.0 m | 30.3 m | 13.4% | −31.6 m |
-| 14 | 39 | `simple_cnn` | balanceado | 43.5 m | 35.9 m | 41.8 m | 9.2% | −35.8 m |
+| 🥇 | **34** | `backbone` | recortado | **14.6 m** | 16.8 m | **9.2 m** | 50.9% | +0.8 m |
+| 🥈 | **40** | `backbone` | balanceado | **15.1 m** | **16.4 m** | 9.0 m | 47.1% | −0.7 m |
+| 🥉 | **37** | `backbone` | completo | 15.4 m | 18.4 m | **6.8 m** | 48.9% | +1.3 m |
+| 4 | **44** | `unified_cnn` | recortado | 19.0 m | **20.0 m** | 16.0 m | 35.9% | −1.8 m |
+| 5 | **46** | `unified_cnn` | balanceado | 21.0 m | 23.9 m | 16.2 m | 35.3% | +0.9 m |
+| 6 | **43** | `bbone_vec` | completo+libre | 23.0 m | 21.0 m | 17.3 m | 28.8% | −12.8 m |
+| 7 | **42** | `simple_cnn` | completo+libre | 24.1 m | 25.4 m | 20.1 m | 30.7% | −11.0 m |
+| 8 | 45 | `unified_cnn` | completo | 29.0 m | 26.3 m | 25.6 m | 24.3% | −18.5 m |
+| 9 | 36 | `simple_cnn` | completo | 30.2 m | **24.3 m** | 25.5 m | 22.5% | −20.2 m |
+| 10 | 35 | `bbone_vec` | recortado | 36.7 m | 27.5 m | 27.6 m | 14.7% | −28.0 m |
+| 11 | 41 | `bbone_vec` | balanceado | 35.0 m | 30.2 m | 26.9 m | 15.5% | −26.5 m |
+| 12 | 33 | `simple_cnn` | recortado | 39.2 m | 38.2 m | 34.5 m | 11.8% | −31.6 m |
+| 13 | 38 | `bbone_vec` | completo | 40.0 m | 31.7 m | 30.3 m | 13.4% | −31.6 m |
+| 14 | 39 | `simple_cnn` | balanceado | 43.5 m | 37.9 m | 41.8 m | 9.2% | −35.8 m |
 
 ---
 

@@ -5,7 +5,7 @@
 > *Technologies*, MDPI), en respuesta a los 20 comentarios de la segunda ronda de revisión.
 > Todos los números citados aquí están verificados contra el código y los datos del proyecto: no
 > hay cifras inventadas. Material de respaldo (figuras, scripts, resultados numéricos crudos) en
-> [`results/experimentos_adicionales/`](results/experimentos_adicionales/).
+> las subcarpetas de este mismo directorio, listadas al final.
 
 ## Estado por comentario del revisor
 
@@ -218,6 +218,6 @@ correcciones puntuales adicionales, con ubicación exacta y texto listo para ins
 
 ## Material de respaldo
 
-- [`results/experimentos_adicionales/figures/`](results/experimentos_adicionales/figures/): diagrama de flujo de participantes, Figura 2 extendida (6 paneles), Figura 8 (identidad+regresión), Bland-Altman.
-- [`results/experimentos_adicionales/scripts/`](results/experimentos_adicionales/scripts/): todo el código usado para generar los números y figuras de este análisis, reproducible desde los datos del proyecto.
-- [`results/experimentos_adicionales/results_json/`](results/experimentos_adicionales/results_json/): resultados numéricos crudos (Dice/IoU por clase, estadísticas extendidas RSNA/MEX, latencia/memoria, significancia del baseline whole-hand, diagnóstico de fallos de validación).
+- [`figures/`](figures/): diagrama de flujo de participantes, Figura 2 extendida (6 paneles), Figura 8 (identidad+regresión), Bland-Altman.
+- [`scripts/`](scripts/): todo el código usado para generar los números y figuras de este análisis, reproducible desde los datos del proyecto.
+- [`results_json/`](results_json/): resultados numéricos crudos (Dice/IoU por clase, estadísticas extendidas RSNA/MEX, latencia/memoria, significancia del baseline whole-hand, diagnóstico de fallos de validación).

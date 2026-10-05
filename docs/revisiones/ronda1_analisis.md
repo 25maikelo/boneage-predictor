@@ -1,6 +1,6 @@
 # Proposed Responses to Reviewers
 
-> Source: [`docs/reviewers.pdf`](reviewers.pdf) (2 reviews of the multi-segment fusion manuscript for bone age estimation).
+> Source: [`docs/reviewers.pdf`](../reviewers.pdf) (2 reviews of the multi-segment fusion manuscript for bone age estimation).
 > Below, each reviewer comment is followed by a proposed response drafted from the project's actual evidence (`docs/results/`, `docs/data/`, `docs/design/`, `models/hand-detector/`, `experiments/*/config.py`), completing or strengthening the items that were left as a bare idea or unanswered in the draft.
 
 ---

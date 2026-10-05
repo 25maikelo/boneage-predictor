@@ -1,12 +1,13 @@
-# Segunda ronda de revisión: resumen final de los 20 comentarios del Revisor 1
+# Experimentos y análisis adicionales para el manuscrito
 
-> Documentación de cierre. Consolida `ANALISIS_COMENTARIOS.md` y los 10 documentos
-> `RESULTADO_comentario*.md` producidos durante esta ronda en un solo archivo de referencia.
-> Manuscrito: *A Multi-Segment Fusion Architecture for Bone Age Estimation* (revista *Technologies*,
-> MDPI). Todos los números citados aquí están verificados contra el código y los datos del
-> proyecto: no hay cifras inventadas.
+> Documentación de cierre de un conjunto de experimentos y análisis adicionales realizados sobre
+> el manuscrito *A Multi-Segment Fusion Architecture for Bone Age Estimation* (revista
+> *Technologies*, MDPI), en respuesta a los 20 comentarios de la segunda ronda de revisión.
+> Todos los números citados aquí están verificados contra el código y los datos del proyecto: no
+> hay cifras inventadas. Material de respaldo (figuras, scripts, resultados numéricos crudos) en
+> [`results/experimentos_adicionales/`](results/experimentos_adicionales/).
 
-## Estado por comentario
+## Estado por comentario del revisor
 
 | # | Tema | Estado |
 |---|---|---|
@@ -33,7 +34,7 @@
 
 ---
 
-## Hallazgos críticos encontrados durante la revisión
+## Hallazgos críticos encontrados durante el análisis
 
 **Hallazgo #1: Bug `real_age` vs. `bone_age`.** `src/08_mex_validation.py` comparaba las
 predicciones del modelo (que predice edad ósea TW3) contra `real_age` (edad cronológica) en vez
@@ -41,15 +42,15 @@ de `bone_age` (edad ósea asignada por TW3), pese a usar `bone_age` correctament
 del mismo script. Corregido en código (commit `9ccd9a6`) y **todos** los números de validación
 mexicana citados en este documento ya están recalculados con la corrección. Efecto principal:
 **F-DenseNet121 pasa a ser el backbone con el MAE numéricamente más bajo en MEX** (16.38 vs. el
-17.28 de F-InceptionV3, que antes figuraba como mejor): aunque la diferencia entre ambos sigue
+17.28 de F-InceptionV3, que antes figuraba como mejor), aunque la diferencia entre ambos sigue
 sin ser estadísticamente significativa.
 
 **Hallazgo #2: Respuestas 13/14 cruzadas** en el borrador de respuestas al revisor (la
 Respuesta 14 contestaba al Comentario 13 por error, dejando el 14 efectivamente sin responder).
-Corregido al redactar las respuestas de este documento.
+Corregido al redactar las respuestas de este análisis.
 
 **Hallazgo #3: Artefacto de fusión de texto**: *"inspired based by theon the Tanner–Whitehouse 3
-(TW3) technique"* (pág. 3): evidencia en vivo de que la limpieza editorial del Comentario 19
+(TW3) technique"* (pág. 3), evidencia en vivo de que la limpieza editorial del Comentario 19
 sigue pendiente. Bloqueado junto con #1 y #19 por falta del `.docx` fuente.
 
 ---
@@ -57,11 +58,11 @@ sigue pendiente. Bloqueado junto con #1 y #19 por falta del `.docx` fuente.
 ## Comentarios resueltos: detalle
 
 ### #2: Diagrama de flujo de participantes
-Se construyó un diagrama de flujo (`figures/participant_flow_diagram.png`) que seguía iterando
-hasta usar exactamente la terminología del manuscrito ("official training/validation/test set",
-"balanced subset", "internal training/validation subset", "Mexican clinical dataset"), sin
-conectar visualmente conceptos no relacionados (se corrigió una flecha que implicaba una relación
-falsa entre el test set oficial de RSNA, no usado, y el cohorte mexicano).
+Se construyó un diagrama de flujo (`figures/participant_flow_diagram.png`) que usa exactamente
+la terminología del manuscrito ("official training/validation/test set", "balanced subset",
+"internal training/validation subset", "Mexican clinical dataset"), sin conectar visualmente
+conceptos no relacionados (se corrigió una flecha que implicaba una relación falsa entre el test
+set oficial de RSNA, no usado, y el cohorte mexicano).
 
 ### #3: Distribución antes/después del balanceo
 Verificado contra los CSV reales: raw = 12,611 imágenes (160 edades, 1–228 meses, 54.2%♂/45.8%♀)
@@ -80,12 +81,12 @@ los 4 backbones en RSNA (n=1,393) y MEX (n=99); pruebas pareadas (Wilcoxon + boo
 remuestreos, corrección de Holm) confirman que **F-DenseNet121 y F-InceptionV3 siguen siendo
 estadísticamente indistinguibles** en ambos datasets (MEX: ΔMAE=−0.90, p=0.70/0.50). Hallazgo
 clínico adicional: pese al MAE similar, DenseNet121 sobreestima sistemáticamente (sesgo +5.68m)
-mientras InceptionV3 subestima levemente (−2.37m): invisible en el MAE agregado. Nueva Figura 8
-(identidad + regresión + IC 95%) y figura Bland-Altman generadas con terminología TW3 corregida.
-Diagnóstico del colapso de F-VGG16 con evidencia real de `training_history`: no es falta de
-entrenamiento (estancado desde la época 1) ni fuga de datos (produciría desempeño artificialmente
-bueno, no un colapso), sino falla de optimización específica de la arquitectura: VGG16 es la
-única de las 4 sin BatchNorm ni conexiones residuales/densas al entrenar desde cero.
+mientras InceptionV3 subestima levemente (−2.37m), algo invisible en el MAE agregado. Nueva
+Figura 8 (identidad + regresión + IC 95%) y figura Bland-Altman generadas con terminología TW3
+corregida. Diagnóstico del colapso de F-VGG16 con evidencia real de `training_history`: no es
+falta de entrenamiento (estancado desde la época 1) ni fuga de datos (produciría desempeño
+artificialmente bueno, no un colapso), sino falla de optimización específica de la arquitectura:
+VGG16 es la única de las 4 sin BatchNorm ni conexiones residuales/densas al entrenar desde cero.
 
 ### #6, #18: Representatividad mexicana y declaración de ética
 Terminología "single-center Mexican clinical cohort" ya adoptada en el manuscrito. Limitación de
@@ -97,9 +98,9 @@ datos clínicos (solo edad/sexo disponibles) declarada explícitamente. La secci
 El manuscrito decía "200 radiografías anotadas"; el dataset real tiene **379** (303 train / 76
 val, split reproducible `random_state=42`), confirmado contra el log de entrenamiento del modelo
 activo (`hand-detector_00`). Dice/IoU por clase calculado sobre el split real: meñique 0.78,
-medio 0.89, pulgar 0.86, muñeca 0.77 (macro 0.83): notablemente más bajo y heterogéneo que el
+medio 0.89, pulgar 0.86, muñeca 0.77 (macro 0.83), notablemente más bajo y heterogéneo que el
 0.9168 agregado que reporta el manuscrito (calculado en modo "soft"/probabilístico, no por clase).
-**Limitación honesta declarada**: las 76 imágenes de "validación" no son un test ciego: son el
+**Limitación honesta declarada**: las 76 imágenes de "validación" no son un test ciego, son el
 mismo conjunto que `EarlyStopping`/`ReduceLROnPlateau` usó para seleccionar el checkpoint del
 segmentador. No se entrenó un segmentador nuevo con split de 3 vías porque `hand-detector_00` es
 el modelo que generó las máscaras de **todos** los experimentos del estudio; evaluar un modelo
@@ -115,10 +116,10 @@ contexto no competitivo para #17). Sin cambios de contenido.
 (`random_state=42`) que los modelos de segmento, así que durante la fase congelada de fusión, la
 cabeza de fusión ve salidas de los modelos de segmento calculadas sobre casos en los que esos
 modelos fueron ajustados. **Decisión explícita del autor: no reentrenar** (ya se había
-implementado y revertido una corrección completa: split de 3 vías: en una sesión anterior).
-Se optó por declarar la limitación honestamente en vez de rehacer el pipeline. Hallazgo adicional
+implementado y revertido una corrección completa, un split de 3 vías, en una sesión anterior). Se
+optó por declarar la limitación honestamente en vez de rehacer el pipeline. Hallazgo adicional
 encontrado en el camino: el checkpoint guardado en disco es el de la última época, no
-necesariamente el de mejor `val_loss`, pese a `restore_best_weights=True`: aplica a todos los
+necesariamente el de mejor `val_loss`, pese a `restore_best_weights=True`; aplica a todos los
 modelos del pipeline, no solo a la fusión.
 
 ### #13: Función de pérdida sin definición matemática
@@ -129,13 +130,13 @@ dos causas verificables en el código: dropout activo durante el cómputo de la 
 entrenamiento, y augmentación de datos solo en entrenamiento.
 
 ### #14: Comparación de arquitecturas no controlada
-Hiperparámetros confirmados idénticos entre los 4 backbones (tabla completa: optimizador, LR,
-early stopping, pesos iniciales, etc.). Tiempos de entrenamiento reales por backbone
-(ResNet50~12h, VGG16~7h, DenseNet121~10h, InceptionV3~14h) y benchmark de latencia/memoria medido
-en nodo GPU dedicado: DenseNet121 tiene los menos parámetros y la menor memoria, pero
-paradójicamente la **mayor** latencia de inferencia (526.7ms, más lento que ResNet50 pese a tener
-3.3× menos parámetros): hallazgo reportado tal cual, sin ocultar que el conteo de parámetros no
-predice bien la latencia real.
+Hiperparámetros confirmados idénticos entre los 4 backbones (optimizador, LR, early stopping,
+pesos iniciales, etc.). Tiempos de entrenamiento reales por backbone (ResNet50~12h, VGG16~7h,
+DenseNet121~10h, InceptionV3~14h) y benchmark de latencia/memoria medido en nodo GPU dedicado:
+DenseNet121 tiene los menos parámetros y la menor memoria, pero paradójicamente la **mayor**
+latencia de inferencia (526.7ms, más lento que ResNet50 pese a tener 3.3× menos parámetros),
+hallazgo reportado tal cual, sin ocultar que el conteo de parámetros no predice bien la latencia
+real.
 
 ### #15: Ablación insuficiente (falta baseline whole-hand)
 Experimento nuevo (exp. 60, `MODEL_TYPE=whole_hand`): una sola rama DenseNet121 sobre la mano
@@ -149,17 +150,17 @@ Resultado con significancia estadística pareada en las tres condiciones de eval
 | MEX externa (n=99) | +7.67m | Sí, fuerte (p<0.0001) |
 
 La segmentación anatómica aporta poco en validación interna pero se vuelve significativa y
-sustancial bajo distribution shift: refuerza la tesis central del artículo sobre la brecha
+sustancial bajo distribution shift, reforzando la tesis central del artículo sobre la brecha
 interna/externa. Nota secundaria: el modelo whole-hand, sin depender de segmentación, procesó el
 100% de ambos conjuntos externos, mientras la fusión pierde 32/1,425 (RSNA) y 1/100 (MEX) casos
 por fallos de segmentación.
 
 ### #16: Mapas de saliencia sin reproducibilidad
-Decisión explícita del autor: **no generar ejemplos nuevos**: la saliencia es puramente
+Decisión explícita del autor: **no generar ejemplos nuevos**, la saliencia es puramente
 ilustrativa. Metodología documentada con precisión (gradiente vainilla vía `tf.GradientTape`, sin
 capa objetivo específica, normalización [0,1], umbral percentil 97, determinístico). Texto de
 reemplazo refuerza explícitamente que no se afirma interpretabilidad clínica ni anatómica más
-allá de que la atención del gradiente cae dentro de las regiones segmentadas: invocando
+allá de que la atención del gradiente cae dentro de las regiones segmentadas, invocando
 directamente la alternativa que el propio revisor ofrece ("...or withdraw interpretability
 claims").
 
@@ -168,33 +169,55 @@ claims").
 ## Comentarios bloqueados o diferidos
 
 - **#1 y #19** (limpieza general/editorial): bloqueados porque solo se dispuso del PDF exportado
-  del manuscrito, nunca del `.docx` fuente: no es posible aceptar cambios de Word ni hacer
+  del manuscrito, nunca del `.docx` fuente; no es posible aceptar cambios de Word ni hacer
   búsqueda de texto completo de forma confiable sobre un PDF.
 - **#5** (confiabilidad inter-observador): requiere que los dos lectores clínicos existentes
-  (radiólogo y médico) califiquen independientemente un subconjunto y se calcule kappa/ICC:
+  (radiólogo y médico) califiquen independientemente un subconjunto y se calcule kappa/ICC,
   trabajo clínico real, no analítico.
 - **#10** (segmentación en imágenes mexicanas): requiere anotación manual de ~20–30 imágenes
-  mexicanas en LabelMe por una persona: el ítem más costoso en tiempo de todo el documento.
+  mexicanas en LabelMe por una persona, el ítem más costoso en tiempo de todo este análisis.
 - **#20** (decisión general): es la síntesis de cierre, se redacta una vez resueltos o declarados
   como diferidos los puntos 1, 5, 10 y 19.
 
 ---
 
-## Más allá de los 20 comentarios numerados
+## Correcciones de texto identificadas sobre el manuscrito editado
 
-Durante la revisión del manuscrito ya editado (`corregido2.pdf`) se encontraron además ~16
-correcciones puntuales (números con el bug viejo aún citados en Abstract/Conclusiones,
-referencias cruzadas rotas tras la reestructuración, tablas/figuras con numeración sin resolver,
-abreviaciones faltantes, un párrafo redundante, etc.): documentadas por separado, con ubicación
-exacta y texto listo para pegar, en
-[`RESULTADO_pendientes_corregido_pdf.md`](RESULTADO_pendientes_corregido_pdf.md).
+Al revisar una versión del manuscrito ya editada con los cambios de arriba se identificaron 16
+correcciones puntuales adicionales, con ubicación exacta y texto listo para insertar:
 
-## Inventario de archivos de este análisis
+1. **Abstract**: todavía cita a F-InceptionV3 como el de mejor desempeño externo; corregir a
+   "statistically indistinguishable" entre F-DenseNet121 y F-InceptionV3.
+2. **Conclusiones**: mismo número viejo (15.98 meses) a corregir, más un párrafo nuevo de
+   limitaciones metodológicas (fuga de fusión, semilla única, split de segmentación no ciego).
+3. **Institutional Review Board Statement**: sincronizar con el detalle ya presente en la Sección
+   2.1 (comité UDG, expediente 26-110, acuerdo RG/ACC/75/2019).
+4. **Artefacto de texto** ("inspired based by theon the") en página 3: limpiar a "inspired by the".
+5. **Participant Flow Diagram**: falta insertar la imagen y el párrafo que la introduce (texto ya
+   redactado, usando exactamente la terminología del manuscrito).
+6. **Nueva sección "Limitations"**: no existe actualmente ninguna sección de limitaciones en el
+   manuscrito; se redactó el contenido completo (fuga de fusión, checkpoint, semilla única, split
+   de segmentación no ciego) listo para insertar como nueva subsección.
+7. **Figura Bland-Altman**: falta insertarla junto con su párrafo de discusión.
+8. **Diagnóstico de F-VGG16**: falta el párrafo con la evidencia real de `training_history` que
+   explica el colapso (ya redactado).
+9-10. **Referencias cruzadas rotas** tras la reestructuración de secciones (una sección
+   inexistente "3.X", una subsección "3.4.1" que ya no existe).
+11-12. **Renumeración mecánica** de 16 tablas y 10 figuras, resultado de insertar las tablas y
+   figuras nuevas de los comentarios de arriba (tabla de mapeo completa disponible en el historial
+   de este análisis).
+13. **Abreviaciones faltantes**: 11 términos usados en el cuerpo del texto (IoU, CLAHE, SD, CI,
+   GPU, HPC, DR, UDG, MAD, MLP, LR) nunca definidos en la lista de abreviaciones.
+14. **Pie de la figura de saliencia**: genérico ("Examples of bone age prediction"), no describe
+   que son mapas de saliencia; reescrito para reflejar el contenido real.
+15. **Párrafo redundante** en la Sección 3.3 que menciona las Tablas 14/15 antes de que aparezca
+   la Tabla 13 en el texto; se identificó como eliminable sin pérdida de información (todo su
+   contenido está duplicado, con más precisión, en la Sección 3.5).
+16. **Typo** ("reports additional reports additional") y **leyenda faltante** para los símbolos
+   ✅/❌ de significancia estadística en la tabla de pruebas pareadas.
 
-- `ANALISIS_COMENTARIOS.md`: mapeo inicial de los 20 comentarios (qué pide / qué tenemos / qué falta).
-- `RESULTADO_comentario_{3,9,12,13,14,15,16}.md`, `RESULTADO_comentarios_{2_6_18,4_7_8,11_17}.md`: detalle completo por comentario, con texto de reemplazo listo para el manuscrito.
-- `RESULTADO_texto_backbone_vs_simplecnn.md`: corrección de un párrafo específico señalado por el usuario (comparación backbone-vs-simple_cnn mal etiquetada como "fusion vs. baseline").
-- `RESULTADO_pendientes_corregido_pdf.md`: checklist mecánico de 16 puntos sobre el manuscrito ya editado.
-- `figures/`: diagrama de flujo, Figura 2 extendida (6 paneles), Figura 8 (identidad+regresión), Bland-Altman.
-- `scripts/`: todo el código usado para generar los números y figuras de este análisis, reproducible desde los datos del proyecto.
-- `results_json/`: resultados numéricos crudos (Dice/IoU, estadísticas extendidas, latencia, significancia whole-hand, etc.).
+## Material de respaldo
+
+- [`results/experimentos_adicionales/figures/`](results/experimentos_adicionales/figures/): diagrama de flujo de participantes, Figura 2 extendida (6 paneles), Figura 8 (identidad+regresión), Bland-Altman.
+- [`results/experimentos_adicionales/scripts/`](results/experimentos_adicionales/scripts/): todo el código usado para generar los números y figuras de este análisis, reproducible desde los datos del proyecto.
+- [`results/experimentos_adicionales/results_json/`](results/experimentos_adicionales/results_json/): resultados numéricos crudos (Dice/IoU por clase, estadísticas extendidas RSNA/MEX, latencia/memoria, significancia del baseline whole-hand, diagnóstico de fallos de validación).

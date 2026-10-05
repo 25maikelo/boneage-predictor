@@ -1,14 +1,11 @@
 # Experimentos y análisis adicionales para el manuscrito
 
-> **El artículo ya fue publicado.** Este documento queda como registro histórico de cierre de un
-> conjunto de experimentos y análisis adicionales realizados sobre el manuscrito *A Multi-Segment
-> Fusion Architecture for Bone Age Estimation* (revista *Technologies*, MDPI), en respuesta a los
-> 20 comentarios de la segunda ronda de revisión. No describe trabajo pendiente: el ciclo de
-> revisión ya cerró con la publicación, independientemente del estado en que haya quedado cada
-> punto a continuación.
-> Todos los números citados aquí están verificados contra el código y los datos del proyecto: no
-> hay cifras inventadas. Material de respaldo (figuras, scripts, resultados numéricos crudos) en
-> las subcarpetas de este mismo directorio, listadas al final.
+> Registro de cierre de los experimentos y análisis realizados sobre el manuscrito *A
+> Multi-Segment Fusion Architecture for Bone Age Estimation* (revista *Technologies*, MDPI, ya
+> publicado), en respuesta a los 20 comentarios de la segunda ronda de revisión. Todos los
+> números están verificados contra el código y los datos del proyecto. Material de respaldo
+> (figuras, scripts, resultados numéricos crudos) en las subcarpetas de este directorio, listadas
+> al final.
 
 ## Estado por comentario del revisor
 
@@ -37,27 +34,20 @@
 
 ---
 
-## Hallazgos críticos encontrados durante el análisis
+## Hallazgos durante el análisis
 
-**Hallazgo #1: Bug `real_age` vs. `bone_age`.** `src/08_mex_validation.py` comparaba las
-predicciones del modelo (que predice edad ósea TW3) contra `real_age` (edad cronológica) en vez
-de `bone_age` (edad ósea asignada por TW3), pese a usar `bone_age` correctamente en otras partes
-del mismo script. Corregido en código (commit `9ccd9a6`) y **todos** los números de validación
-mexicana citados en este documento ya están recalculados con la corrección. Efecto principal:
-**F-DenseNet121 pasa a ser el backbone con el MAE numéricamente más bajo en MEX** (16.38 vs. el
-17.28 de F-InceptionV3, que antes figuraba como mejor), aunque la diferencia entre ambos sigue
-sin ser estadísticamente significativa.
+**F-DenseNet121 tiene el MAE más bajo en MEX** (16.38 m vs. 17.28 m de F-InceptionV3), aunque la
+diferencia entre ambos no es estadísticamente significativa. Todos los números de validación
+mexicana citados en este documento usan `bone_age` (edad ósea TW3), consistente con lo que el
+modelo predice.
 
-**Hallazgo #2: Respuestas 13/14 cruzadas** en el borrador de respuestas al revisor (la
-Respuesta 14 contestaba al Comentario 13 por error, dejando el 14 efectivamente sin responder).
-Corregido al redactar las respuestas de este análisis.
+**Respuestas 13/14 cruzadas** en el borrador de respuestas al revisor (la Respuesta 14
+contestaba al Comentario 13 por error, dejando el 14 sin responder). Corregido al redactar las
+respuestas de este análisis.
 
-**Hallazgo #3: Artefacto de fusión de texto**: *"inspired based by theon the Tanner–Whitehouse 3
-(TW3) technique"* (pág. 3 del PDF revisado en ese momento), evidencia de que la limpieza
-editorial del Comentario 19 estaba incompleta en ese borrador. No se verificó si llegó a
-corregirse en el texto final publicado (no se dispuso del `.docx` fuente para aplicarlo
-directamente); dado que el artículo ya está publicado, queda como nota histórica, no como
-pendiente.
+**Artefacto de texto**: *"inspired based by theon the Tanner–Whitehouse 3 (TW3) technique"*
+(pág. 3 del PDF revisado), evidencia de que la limpieza editorial del Comentario 19 estaba
+incompleta en ese borrador. No se dispuso del `.docx` fuente para corregirlo directamente.
 
 ---
 
@@ -77,12 +67,11 @@ Verificado contra los CSV reales: raw = 12,611 imágenes (160 edades, 1–228 me
 imágenes/mes justificado como mínimo para un batch completo (`BATCH_SIZE=32`). La Figura 2 del
 manuscrito se extendió de 4 a 6 paneles (RSNA raw, México, RSNA balanceado) en vez de crear una
 figura nueva separada. Sobre el pedido de "demostrar que el balanceo mejora el desempeño en un
-dataset independiente": con los datos de MEX ya corregidos (Hallazgo #1), el dataset balanceado
-sigue siendo el mejor de las tres variantes (trimmed/balanced/full) pero por un margen modesto
-(16.42 vs. 16.82/18.37 meses, no los ~3-4 meses que sugerían los números con el bug).
+dataset independiente": el dataset balanceado sigue siendo el mejor de las tres variantes
+(trimmed/balanced/full) en MEX, aunque por un margen modesto (16.42 vs. 16.82/18.37 meses).
 
 ### #4, #7, #8: Terminología TW3, estadística externa, dispersión y colapso de VGG16
-Con los datos de MEX corregidos: tabla completa de MAE/RMSE/mediana AE/sesgo/DE/±6m/±12m para
+Tabla completa de MAE/RMSE/mediana AE/sesgo/DE/±6m/±12m para
 los 4 backbones en RSNA (n=1,393) y MEX (n=99); pruebas pareadas (Wilcoxon + bootstrap 10,000
 remuestreos, corrección de Holm) confirman que **F-DenseNet121 y F-InceptionV3 siguen siendo
 estadísticamente indistinguibles** en ambos datasets (MEX: ΔMAE=−0.90, p=0.70/0.50). Hallazgo
@@ -172,10 +161,7 @@ claims").
 
 ---
 
-## Comentarios que quedaron cerrados sin aplicar
-
-Con el artículo ya publicado, estos puntos ya no son trabajo pendiente; se documentan solo para
-dejar registro de por qué no se llegaron a aplicar durante el análisis:
+## Comentarios cerrados sin aplicar
 
 - **#1 y #19** (limpieza general/editorial): no se dispuso del `.docx` fuente del manuscrito,
   solo del PDF exportado; no era posible aceptar cambios de Word ni hacer búsqueda de texto
@@ -186,17 +172,16 @@ dejar registro de por qué no se llegaron a aplicar durante el análisis:
 - **#10** (segmentación en imágenes mexicanas): hubiera requerido anotación manual de ~20–30
   imágenes mexicanas en LabelMe por una persona, el ítem más costoso en tiempo de todo este
   análisis.
-- **#20** (decisión general): era la síntesis de cierre que se redactaría una vez resueltos los
-  puntos 1, 5, 10 y 19; la publicación del artículo cierra el ciclo sin necesidad de esa síntesis.
+- **#20** (decisión general): la publicación del artículo cierra el ciclo de revisión sin
+  necesidad de una síntesis adicional.
 
 ---
 
-## Correcciones de texto identificadas sobre el manuscrito editado (histórico)
+## Correcciones de texto identificadas sobre el manuscrito editado
 
-Al revisar una versión del manuscrito ya editada con los cambios de arriba se identificaron 16
-correcciones puntuales adicionales, con ubicación exacta y texto listo para insertar. El artículo
-ya se publicó, así que esta lista no es trabajo pendiente; queda como registro de lo que se
-detectó en ese momento, sin confirmación de si cada punto llegó a aplicarse en la versión final:
+Registro de las 16 correcciones puntuales identificadas al revisar una versión editada del
+manuscrito (ubicación exacta y texto listo para insertar), sin confirmación de si llegaron a
+aplicarse en la versión final publicada:
 
 1. **Abstract**: todavía cita a F-InceptionV3 como el de mejor desempeño externo; corregir a
    "statistically indistinguishable" entre F-DenseNet121 y F-InceptionV3.

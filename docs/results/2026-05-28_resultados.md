@@ -2,14 +2,22 @@
 
 > 14 experimentos completados · 4 arquitecturas · 3 datasets · 2026-04-29
 
-> ⚠️ **Nota de corrección (2026-08-07):** las columnas "Mex MAE" de este documento se calcularon
-> con un bug ya corregido en `src/08_mex_validation.py` (comparaba contra `real_age`, edad
-> cronológica, en vez de `bone_age`, edad ósea TW3). Los valores aquí quedaron desactualizados.
-> Para los experimentos 23/26/27/28/33/34/36/37/39/40 ya existen números recalculados en
-> [`results/experimentos_adicionales/analisis.md`](experimentos_adicionales/analisis.md) y
-> [`results/ablacion_backbones/2026-07-22_ablacion_backbones.md`](ablacion_backbones/2026-07-22_ablacion_backbones.md).
-> El resto de los experimentos de este documento (35/38/41/42/43, etc.) no se han vuelto a
-> validar contra MEX con el script corregido.
+> ⚠️ **Nota de corrección (2026-08-07, actualizada 2026-10-05):** las columnas "Mex MAE" de la
+> tabla de abajo se calcularon con un bug ya corregido en `src/08_mex_validation.py` (comparaba
+> contra `real_age`, edad cronológica, en vez de `bone_age`, edad ósea TW3). Los valores de la
+> tabla quedan sin modificar (registro histórico); los números reales recalculados son:
+>
+> | Exp | Mex MAE (tabla, con bug) | Mex MAE (recalculado) |
+> |---|:---:|:---:|
+> | 23/26/27/28/33/34/36/37/39/40 | ver tabla | en [`experimentos_adicionales/analisis.md`](experimentos_adicionales/analisis.md) y [`ablacion_backbones/2026-07-22_ablacion_backbones.md`](ablacion_backbones/2026-07-22_ablacion_backbones.md) |
+> | 35 | 23.4 m | **27.50 m** |
+> | 38 | 28.0 m | **31.74 m** |
+> | 41 | 27.3 m | **30.17 m** |
+> | 42 | 20.0 m | **25.40 m** |
+> | 43 | 18.5 m | **20.97 m** |
+>
+> Los experimentos 44/45/46 (`unified_cnn`) todavía no se han vuelto a validar contra MEX con el
+> script corregido.
 
 ---
 

@@ -1,6 +1,7 @@
 # Fase: Preprocesamiento y Segmentación
 
-> **Estado:** en curso, iniciada 2026-10-11. Etapa 1 completa, Etapa 2 en progreso.
+> **Estado:** en curso, iniciada 2026-10-11. Etapas 1 y 2 completas. Prioridad de Etapas 3/4
+> pendiente de confirmar con el usuario (ver bitácora).
 >
 > **Corrección de rumbo (2026-10-11):** el orden original saltaba directo a rehacer la grilla de
 > arquitecturas sin antes diagnosticar qué falla realmente en el modelo que está en producción
@@ -154,3 +155,15 @@ documentación del pipeline con la configuración ganadora y su justificación f
   (`hand-detector_00`, nunca afectado por el bug del hallazgo #2). Rehacer la grilla queda
   condicional a lo que ese diagnóstico encuentre.
 - Inicia Etapa 2 (diagnóstico de fallos de `hand-detector_00`).
+- **Etapa 2 completa.** Diagnóstico en
+  [`docs/results/segmentacion_diagnostico/diagnostico.md`](../results/segmentacion_diagnostico/diagnostico.md).
+  Dos causas distintas, no una: (a) un subconjunto pequeño de imágenes (≈4–7% de las 76 de
+  validación) con recorte/rotación defectuoso de `02_frame_and_zoom.py` (borde de placa
+  visible) causa los fallos más severos, incluyendo un falso positivo alucinado sobre un
+  artefacto de encuadre; (b) erosión de borde en estructuras delgadas (pinky, wrist) en
+  imágenes bien encuadradas, sin evidencia de confusión entre clases (matriz de confusión por
+  píxel: ~0% de confusión cruzada entre dedos, el único error es perder píxeles hacia fondo).
+  **Esto cambia la prioridad de las etapas condicionales**: la Etapa 4 (preprocesamiento) queda
+  priorizada con evidencia directa; la Etapa 3 (grilla de arquitecturas) pierde justificación
+  tal como estaba planteada, porque el diagnóstico no apunta a un problema de arquitectura.
+  Pendiente de decidir con el usuario cómo seguir.

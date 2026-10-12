@@ -40,7 +40,8 @@
 | [2026-05-28_resultados.md](results/2026-05-28_resultados.md) | Tabla resumen con podio y hallazgos de los primeros 14 experimentos | Vigente |
 | [2026-05-28_resumen_evaluacion.md](results/2026-05-28_resumen_evaluacion.md) | Resultados detallados por experimento: ranking global, análisis por segmento y rango de edad | Vigente |
 | [ablacion_backbones/](results/ablacion_backbones/2026-07-22_ablacion_backbones.md) | Comparación formal de los 4 backbones (ResNet50/VGG16/DenseNet121/InceptionV3) con pruebas pareadas | Vigente |
-| [experimentos_adicionales/](results/experimentos_adicionales/analisis.md) | Experimentos y análisis adicionales para el manuscrito publicado: baseline whole-hand, Dice/IoU por clase, benchmark de latencia, significancia estadística | **Vigente: más reciente** |
+| [experimentos_adicionales/](results/experimentos_adicionales/analisis.md) | Experimentos y análisis adicionales para el manuscrito publicado: baseline whole-hand, Dice/IoU por clase, benchmark de latencia, significancia estadística | Vigente |
+| [segmentacion_diagnostico/](results/segmentacion_diagnostico/diagnostico.md) | Diagnóstico de fallos de `hand-detector_00`: matriz de confusión por píxel, peores casos por clase, causas identificadas | **Vigente: más reciente** |
 
 ---
 

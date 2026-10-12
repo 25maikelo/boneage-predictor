@@ -41,7 +41,8 @@
 | [2026-05-28_resumen_evaluacion.md](results/2026-05-28_resumen_evaluacion.md) | Resultados detallados por experimento: ranking global, análisis por segmento y rango de edad | Vigente |
 | [ablacion_backbones/](results/ablacion_backbones/2026-07-22_ablacion_backbones.md) | Comparación formal de los 4 backbones (ResNet50/VGG16/DenseNet121/InceptionV3) con pruebas pareadas | Vigente |
 | [experimentos_adicionales/](results/experimentos_adicionales/analisis.md) | Experimentos y análisis adicionales para el manuscrito publicado: baseline whole-hand, Dice/IoU por clase, benchmark de latencia, significancia estadística | Vigente |
-| [segmentacion_diagnostico/](results/segmentacion_diagnostico/diagnostico.md) | Diagnóstico de fallos de `hand-detector_00`: matriz de confusión por píxel, peores casos por clase, causas identificadas | **Vigente: más reciente** |
+| [segmentacion_diagnostico/](results/segmentacion_diagnostico/diagnostico.md) | Diagnóstico de fallos de `hand-detector_00`: matriz de confusión por píxel, peores casos por clase, causas identificadas | Vigente |
+| [preprocesamiento_diagnostico/](results/preprocesamiento_diagnostico/diagnostico.md) | Auditoría de `02_frame_and_zoom.py`/`03_histogram_equalization.py` con métricas propias (fill ratio, contraste, saturación), sin depender de ningún modelo | **Vigente: más reciente** |
 
 ---
 

@@ -1,7 +1,7 @@
 # Fase: Preprocesamiento y Segmentación
 
-> **Estado:** en curso, iniciada 2026-10-11. Etapas 1 y 2 completas. Prioridad de Etapas 3/4
-> pendiente de confirmar con el usuario (ver bitácora).
+> **Estado:** en curso, iniciada 2026-10-11. Etapas 1, 2 y 4 completas. Etapa 3 (grilla de
+> arquitecturas) en pausa, sin justificación clara tras el diagnóstico de la Etapa 2.
 >
 > **Corrección de rumbo (2026-10-11):** el orden original saltaba directo a rehacer la grilla de
 > arquitecturas sin antes diagnosticar qué falla realmente en el modelo que está en producción
@@ -108,7 +108,12 @@ por tres criterios: Dice/IoU por clase, impacto en MAE downstream (experimento d
 referencia), y Dice sobre el subconjunto mexicano. Selección por los tres criterios combinados,
 no solo Dice en RSNA.
 
-### Etapa 4 (condicional): Preprocesamiento (02/03), justificado y ablacionado
+### Etapa 4: Preprocesamiento (02/03), justificado y ablacionado
+
+**Alcance explícito:** esta etapa evalúa `02_frame_and_zoom.py`/`03_histogram_equalization.py`
+con métricas propias de la imagen (geometría del recorte, contraste, entropía, saturación), sin
+depender del segmentador ni de ningún modelo entrenado. Es deliberadamente independiente de las
+Etapas 2/3.
 
 | Script | Parámetro actual | Justificación actual | Alternativa a explorar |
 |---|---|---|---|
@@ -119,8 +124,8 @@ no solo Dice en RSNA.
 | `03_histogram_equalization.py` | Mezcla 60% original + 40% CLAHE | Evita sobre-realce; proporción sin criterio medible | Barrer proporción de mezcla (0–100% CLAHE) |
 | `03_histogram_equalization.py` | Ajuste final `alpha=0.9, beta=-10` | Corrección cosmética sin justificación registrada | Evaluar si sigue siendo necesaria tras optimizar la mezcla |
 
-Cada variante se mide contra Dice/IoU del segmentador ganador de la Etapa 3 (o el actual, si la
-Etapa 3 no se ejecuta), mismo subconjunto de validación, nunca por inspección visual.
+Cada variante se mide con métricas propias de la imagen (fill ratio post-recorte, contraste,
+entropía, tasa de saturación), nunca por inspección visual ni contra un modelo de segmentación.
 
 ### Etapa 5: Síntesis y adopción
 Experimentos de fusión end-to-end (mismo split/seed que experimentos previos) confirmando la
@@ -134,7 +139,7 @@ documentación del pipeline con la configuración ganadora y su justificación f
 | 1 | `metrics.json`: accuracy ya no colapsa a ~0.878 |
 | 2 | Reporte de fallos por imagen/clase con evidencia visual, y una conclusión explícita de si el problema es de arquitectura, preprocesamiento, anotación o ninguno |
 | 3 | Tabla comparativa (arquitectura × modo de recorte) con Dice/IoU por clase, MAE downstream, Dice en MEX |
-| 4 | Dice/IoU antes/después de cada variación, mismo subconjunto de validación |
+| 4 | Fill ratio/contraste/entropía/saturación antes y después de cada variación, mismo subconjunto de imágenes |
 | 5 | Prueba pareada (`11_paired_validation.py`) config nueva vs. actual, en RSNA y MEX |
 
 ## Bitácora de avance
@@ -166,4 +171,17 @@ documentación del pipeline con la configuración ganadora y su justificación f
   **Esto cambia la prioridad de las etapas condicionales**: la Etapa 4 (preprocesamiento) queda
   priorizada con evidencia directa; la Etapa 3 (grilla de arquitecturas) pierde justificación
   tal como estaba planteada, porque el diagnóstico no apunta a un problema de arquitectura.
-  Pendiente de decidir con el usuario cómo seguir.
+- **Corrección de alcance:** la Etapa 4 se evalúa exclusivamente con métricas propias de la
+  imagen (fill ratio, contraste, entropía, saturación), sin ninguna dependencia del segmentador
+  ni de Dice/IoU. El preprocesamiento (02/03) y la segmentación (01/04) se tratan como líneas de
+  trabajo separadas; no se retoma la idea de reentrenar el segmentador en esta etapa.
+- **Etapa 4 completa.** Diagnóstico en
+  [`docs/results/preprocesamiento_diagnostico/diagnostico.md`](../results/preprocesamiento_diagnostico/diagnostico.md).
+  Hallazgos: (a) el recorte deja en promedio 27% de fondo/borde residual (fill ratio medio
+  0.730), con una cola de ~2–5% de imágenes donde el recorte falla casi por completo; (b) esos
+  peores casos no son de rotación compleja, son de **contraste global bajo** que rompe el
+  umbral de Otsu, lo cual importa porque el recorte (02) corre antes de la ecualización (03) en
+  el pipeline; (c) los parámetros actuales de CLAHE (`clipLimit=2.0`) no son los mejores de los
+  probados: reducen el contraste respecto a no aplicar CLAHE y aumentan la saturación más que
+  `clipLimit=4.0`. Próximos pasos propuestos (sin ejecutar todavía): probar `clipLimit=4.0` como
+  nuevo default, y evaluar normalizar contraste antes del umbral de Otsu en el recorte.

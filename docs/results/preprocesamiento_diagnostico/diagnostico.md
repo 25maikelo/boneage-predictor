@@ -73,11 +73,34 @@ ecualizar. `tileGridSize=16×16` es la peor variante en ambos criterios.
    reforzar el control de contraste antes/durante el recorte podría reducir la cola de fallos
    del hallazgo 1, además de la mejora directa en calidad de imagen del hallazgo 3.
 
-## Próximos pasos propuestos
+## Validación de las propuestas sobre el dataset completo (12,811 imágenes)
 
-- Probar `clipLimit=4.0` como nuevo default de `03_histogram_equalization.py` y confirmar con
-  una muestra más grande (actualmente n=800).
-- Evaluar si aplicar una normalización de contraste previa al umbral de Otsu en
-  `02_frame_and_zoom.py` (sin alterar la imagen final recortada) reduce la tasa de activación de
-  la salvaguarda en las imágenes de bajo contraste identificadas.
-- Pendiente de decidir con el usuario antes de modificar los scripts de producción.
+Script: [`scripts/validar_propuestas.py`](scripts/validar_propuestas.py). Resultados crudos en
+`results_json/validacion_clahe_clip4.json` y `results_json/validacion_otsu_contraste_previo.json`.
+
+**`clipLimit=4.0` se confirma**: 85.4% de las imágenes muestran más contraste que con
+`clipLimit=2.0` (delta medio +0.85 de desviación estándar); la reducción de saturación es más
+débil de lo que sugería la muestra de 800 (51.7% de las imágenes satura menos, prácticamente
+parejo). Dirección consistente con el hallazgo 3, confirmado a escala completa.
+
+**La normalización de contraste antes de Otsu (`equalizeHist`) NO funciona**: el fill ratio
+promedio bajó (0.735 → 0.715, empeora en vez de mejorar), 18.2% de las imágenes empeoran, y de
+los 583 peores casos (fill ratio <0.3) solo el 48.5% mejora con este método, prácticamente una
+moneda al aire. La tasa de descarte sí bajó un poco (642 → 549 de 12,811), pero a costa de
+recortes peores en otros casos. **Esta propuesta queda descartada**, no se adopta.
+
+## Segunda alternativa: sustracción de fondo morfológica
+
+Tras revisar literatura sobre segmentación de radiografías con iluminación/contraste desparejo
+([`revision_literatura.md`](revision_literatura.md), sección 3), se identificó la sustracción de
+fondo morfológica ("rolling ball"/top-hat) como el método documentado para este problema
+específico, mejor fundamentado que una ecualización genérica. En validación sobre el dataset
+completo (resultado pendiente al momento de escribir esto, ver
+`results_json/validacion_background_subtraction.json` cuando esté disponible).
+
+## Próximos pasos
+
+- Confirmar o descartar la sustracción de fondo morfológica con los resultados completos.
+- Adoptar `clipLimit=4.0` en `03_histogram_equalization.py` está respaldado por los datos; falta
+  decidir con el usuario si se aplica al script de producción.
+- La normalización vía `equalizeHist` antes de Otsu queda descartada por los resultados.

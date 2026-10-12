@@ -1,0 +1,18 @@
+{
+  "n": 12811,
+  "estados_actual": {
+    "ok": 12169,
+    "discard_area": 642
+  },
+  "estados_propuesto": {
+    "ok": 12262,
+    "discard_area": 549
+  },
+  "fill_ratio_actual_mean": 0.7349257637440902,
+  "fill_ratio_propuesto_mean": 0.7152373605701802,
+  "n_peores_actual_fillratio<0.3": 583,
+  "de_esos_peores_mejoran_con_propuesto_pct": 48.54202401372213,
+  "fill_ratio_medio_de_peores_actual": 0.13899518513836187,
+  "fill_ratio_medio_de_peores_propuesto": 0.15921476830554707,
+  "pct_imagenes_que_empeoran_con_propuesto": 18.249941456560766
+}

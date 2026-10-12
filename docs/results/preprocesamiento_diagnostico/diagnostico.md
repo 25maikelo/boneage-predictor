@@ -107,15 +107,36 @@ mejoraron, mejor que `equalizeHist` (48.5%) y con menos imágenes dañadas en ge
 18.2%). Esto sugiere que la técnica tiene mérito pero el kernel está mal calibrado, no que el
 método en sí no sirva.
 
-**Segundo intento, kernel proporcional al tamaño de imagen, en validación**: se prueba
-`kernel = min(alto, ancho) / divisor` en vez de un tamaño fijo, sobre una muestra de 400 imágenes
-+ los 5 peores casos conocidos, con varios divisores (3, 4, 6), antes de comprometerse a otra
-corrida de ~1h sobre el dataset completo.
+**Segundo intento, kernel proporcional al tamaño de imagen**: `kernel = min(alto, ancho) /
+divisor` en vez de un tamaño fijo, sobre una muestra de 405 imágenes (400 al azar + los 5 peores
+casos conocidos). Mejora la tasa de descarte frente al kernel fijo (10.1–11.6% según el divisor,
+vs. el 50% catastrófico de antes), pero sigue siendo **peor que el 5% actual** en esta muestra.
+
+**Verificación dirigida a los 5 peores casos conocidos (`2615`, `3172`, `2176`, `3016`, `2721`)**:
+con el mejor divisor (3, kernel≈495px), **ninguno de los 5 mejora**: mismo estado
+(`discard_area`) y mismo fill ratio hasta la tercera decimal que con Otsu directo. La mejora
+agregada del 52.3% en el conjunto de 583 "peores casos" (kernel fijo) no viene de estos casos
+extremos, sino de casos menos severos dentro de ese grupo. Estas 5 imágenes en particular son
+tan uniformemente oscuras/bajo contraste que ninguna normalización de contraste previa a Otsu
+(ni `equalizeHist` ni sustracción de fondo, con ningún tamaño de kernel probado) les da
+suficiente separación bimodal para que Otsu encuentre la mano.
+
+**Conclusión de esta línea de trabajo**: se descartan ambas alternativas a Otsu probadas como
+reemplazo general. Ninguna resuelve de forma barata el núcleo duro de casos extremos. Siguiendo
+el precedente de BoneXpert ([`revision_literatura.md`](revision_literatura.md), sección 4): en
+vez de seguir buscando un fix automático para ~2–5% del dataset, lo más defendible es **detectar
+y registrar explícitamente** estos casos (hoy `02_frame_and_zoom.py` cae a la imagen completa en
+silencio, sin dejar rastro) para poder decidir caso por caso, en vez de asumir que el pipeline
+debe producir un recorte automático para el 100% de las imágenes.
 
 ## Próximos pasos
 
-- Confirmar el divisor de kernel proporcional que mejor balancee tasa de descarte y mejora en
-  los peores casos, y validar esa configuración sobre el dataset completo.
-- Adoptar `clipLimit=4.0` en `03_histogram_equalization.py` está respaldado por los datos; falta
-  decidir con el usuario si se aplica al script de producción.
-- La normalización vía `equalizeHist` antes de Otsu queda descartada por los resultados.
+- **Adoptar `clipLimit=4.0`** en `03_histogram_equalization.py`: respaldado por los datos
+  (85.4% de 12,811 imágenes con más contraste). Pendiente de decidir con el usuario si se aplica
+  al script de producción.
+- **Agregar logging explícito** de las imágenes que activan cualquier salvaguarda de
+  `02_frame_and_zoom.py` (hoy es silencioso), para poder auditarlas y decidir caso por caso, en
+  vez de seguir buscando un reemplazo automático de Otsu.
+- `equalizeHist` y sustracción de fondo morfológica (fija o proporcional) quedan **descartadas**
+  como reemplazo de Otsu: ninguna resuelve los casos extremos y ambas introducen regresiones en
+  otras imágenes.

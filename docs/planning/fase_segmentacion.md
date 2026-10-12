@@ -185,3 +185,17 @@ documentación del pipeline con la configuración ganadora y su justificación f
   probados: reducen el contraste respecto a no aplicar CLAHE y aumentan la saturación más que
   `clipLimit=4.0`. Próximos pasos propuestos (sin ejecutar todavía): probar `clipLimit=4.0` como
   nuevo default, y evaluar normalizar contraste antes del umbral de Otsu en el recorte.
+- **Revisión de literatura** sobre mejora de calidad radiográfica en
+  [`docs/results/preprocesamiento_diagnostico/revision_literatura.md`](../results/preprocesamiento_diagnostico/revision_literatura.md).
+  Identificó sustracción de fondo morfológica como alternativa a Otsu mejor fundamentada que
+  normalizar contraste genérico, y el precedente de BoneXpert (rechazar imágenes de mala calidad
+  en vez de forzarlas, tasa real de rechazo 2.3%, mismo orden de magnitud que la nuestra).
+- **Validación de las tres propuestas sobre el dataset completo (12,811 imágenes), cerrada**:
+  `clipLimit=4.0` se confirma (85.4% de las imágenes con más contraste) y queda recomendado para
+  adoptar. `equalizeHist` antes de Otsu y sustracción de fondo morfológica (kernel fijo y
+  proporcional) quedan **descartadas** como reemplazo de Otsu: ninguna resuelve los 5 casos más
+  extremos verificados uno por uno (imágenes tan uniformemente oscuras que ninguna normalización
+  de contraste previa les da separación bimodal suficiente), y ambas dañan otras imágenes en el
+  proceso. Recomendación final: adoptar `clipLimit=4.0`, y agregar logging explícito de las
+  imágenes que activan las salvaguardas de `02_frame_and_zoom.py` (hoy es silencioso) en vez de
+  seguir buscando un reemplazo automático de Otsu.

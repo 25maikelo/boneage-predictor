@@ -1,6 +1,6 @@
 # Documentación: Bone Age Predictor
 
-> Mapa de archivos, actualizado 2026-10-05. El estado de cada documento se indica explícitamente
+> Mapa de archivos, actualizado 2026-10-11. El estado de cada documento se indica explícitamente
 > (vigente, histórico/completado, o superado) para que no haya que adivinar cuál es la fuente de
 > verdad actual.
 
@@ -9,6 +9,7 @@
 | Archivo | Contenido | Estado |
 |---|---|---|
 | [pipeline.md](planning/pipeline.md) | Descripción de cada script (00–10), entradas/salidas, tiempos y comandos SLURM | Vigente |
+| [fase_segmentacion.md](planning/fase_segmentacion.md) | Nueva fase: análisis sistemático de preprocesamiento y segmentación (bugs encontrados, grilla a rehacer, ablación de parámetros) | **En curso** |
 | [plan_exploracion.md](planning/plan_exploracion.md) | Criterios de priorización para las ablaciones de género/LR/tamaño de imagen/datos clínicos | Histórico (completado, ver `results/2026-06-18_optimizacion.md`) |
 
 ---

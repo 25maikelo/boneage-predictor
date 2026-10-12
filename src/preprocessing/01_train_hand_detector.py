@@ -780,8 +780,17 @@ def main():
     validation_steps = max(1, len(x_val)   // batch_size)
 
     # ── Data Augmentation ────────────────────────────────────────────────────
-    # Las transformaciones geométricas se aplican igual a imagen y máscara
-    # (usando el mismo seed). El brillo solo se aplica a la imagen.
+    # Imagen y máscara se combinan en UN solo tensor y pasan por UN solo generador,
+    # para garantizar exactamente la misma transformación geométrica en ambas. Dos
+    # generadores independientes con el mismo seed (esquema anterior) se desincronizan
+    # en cuanto consumen un número distinto de llamadas aleatorias por muestra: aquí
+    # ocurría porque AUG_BRIGHTNESS_RANGE solo se aplicaba al generador de imagen, nunca
+    # al de máscara, lo que rompía la correspondencia imagen-máscara tras la primera
+    # transformación geométrica y colapsaba el entrenamiento (ver
+    # docs/planning/fase_segmentacion.md, hallazgo #2). El brillo se aplica aparte, con
+    # su propio muestreo aleatorio, solo sobre el canal de imagen ya separado.
+    n_img_channels = x_train.shape[-1]
+
     if DATA_AUGMENTATION:
         print("Data augmentation activado.")
         geo_params = dict(
@@ -794,26 +803,37 @@ def main():
             shear_range=AUG_SHEAR_RANGE,
             fill_mode="nearest",
         )
-        img_gen_params  = {**geo_params}
-        if AUG_BRIGHTNESS_RANGE is not None:
-            img_gen_params["brightness_range"] = AUG_BRIGHTNESS_RANGE
-        mask_gen_params = geo_params  # sin brillo para las máscaras
     else:
-        img_gen_params  = {}
-        mask_gen_params = {}
+        geo_params = {}
 
-    train_img_gen  = ImageDataGenerator(**img_gen_params).flow(
-        x_train, batch_size=batch_size, seed=seed, shuffle=True
-    )
-    train_mask_gen = ImageDataGenerator(**mask_gen_params).flow(
-        y_train_cat, batch_size=batch_size, seed=seed, shuffle=True
-    )
-    val_img_gen  = ImageDataGenerator().flow(x_val,     batch_size=batch_size, seed=seed, shuffle=False)
-    val_mask_gen = ImageDataGenerator().flow(y_val_cat, batch_size=batch_size, seed=seed, shuffle=False)
+    combined_train = np.concatenate([x_train, y_train_cat], axis=-1)
+    combined_val   = np.concatenate([x_val, y_val_cat], axis=-1)
 
-    def _gen(ig, mg):
+    train_combined_gen = ImageDataGenerator(**geo_params).flow(
+        combined_train, batch_size=batch_size, seed=seed, shuffle=True
+    )
+    val_combined_gen = ImageDataGenerator().flow(
+        combined_val, batch_size=batch_size, seed=seed, shuffle=False
+    )
+
+    def _split_batch(batch):
+        img  = batch[..., :n_img_channels]
+        mask = batch[..., n_img_channels:]
+        if DATA_AUGMENTATION:
+            # La interpolación geométrica puede mezclar el one-hot de la máscara en los
+            # bordes entre clases; se reconstruye a clases discretas tras transformar.
+            mask = to_categorical(mask.argmax(axis=-1), num_classes=mask.shape[-1])
+            if AUG_BRIGHTNESS_RANGE is not None:
+                factor = np.random.uniform(
+                    AUG_BRIGHTNESS_RANGE[0], AUG_BRIGHTNESS_RANGE[1],
+                    size=(img.shape[0], 1, 1, 1)
+                )
+                img = np.clip(img * factor, 0.0, 1.0)
+        return img, mask
+
+    def _gen(combined_gen):
         while True:
-            yield next(ig), next(mg)
+            yield _split_batch(next(combined_gen))
 
     callbacks = [
         EarlyStopping(monitor="val_loss", patience=5, restore_best_weights=True),
@@ -822,9 +842,9 @@ def main():
 
     with timer("Entrenamiento"):
         history = model.fit(
-            _gen(train_img_gen, train_mask_gen),
+            _gen(train_combined_gen),
             steps_per_epoch=steps_per_epoch,
-            validation_data=_gen(val_img_gen, val_mask_gen),
+            validation_data=_gen(val_combined_gen),
             validation_steps=validation_steps,
             epochs=EPOCHS,
             callbacks=callbacks,

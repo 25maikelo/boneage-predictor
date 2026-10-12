@@ -94,13 +94,28 @@ recortes peores en otros casos. **Esta propuesta queda descartada**, no se adopt
 Tras revisar literatura sobre segmentación de radiografías con iluminación/contraste desparejo
 ([`revision_literatura.md`](revision_literatura.md), sección 3), se identificó la sustracción de
 fondo morfológica ("rolling ball"/top-hat) como el método documentado para este problema
-específico, mejor fundamentado que una ecualización genérica. En validación sobre el dataset
-completo (resultado pendiente al momento de escribir esto, ver
-`results_json/validacion_background_subtraction.json` cuando esté disponible).
+específico, mejor fundamentado que una ecualización genérica.
+
+**Primer intento, kernel fijo de 51px, descartado**: sobre el dataset completo
+(`results_json/validacion_background_subtraction.json`), la tasa de descarte se disparó de 642 a
+**6,413 de 12,811 imágenes** (el kernel de 51px es minúsculo frente al tamaño real de las
+imágenes raw, ~900–2200px por lado, muy por debajo de lo que recomienda la literatura: "al menos
+tan grande como el objeto de interés más grande"). El fill ratio promedio también empeoró
+(0.735 → 0.725). Sin embargo, para el subconjunto específico de los 583 peores casos actuales
+(fill ratio <0.3), el fill ratio promedio **más que se duplicó** (0.139 → 0.303) y 52.3% de ellos
+mejoraron, mejor que `equalizeHist` (48.5%) y con menos imágenes dañadas en general (8.7% vs.
+18.2%). Esto sugiere que la técnica tiene mérito pero el kernel está mal calibrado, no que el
+método en sí no sirva.
+
+**Segundo intento, kernel proporcional al tamaño de imagen, en validación**: se prueba
+`kernel = min(alto, ancho) / divisor` en vez de un tamaño fijo, sobre una muestra de 400 imágenes
++ los 5 peores casos conocidos, con varios divisores (3, 4, 6), antes de comprometerse a otra
+corrida de ~1h sobre el dataset completo.
 
 ## Próximos pasos
 
-- Confirmar o descartar la sustracción de fondo morfológica con los resultados completos.
+- Confirmar el divisor de kernel proporcional que mejor balancee tasa de descarte y mejora en
+  los peores casos, y validar esa configuración sobre el dataset completo.
 - Adoptar `clipLimit=4.0` en `03_histogram_equalization.py` está respaldado por los datos; falta
   decidir con el usuario si se aplica al script de producción.
 - La normalización vía `equalizeHist` antes de Otsu queda descartada por los resultados.

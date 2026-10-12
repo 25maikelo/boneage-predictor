@@ -1,0 +1,19 @@
+{
+  "n": 12811,
+  "kernel_size": 51,
+  "estados_actual": {
+    "ok": 12169,
+    "discard_area": 642
+  },
+  "estados_bgsub": {
+    "ok": 6398,
+    "discard_area": 6413
+  },
+  "fill_ratio_actual_mean": 0.7349257637440902,
+  "fill_ratio_bgsub_mean": 0.7245653414114498,
+  "n_peores_actual_fillratio<0.3": 583,
+  "de_esos_peores_mejoran_con_bgsub_pct": 52.315608919382505,
+  "fill_ratio_medio_de_peores_actual": 0.13899518513836187,
+  "fill_ratio_medio_de_peores_bgsub": 0.30314926131686565,
+  "pct_imagenes_que_empeoran_con_bgsub": 8.656623214425103
+}

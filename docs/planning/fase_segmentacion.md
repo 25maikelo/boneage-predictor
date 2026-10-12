@@ -1,6 +1,14 @@
 # Fase: Preprocesamiento y Segmentación
 
-> **Estado:** en curso, iniciada 2026-10-11. Etapa 1 completa, Etapa 2 pendiente de iniciar.
+> **Estado:** en curso, iniciada 2026-10-11. Etapa 1 completa, Etapa 2 en progreso.
+>
+> **Corrección de rumbo (2026-10-11):** el orden original saltaba directo a rehacer la grilla de
+> arquitecturas sin antes diagnosticar qué falla realmente en el modelo que está en producción
+> (`hand-detector_00`). Se reordena: primero diagnóstico de fallos sobre el modelo actual, y solo
+> si el diagnóstico apunta a un problema de arquitectura/preprocesamiento se decide qué ablación
+> vale la pena correr. El modelo en producción (`hand-detector_00`, sin augmentation) nunca
+> estuvo afectado por el bug del hallazgo #2: eso solo contaminó corridas de la grilla que
+> nadie adoptó.
 
 ## Contexto
 
@@ -71,16 +79,35 @@ Arreglar el bug de sincronización imagen/máscara (#2) y el colapso de `ENCODER
 mismo split `random_state=42`) y confirmar en `evaluation/metrics.json` que el accuracy ya no se
 estanca en ~0.878.
 
-### Etapa 2: Rehacer la grilla de segmentación
-Re-ejecutar la grilla (arquitecturas/pesos/augmentation ya justificados en
+### Etapa 2: Diagnóstico de fallos del modelo en producción (`hand-detector_00`)
+Antes de ablacionar nada, caracterizar dónde y por qué falla el modelo que realmente se usa.
+- Extender `per_class_dice.py` (ya calcula Dice/IoU por imagen, pero solo guarda el agregado)
+  para conservar el Dice por imagen y por clase, con el ID de cada imagen.
+- Identificar las imágenes con peor Dice, en particular para meñique y muñeca (hallazgo #4).
+- Generar comparativas visuales (imagen de entrada, máscara real, máscara predicha) para los
+  peores casos de cada clase.
+- Clasificar el tipo de fallo observado: ¿imprecisión de borde, confusión entre clases
+  adyacentes, región completamente perdida, correlación con pose/ángulo de la mano o calidad de
+  imagen? Esto determina si el problema es de arquitectura (→ Etapa 3), de preprocesamiento
+  (→ Etapa 4), de la anotación misma, o ninguno de los anteriores.
+- Dataset: las mismas 76 imágenes de validación (`random_state=42`) usadas por
+  `per_class_dice.py`, más el subconjunto mexicano (~20–30 imágenes, retoma el Comentario #10)
+  para ver si el patrón de fallo es el mismo o distinto fuera de RSNA.
+
+**Decisión de alcance:** las Etapas 3 y 4 solo se ejecutan, y solo en la medida en que el
+diagnóstico de esta etapa las justifique. Si los fallos son de borde/anotación y no de
+arquitectura, rehacer la grilla completa no tendría sentido.
+
+### Etapa 3 (condicional): Rehacer la grilla de segmentación
+Solo si el diagnóstico de la Etapa 2 apunta a una limitación de arquitectura. Re-ejecutar la
+grilla (arquitecturas/pesos/augmentation ya justificados en
 `models/hand-detector/experiments.md`, por consistencia con `ablacion_backbones.md`) con el
 código corregido, agregando `spatial`/`cropped` como eje adicional. Evaluar cada configuración
-por tres criterios: Dice/IoU por clase (`per_class_dice.py`), impacto en MAE downstream
-(experimento de fusión de referencia), y Dice sobre un subconjunto mexicano anotado (~20–30
-imágenes, retoma el Comentario #10). Selección por los tres criterios combinados, no solo Dice
-en RSNA.
+por tres criterios: Dice/IoU por clase, impacto en MAE downstream (experimento de fusión de
+referencia), y Dice sobre el subconjunto mexicano. Selección por los tres criterios combinados,
+no solo Dice en RSNA.
 
-### Etapa 3: Preprocesamiento (02/03), justificado y ablacionado
+### Etapa 4 (condicional): Preprocesamiento (02/03), justificado y ablacionado
 
 | Script | Parámetro actual | Justificación actual | Alternativa a explorar |
 |---|---|---|---|
@@ -91,10 +118,10 @@ en RSNA.
 | `03_histogram_equalization.py` | Mezcla 60% original + 40% CLAHE | Evita sobre-realce; proporción sin criterio medible | Barrer proporción de mezcla (0–100% CLAHE) |
 | `03_histogram_equalization.py` | Ajuste final `alpha=0.9, beta=-10` | Corrección cosmética sin justificación registrada | Evaluar si sigue siendo necesaria tras optimizar la mezcla |
 
-Cada variante se mide contra Dice/IoU del segmentador ganador de la Etapa 2, mismo subconjunto
-de validación, nunca por inspección visual.
+Cada variante se mide contra Dice/IoU del segmentador ganador de la Etapa 3 (o el actual, si la
+Etapa 3 no se ejecuta), mismo subconjunto de validación, nunca por inspección visual.
 
-### Etapa 4: Síntesis y adopción
+### Etapa 5: Síntesis y adopción
 Experimentos de fusión end-to-end (mismo split/seed que experimentos previos) confirmando la
 mejora acumulada en RSNA y MEX. Actualizar `config/segmentation.py`, scripts 02/03 y la
 documentación del pipeline con la configuración ganadora y su justificación final.
@@ -104,9 +131,10 @@ documentación del pipeline con la configuración ganadora y su justificación f
 | Etapa | Criterio |
 |---|---|
 | 1 | `metrics.json`: accuracy ya no colapsa a ~0.878 |
-| 2 | Tabla comparativa (arquitectura × modo de recorte) con Dice/IoU por clase, MAE downstream, Dice en MEX |
-| 3 | Dice/IoU antes/después de cada variación, mismo subconjunto de validación |
-| 4 | Prueba pareada (`11_paired_validation.py`) config nueva vs. actual, en RSNA y MEX |
+| 2 | Reporte de fallos por imagen/clase con evidencia visual, y una conclusión explícita de si el problema es de arquitectura, preprocesamiento, anotación o ninguno |
+| 3 | Tabla comparativa (arquitectura × modo de recorte) con Dice/IoU por clase, MAE downstream, Dice en MEX |
+| 4 | Dice/IoU antes/después de cada variación, mismo subconjunto de validación |
+| 5 | Prueba pareada (`11_paired_validation.py`) config nueva vs. actual, en RSNA y MEX |
 
 ## Bitácora de avance
 
@@ -120,5 +148,9 @@ documentación del pipeline con la configuración ganadora y su justificación f
   confirmado, Etapa 1 cerrada para el hallazgo #2.
 - Hallazgo #3 (`ENCODER_WEIGHTS=None`) diagnosticado sin aplicar fix de código (ver detalle en
   la sección de hallazgos): baja prioridad, no bloquea el resto del plan.
-- Etapa 1 completa. Sigue la Etapa 2 (rehacer la grilla de segmentación con el código
-  corregido, cruzada con el modo de recorte `spatial`/`cropped`).
+- Etapa 1 completa.
+- **Corrección de rumbo:** se reordena el plan (ver nota al inicio). Antes de rehacer la grilla
+  de arquitecturas, se diagnostican los fallos reales del modelo en producción
+  (`hand-detector_00`, nunca afectado por el bug del hallazgo #2). Rehacer la grilla queda
+  condicional a lo que ese diagnóstico encuentre.
+- Inicia Etapa 2 (diagnóstico de fallos de `hand-detector_00`).

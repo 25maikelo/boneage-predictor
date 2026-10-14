@@ -78,7 +78,8 @@ def get_segmentation_model_path(run=None):
     return os.path.join(PRETRAINED_MODELS_DIR, "modelo_segmentacion.h5")
 
 
-SEGMENTATION_MODEL_PATH = get_segmentation_model_path()
+from config.segmentation import HAND_DETECTOR_RUN
+SEGMENTATION_MODEL_PATH = get_segmentation_model_path(HAND_DETECTOR_RUN)
 
 # ============================================================
 # EXPERIMENTOS

@@ -66,15 +66,26 @@ def rotar_y_recortar(image_path, output_path, kernel_size=(9, 9), dilation_iters
         angle -= 90
 
     h, w = img.shape
-    M = cv2.getRotationMatrix2D((w // 2, h // 2), angle, 1.0)
-    rotated = cv2.warpAffine(img, M, (w, h), flags=cv2.INTER_CUBIC,
+    cx, cy = w / 2, h / 2
+    M = cv2.getRotationMatrix2D((cx, cy), angle, 1.0)
+
+    # Canvas expandido al tamaño minimo que contiene la imagen rotada completa,
+    # para no perder contenido que rotaria fuera de un canvas del mismo tamano
+    # que el original cuando la mano esta lejos del centro de la imagen.
+    cos, sin = abs(M[0, 0]), abs(M[0, 1])
+    new_w = int(h * sin + w * cos)
+    new_h = int(h * cos + w * sin)
+    M[0, 2] += (new_w / 2) - cx
+    M[1, 2] += (new_h / 2) - cy
+
+    rotated = cv2.warpAffine(img, M, (new_w, new_h), flags=cv2.INTER_CUBIC,
                               borderMode=cv2.BORDER_REPLICATE)
 
     ones = np.ones((len(box), 1))
     box_h = np.hstack([box, ones])
     box_r = np.dot(M, box_h.T).T.astype(int)
-    x0, y0 = box_r[:, 0].min(), box_r[:, 1].min()
-    x1, y1 = box_r[:, 0].max(), box_r[:, 1].max()
+    x0, y0 = max(0, box_r[:, 0].min()), max(0, box_r[:, 1].min())
+    x1, y1 = min(new_w, box_r[:, 0].max()), min(new_h, box_r[:, 1].max())
 
     if x0 >= x1 or y0 >= y1:
         cv2.imwrite(output_path, img)

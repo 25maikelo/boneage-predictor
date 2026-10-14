@@ -1,6 +1,8 @@
 """
-Genera un PDF corto con el antes/despues del fix de canvas expandido en
-02_frame_and_zoom.py (ver diagnostico.md, hallazgo 4).
+Genera un PDF corto con el antes/despues de los dos fixes geometricos de
+02_frame_and_zoom.py (ver diagnostico.md, hallazgos 4 y 5): canvas expandido
+(evita perder contenido al rotar) y correccion de la rotacion espuria de 90
+grados (evita rotar manos que ya estaban alineadas).
 
 Uso:
     python docs/results/preprocesamiento_diagnostico/scripts/generar_reporte_pdf.py
@@ -43,17 +45,30 @@ def detect_box(img, kernel_size=(9, 9), dilation_iters=4):
     contours, _ = cv2.findContours(dilated, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     rect = cv2.minAreaRect(max(contours, key=cv2.contourArea))
     box = np.intp(cv2.boxPoints(rect))
-    angle = rect[-1]
-    w_r, h_r = rect[1]
+    return box, rect[-1], rect[1]  # box, angulo crudo, (w, h)
+
+
+def angle_antes(raw_angle, w_r, h_r):
+    angle = raw_angle
     if w_r < h_r:
         angle += 90
     if angle > 45:
         angle -= 90
-    return box, angle
+    return angle
+
+
+def angle_despues(raw_angle, w_r, h_r, tol=1.0):
+    angle = raw_angle
+    if w_r < h_r and abs(raw_angle - 90) > tol:
+        angle += 90
+    if angle > 45:
+        angle -= 90
+    return angle
 
 
 def crop_antes(img):
-    box, angle = detect_box(img)
+    box, raw_angle, (w_r, h_r) = detect_box(img)
+    angle = angle_antes(raw_angle, w_r, h_r)
     h, w = img.shape
     M = cv2.getRotationMatrix2D((w // 2, h // 2), angle, 1.0)
     rotated = cv2.warpAffine(img, M, (w, h), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)
@@ -66,7 +81,8 @@ def crop_antes(img):
 
 
 def crop_despues(img):
-    box, angle = detect_box(img)
+    box, raw_angle, (w_r, h_r) = detect_box(img)
+    angle = angle_despues(raw_angle, w_r, h_r)
     h, w = img.shape
     cx, cy = w / 2, h / 2
     M = cv2.getRotationMatrix2D((cx, cy), angle, 1.0)
@@ -89,15 +105,20 @@ def main():
     with PdfPages(out_path) as pdf:
         # Portada
         fig = plt.figure(figsize=(8.5, 11))
-        fig.text(0.5, 0.75, "Fix de recorte: canvas expandido",
+        fig.text(0.5, 0.75, "Fixes de recorte: geometria de la rotacion",
                   ha="center", fontsize=20, weight="bold")
         fig.text(0.5, 0.70, "02_frame_and_zoom.py: antes y despues",
                   ha="center", fontsize=13, color="#444444")
         resumen = (
-            "Problema: al rotar la imagen alrededor de su centro manteniendo el mismo\n"
-            "tamano de canvas, la mano se puede salir del cuadro cuando esta lejos del\n"
-            "centro. El recorte resultante pierde la mano por completo.\n\n"
+            "Problema 1 (canvas): al rotar la imagen alrededor de su centro manteniendo\n"
+            "el mismo tamano de canvas, la mano se puede salir del cuadro cuando esta\n"
+            "lejos del centro. El recorte resultante pierde la mano por completo.\n"
             "Fix: expandir el canvas antes de rotar, para no perder contenido.\n\n"
+            "Problema 2 (angulo): cv2.minAreaRect devuelve angle=90 como valor de\n"
+            "frontera para rectangulos ya alineados; la logica de correccion lo\n"
+            "interpretaba como 'rotar 90 grados', girando de lado manos que ya\n"
+            "estaban bien orientadas.\n"
+            "Fix: no corregir cuando el angulo crudo ya esta en esa frontera.\n\n"
             "Resultado validado sobre 1,500 imagenes:\n"
             "   Descartes (recorte fallido):  5.6% -> 2.1%  (63% menos)\n"
             "   Sin regresiones en el resto del dataset.\n\n"

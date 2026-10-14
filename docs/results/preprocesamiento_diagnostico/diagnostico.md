@@ -101,18 +101,42 @@ es prácticamente idéntico entre ambos métodos, el fix no degrada los casos qu
 solo repara los que fallaban por esta causa geométrica
 ([`figures/validacion_canvas_expandido.png`](figures/validacion_canvas_expandido.png)).
 
+## Hallazgo 5: rotación espuria de 90° en casos ya alineados
+
+Detectado al revisar visualmente los casos del hallazgo 4: algunas imágenes con el fix de canvas
+expandido aplicado quedaban con la mano rotada de lado (horizontal) en vez de mantener su
+orientación original (vertical, dedos hacia arriba), pese a que el original ya estaba
+razonablemente alineado.
+
+Causa: `cv2.minAreaRect` devuelve `angle=90.0` como valor de frontera cuando el rectángulo
+detectado ya está alineado a los ejes. La lógica de corrección existente
+(`if w_rect < h_rect: angle += 90`) interpreta ese caso límite como "necesita rotar 90°", cuando
+en realidad significa "ya está alineado, no rotar". Confirmado en **2.5–3.5% de una muestra de
+600–800 imágenes** (ángulo crudo en el rango [89°, 91°] combinado con `w_rect < h_rect`).
+
+**Fix validado**: no aplicar la corrección `+90` cuando el ángulo crudo ya está en ese rango de
+frontera (tolerancia de 1°). Verificado visualmente en los 4 casos del hallazgo 4: con el fix,
+las 4 manos quedan en su orientación original en vez de rotar 90°
+([`figures/comparacion_angulo.png`](figures/comparacion_angulo.png)). Sobre una muestra de 800
+imágenes, solo cambia el ángulo final del 3.0% de los casos, todos dentro del rango de frontera
+identificado, sin afectar la lógica de corrección para inclinaciones reales.
+
+**Aplicado a producción** en `02_frame_and_zoom.py`, junto con el fix de canvas expandido
+(hallazgo 4). Con ambos fixes activos, una muestra de 300 imágenes da 97.7% `ok` / 2.3%
+`discard_area`, consistente con que el único problema restante es el de contraste (hallazgo 2,
+sin fix encontrado).
+
 ## Conclusiones
 
-1. El recorte de `02_frame_and_zoom.py` funciona bien en la mayoría de los casos (mediana de
-   fill ratio 0.765), pero tiene una cola de fallos (~5% del dataset) con **dos causas
-   independientes**: bajo contraste global que rompe Otsu (hallazgo 2, sin fix encontrado hasta
-   ahora), y un bug de corrimiento de píxeles en la rotación que afecta a imágenes bien
-   contrastadas pero con la mano lejos del centro (hallazgo 4, **con fix validado**).
-2. Los parámetros actuales de CLAHE (`clipLimit=2.0`) no son óptimos frente a las alternativas
-   probadas en estas métricas: `clipLimit=4.0` preserva más contraste y satura menos píxeles.
-3. El fix de canvas expandido (hallazgo 4) es independiente de CLAHE y del problema de contraste;
-   ataca una causa geométrica distinta, con evidencia cuantitativa clara y sin regresiones
-   detectadas.
+1. El recorte de `02_frame_and_zoom.py` tenía una cola de fallos/errores (~5% del dataset) con
+   **tres causas independientes**: bajo contraste global que rompe Otsu (hallazgo 2, sin fix
+   encontrado todavía), pérdida de contenido al rotar manos lejos del centro (hallazgo 4, **fix
+   aplicado**), y rotación espuria de 90° en casos ya alineados (hallazgo 5, **fix aplicado**).
+2. Los parámetros actuales de CLAHE (`clipLimit=2.0`) no eran óptimos frente a las alternativas
+   probadas: `clipLimit=4.0` preserva más contraste y satura menos píxeles (**aplicado**).
+3. Los fixes de los hallazgos 4 y 5 son independientes de CLAHE y del problema de contraste;
+   atacan causas geométricas distintas, con evidencia cuantitativa y visual clara y sin
+   regresiones detectadas.
 
 ## Validación de las propuestas sobre el dataset completo (12,811 imágenes)
 
@@ -179,7 +203,8 @@ debe producir un recorte automático para el 100% de las imágenes.
   como reemplazo de Otsu: ninguna resuelve los casos extremos y ambas introducen regresiones en
   otras imágenes.
 - ~~Aplicar el fix de canvas expandido~~ **hecho**: aplicado en `02_frame_and_zoom.py`.
+- ~~Aplicar el fix de rotación espuria de 90°~~ **hecho**: aplicado en `02_frame_and_zoom.py`.
 - **Pendiente**: re-correr `02_frame_and_zoom.py` y `03_histogram_equalization.py` sobre el
-  dataset completo (12,813 imágenes) para que `data/images/cropped/`/`equalized/` reflejen el fix
-  y el `clipLimit=4.0` ya adoptado; el código está listo pero los datos en disco siguen siendo
-  los generados con el código anterior hasta que se regeneren.
+  dataset completo (12,813 imágenes) para que `data/images/cropped/`/`equalized/` reflejen los
+  tres fixes ya aplicados; el código está listo pero los datos en disco siguen siendo los
+  generados con el código anterior hasta que se regeneren.

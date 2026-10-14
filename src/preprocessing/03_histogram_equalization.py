@@ -25,7 +25,7 @@ START_TIME = time.time()
 
 
 def ecualizacion_clahe(img):
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    clahe = cv2.createCLAHE(clipLimit=4.0, tileGridSize=(8, 8))
     eq = clahe.apply(img)
     blended = cv2.addWeighted(img, 0.6, eq, 0.4, 0)
     return cv2.convertScaleAbs(blended, alpha=0.9, beta=-10)

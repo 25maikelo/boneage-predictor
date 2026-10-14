@@ -11,6 +11,7 @@ Uso:
 """
 import os
 import sys
+import json
 import time
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -19,7 +20,7 @@ sys.path.insert(0, PROJECT_ROOT)
 import cv2
 import numpy as np
 
-from config.paths import RAW_IMAGES_DIR, CROPPED_IMAGES_DIR
+from config.paths import RAW_IMAGES_DIR, CROPPED_IMAGES_DIR, IMAGES_DIR
 from src.utils.timing import report_timing, setup_logging
 
 START_TIME = time.time()
@@ -40,7 +41,7 @@ def rotar_y_recortar(image_path, output_path, kernel_size=(9, 9), dilation_iters
     img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
     if img is None:
         print(f"No se pudo cargar: {image_path}")
-        return
+        return "no_load"
 
     blur = cv2.GaussianBlur(img, (5, 5), 0)
     _, thresh = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
@@ -52,7 +53,7 @@ def rotar_y_recortar(image_path, output_path, kernel_size=(9, 9), dilation_iters
 
     if not contours:
         cv2.imwrite(output_path, img)
-        return
+        return "no_contour"
 
     rect = cv2.minAreaRect(max(contours, key=cv2.contourArea))
     box = np.intp(cv2.boxPoints(rect))
@@ -77,14 +78,15 @@ def rotar_y_recortar(image_path, output_path, kernel_size=(9, 9), dilation_iters
 
     if x0 >= x1 or y0 >= y1:
         cv2.imwrite(output_path, img)
-        return
+        return "degenerate"
 
     cropped = rotated[y0:y1, x0:x1]
     if cropped.size < 0.2 * img.size:
         cv2.imwrite(output_path, img)
-        return
+        return "discard_area"
 
     cv2.imwrite(output_path, cropped)
+    return "ok"
 
 
 def procesar_todas():
@@ -95,14 +97,23 @@ def procesar_todas():
         return
 
     print(f"Procesando {len(files)} imágenes...")
+    fallbacks = {}
     for i, fname in enumerate(files, 1):
         src = os.path.join(RAW_IMAGES_DIR, fname)
         dst = os.path.join(CROPPED_IMAGES_DIR, fname)
-        rotar_y_recortar(src, dst)
+        estado = rotar_y_recortar(src, dst)
+        if estado != "ok":
+            fallbacks[fname] = estado
         if i % 500 == 0:
             print(f"  {i}/{len(files)} procesadas")
 
     print(f"Imágenes recortadas guardadas en: {CROPPED_IMAGES_DIR}")
+    print(f"Imágenes sin recortar (fallback): {len(fallbacks)}/{len(files)}")
+
+    fallbacks_path = os.path.join(IMAGES_DIR, "crop_fallbacks.json")
+    with open(fallbacks_path, "w", encoding="utf-8") as f:
+        json.dump(fallbacks, f, indent=2, ensure_ascii=False)
+    print(f"Detalle de fallbacks guardado en: {fallbacks_path}")
 
 
 if __name__ == "__main__":

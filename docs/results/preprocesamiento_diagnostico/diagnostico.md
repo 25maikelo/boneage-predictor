@@ -137,6 +137,9 @@ sin fix encontrado).
 3. Los fixes de los hallazgos 4 y 5 son independientes de CLAHE y del problema de contraste;
    atacan causas geométricas distintas, con evidencia cuantitativa y visual clara y sin
    regresiones detectadas.
+4. `03_histogram_equalization.py` tenía un defecto independiente (hallazgo 6): el ajuste final
+   de contraste reflejaba en vez de saturar los tonos más oscuros, afectando sobre todo al fondo.
+   Impacto sutil pero real; **fix aplicado**.
 
 ## Validación de las propuestas sobre el dataset completo (12,811 imágenes)
 
@@ -194,6 +197,24 @@ y registrar explícitamente** estos casos (hoy `02_frame_and_zoom.py` cae a la i
 silencio, sin dejar rastro) para poder decidir caso por caso, en vez de asumir que el pipeline
 debe producir un recorte automático para el 100% de las imágenes.
 
+## Hallazgo 6: `convertScaleAbs` reflejaba los tonos más oscuros en `03_histogram_equalization.py`
+
+Al revisar el script de ecualización con el mismo nivel de detalle que `02_frame_and_zoom.py`,
+se encontró que el ajuste final de contraste/brillo usaba `cv2.convertScaleAbs(blended,
+alpha=0.9, beta=-10)`, que calcula `|blended·0.9 − 10|` (valor absoluto), no un recorte
+(`saturate(blended·0.9 − 10)`). Para `blended ≤ 22` (el rango que ocupa casi todo el fondo
+oscuro de la radiografía tras el recorte), `blended·0.9 − 10` es negativo, y el valor absoluto lo
+**refleja hacia arriba** en vez de saturar a 0: entrada=0 → salida=10, entrada=11 → salida=0,
+entrada=22 → salida=10 de nuevo. La función deja de ser monótona exactamente en el rango que
+ocupa el fondo.
+
+Verificado sobre una imagen real: el píxel con el valor mínimo real (`blended=0`) quedaba en 10
+con el bug, correctamente en 0 con el fix. El 3.3% de los píxeles de esa imagen difieren en más
+de 3 niveles de gris entre ambos comportamientos
+([`figures/fix_convertscaleabs.png`](figures/fix_convertscaleabs.png)). El impacto visual es
+sutil (la magnitud del error es de pocos niveles de gris), pero es un defecto real y de bajo
+costo arreglar: se reemplazó por un recorte explícito a `[0, 255]`. **Aplicado a producción.**
+
 ## Próximos pasos
 
 - ~~Adoptar `clipLimit=4.0`~~ **hecho**: aplicado en `03_histogram_equalization.py`.
@@ -204,7 +225,10 @@ debe producir un recorte automático para el 100% de las imágenes.
   otras imágenes.
 - ~~Aplicar el fix de canvas expandido~~ **hecho**: aplicado en `02_frame_and_zoom.py`.
 - ~~Aplicar el fix de rotación espuria de 90°~~ **hecho**: aplicado en `02_frame_and_zoom.py`.
+- ~~Aplicar el fix de `convertScaleAbs`~~ **hecho**: aplicado en `03_histogram_equalization.py`.
+- Revisado `04_segment_images.py` con el mismo nivel de detalle (lógica de recorte al bounding
+  box): sin bugs equivalentes encontrados, todos los límites ya están correctamente acotados.
 - **Pendiente**: re-correr `02_frame_and_zoom.py` y `03_histogram_equalization.py` sobre el
   dataset completo (12,813 imágenes) para que `data/images/cropped/`/`equalized/` reflejen los
-  tres fixes ya aplicados; el código está listo pero los datos en disco siguen siendo los
+  cuatro fixes ya aplicados; el código está listo pero los datos en disco siguen siendo los
   generados con el código anterior hasta que se regeneren.

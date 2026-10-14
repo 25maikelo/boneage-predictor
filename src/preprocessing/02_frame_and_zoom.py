@@ -60,7 +60,10 @@ def rotar_y_recortar(image_path, output_path, kernel_size=(9, 9), dilation_iters
     angle = rect[-1]
     w_rect, h_rect = rect[1]
 
-    if w_rect < h_rect:
+    # angle==90 es el valor que cv2.minAreaRect usa para un rectangulo ya
+    # alineado a los ejes; en ese caso w_rect<h_rect NO indica una rotacion
+    # real pendiente, y sumar 90 aqui introduce un giro de 90 grados espurio.
+    if w_rect < h_rect and abs(angle - 90) > 1.0:
         angle += 90
     if angle > 45:
         angle -= 90

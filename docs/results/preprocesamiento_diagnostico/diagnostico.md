@@ -62,16 +62,57 @@ Los parámetros actuales **reducen el contraste** respecto a no aplicar CLAHE (4
 que la configuración actual, y de hecho su entropía (5.838) supera incluso a la imagen sin
 ecualizar. `tileGridSize=16×16` es la peor variante en ambos criterios.
 
+## Hallazgo 4: bug de corrimiento de píxeles en la rotación, causa independiente de fallos
+
+El recorte rota la imagen completa alrededor del **centro de la imagen** (`cv2.getRotationMatrix2D`
+con `(w//2, h//2)`), no del centro de la mano detectada, y mantiene el **mismo tamaño de canvas**
+en `cv2.warpAffine(img, M, (w, h))`. Cuando la mano está lejos del centro de la imagen, rotarla
+alrededor de un punto que no es el suyo puede sacar parte de su contenido fuera del cuadro fijo,
+contenido que `warpAffine` descarta silenciosamente (no hay forma de recuperarlo de `rotated`
+después).
+
+Esto produce coordenadas de recorte **negativas** en una fracción medible de las imágenes
+(21/600 en una muestra, 3.5%). En Python/NumPy, un índice negativo en un slice no se trata como
+"0": se interpreta como "contar desde el final del arreglo", así que
+`rotated[y0:y1, x0:x1]` con `y0` negativo produce un recorte **equivocado** (una tira angosta de
+una zona arbitraria de la imagen rotada) en vez de un error visible. Ejemplo verificado
+(`1748.png`): el recorte real queda en **(264, 2040)** píxeles, una tira sin nada de la mano,
+visible en [`figures/bug_corrimiento_1748.png`](figures/bug_corrimiento_1748.png).
+
+**Por qué no se había detectado antes**: la salvaguarda existente (`<20%` del área) sí atrapa
+estos 21 casos verificados y cae de vuelta a la imagen completa sin recortar, no hay corrupción
+silenciosa confirmada hasta ahora, pero caen en la misma categoría "descarte" que el hallazgo 2,
+con una causa completamente distinta (geometría de la rotación, no contraste). Las imágenes
+afectadas tienen buen contraste; el problema es puramente que la mano está lejos del centro.
+
+**Fix validado**: expandir el canvas antes de rotar (técnica estándar de "rotar sin recortar
+esquinas": calcular el tamaño mínimo que contiene la imagen rotada completa, ajustar la matriz de
+traslación, rotar hacia ese canvas más grande, y solo entonces calcular el recorte). Sobre una
+muestra de 1,500 imágenes completas (no solo los casos conocidos):
+
+| Métrica | Actual | Canvas expandido |
+|---|---:|---:|
+| Estado `discard_area` | 84/1500 (5.6%) | 31/1500 (2.1%) |
+| Estado `ok` | 1416/1500 | 1469/1500 |
+
+**63% menos descartes**, recuperando ~53 de cada 1,500 imágenes (≈3.5%, consistente con la
+muestra de 600). El histograma de fill ratio del cuerpo principal de la distribución (0.6–0.85)
+es prácticamente idéntico entre ambos métodos, el fix no degrada los casos que ya funcionaban,
+solo repara los que fallaban por esta causa geométrica
+([`figures/validacion_canvas_expandido.png`](figures/validacion_canvas_expandido.png)).
+
 ## Conclusiones
 
 1. El recorte de `02_frame_and_zoom.py` funciona bien en la mayoría de los casos (mediana de
-   fill ratio 0.765), pero tiene una cola de fallos (~2–5% del dataset) concentrada en imágenes
-   de bajo contraste global, no en casos de rotación compleja.
+   fill ratio 0.765), pero tiene una cola de fallos (~5% del dataset) con **dos causas
+   independientes**: bajo contraste global que rompe Otsu (hallazgo 2, sin fix encontrado hasta
+   ahora), y un bug de corrimiento de píxeles en la rotación que afecta a imágenes bien
+   contrastadas pero con la mano lejos del centro (hallazgo 4, **con fix validado**).
 2. Los parámetros actuales de CLAHE (`clipLimit=2.0`) no son óptimos frente a las alternativas
    probadas en estas métricas: `clipLimit=4.0` preserva más contraste y satura menos píxeles.
-3. Ambos hallazgos son independientes entre sí pero sugieren la misma hipótesis: adelantar o
-   reforzar el control de contraste antes/durante el recorte podría reducir la cola de fallos
-   del hallazgo 1, además de la mejora directa en calidad de imagen del hallazgo 3.
+3. El fix de canvas expandido (hallazgo 4) es independiente de CLAHE y del problema de contraste;
+   ataca una causa geométrica distinta, con evidencia cuantitativa clara y sin regresiones
+   detectadas.
 
 ## Validación de las propuestas sobre el dataset completo (12,811 imágenes)
 
@@ -131,12 +172,14 @@ debe producir un recorte automático para el 100% de las imágenes.
 
 ## Próximos pasos
 
-- **Adoptar `clipLimit=4.0`** en `03_histogram_equalization.py`: respaldado por los datos
-  (85.4% de 12,811 imágenes con más contraste). Pendiente de decidir con el usuario si se aplica
-  al script de producción.
-- **Agregar logging explícito** de las imágenes que activan cualquier salvaguarda de
-  `02_frame_and_zoom.py` (hoy es silencioso), para poder auditarlas y decidir caso por caso, en
-  vez de seguir buscando un reemplazo automático de Otsu.
+- ~~Adoptar `clipLimit=4.0`~~ **hecho**: aplicado en `03_histogram_equalization.py`.
+- ~~Agregar logging explícito de las salvaguardas~~ **hecho**: `02_frame_and_zoom.py` ahora
+  guarda `data/images/crop_fallbacks.json` con el detalle por imagen.
 - `equalizeHist` y sustracción de fondo morfológica (fija o proporcional) quedan **descartadas**
   como reemplazo de Otsu: ninguna resuelve los casos extremos y ambas introducen regresiones en
   otras imágenes.
+- **Pendiente de decidir con el usuario**: aplicar el fix de canvas expandido (hallazgo 4) a
+  `02_frame_and_zoom.py` en producción. Validado sobre 1,500 imágenes sin regresiones detectadas;
+  requiere re-correr el recorte sobre el dataset completo para que el pipeline use las imágenes
+  corregidas (mismo tipo de decisión que el cambio de `clipLimit`, pero afecta a la geometría del
+  recorte, no solo al contraste).

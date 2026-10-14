@@ -1,0 +1,18 @@
+{
+  "n": 1500,
+  "n_indice_negativo_metodo_actual": 0,
+  "pct_indice_negativo": 0.0,
+  "estados_actual": {
+    "ok": 1416,
+    "discard_area": 84
+  },
+  "estados_fix": {
+    "ok": 1469,
+    "discard_area": 31
+  },
+  "fill_ratio_actual_mean": 0.7345374208877989,
+  "fill_ratio_fix_mean": 0.732053479981677,
+  "pct_mejoran_con_fix": 0.46666666666666673,
+  "pct_empeoran_con_fix": 1.4666666666666666,
+  "casos_indice_negativo_que_pasan_a_ok_con_fix": 0
+}

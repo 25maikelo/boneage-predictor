@@ -199,3 +199,13 @@ documentación del pipeline con la configuración ganadora y su justificación f
   proceso. Recomendación final: adoptar `clipLimit=4.0`, y agregar logging explícito de las
   imágenes que activan las salvaguardas de `02_frame_and_zoom.py` (hoy es silencioso) en vez de
   seguir buscando un reemplazo automático de Otsu.
+- **`clipLimit=4.0` y el logging de salvaguardas ya se aplicaron a producción.**
+- **Nuevo hallazgo (hallazgo 4 de
+  [`preprocesamiento_diagnostico/diagnostico.md`](../results/preprocesamiento_diagnostico/diagnostico.md))**:
+  bug de corrimiento de píxeles en la rotación de `02_frame_and_zoom.py` (rota alrededor del
+  centro de la imagen, no de la mano, con el mismo tamaño de canvas; produce coordenadas de
+  recorte negativas y pierde contenido). Causa independiente del bajo contraste (hallazgo 2):
+  afecta imágenes bien contrastadas donde la mano está lejos del centro. Fix de "canvas
+  expandido" validado sobre 1,500 imágenes: reduce la tasa de `discard_area` de 5.6% a 2.1%
+  (63% menos descartes), sin regresiones detectadas en el resto de la distribución. Pendiente de
+  aplicar a producción.

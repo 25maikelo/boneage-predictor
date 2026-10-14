@@ -178,8 +178,8 @@ debe producir un recorte automático para el 100% de las imágenes.
 - `equalizeHist` y sustracción de fondo morfológica (fija o proporcional) quedan **descartadas**
   como reemplazo de Otsu: ninguna resuelve los casos extremos y ambas introducen regresiones en
   otras imágenes.
-- **Pendiente de decidir con el usuario**: aplicar el fix de canvas expandido (hallazgo 4) a
-  `02_frame_and_zoom.py` en producción. Validado sobre 1,500 imágenes sin regresiones detectadas;
-  requiere re-correr el recorte sobre el dataset completo para que el pipeline use las imágenes
-  corregidas (mismo tipo de decisión que el cambio de `clipLimit`, pero afecta a la geometría del
-  recorte, no solo al contraste).
+- ~~Aplicar el fix de canvas expandido~~ **hecho**: aplicado en `02_frame_and_zoom.py`.
+- **Pendiente**: re-correr `02_frame_and_zoom.py` y `03_histogram_equalization.py` sobre el
+  dataset completo (12,813 imágenes) para que `data/images/cropped/`/`equalized/` reflejen el fix
+  y el `clipLimit=4.0` ya adoptado; el código está listo pero los datos en disco siguen siendo
+  los generados con el código anterior hasta que se regeneren.

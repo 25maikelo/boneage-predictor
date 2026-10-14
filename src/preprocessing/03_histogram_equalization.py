@@ -17,6 +17,7 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(_
 sys.path.insert(0, PROJECT_ROOT)
 
 import cv2
+import numpy as np
 
 from config.paths import CROPPED_IMAGES_DIR, EQUALIZED_IMAGES_DIR
 from src.utils.timing import report_timing, setup_logging
@@ -28,7 +29,11 @@ def ecualizacion_clahe(img):
     clahe = cv2.createCLAHE(clipLimit=4.0, tileGridSize=(8, 8))
     eq = clahe.apply(img)
     blended = cv2.addWeighted(img, 0.6, eq, 0.4, 0)
-    return cv2.convertScaleAbs(blended, alpha=0.9, beta=-10)
+    # No usar cv2.convertScaleAbs aqui: toma valor absoluto en vez de recortar,
+    # asi que para blended*0.9-10 < 0 (todo el fondo oscuro, uint8 0-22) el
+    # resultado se "refleja" en vez de saturar a 0, rompiendo la monotonia.
+    adjusted = blended.astype(np.float32) * 0.9 - 10
+    return np.clip(adjusted, 0, 255).astype(np.uint8)
 
 
 def procesar_todas():

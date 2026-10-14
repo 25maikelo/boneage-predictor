@@ -200,6 +200,7 @@
 † Valores aproximados: exp 29 desde logs de Windows (script antiguo); exp 99 con solo 80 muestras.  
 Exps 00–16 sin `config.py` — no ejecutables; los modelos de 03–16 existen en formato desconocido.  
 Exps 17–22 sin `MODEL_TYPE`, `SEGMENT_MODE`, `DATASET_PATH`, `FREEZE_EXTRACTORS`, `SEGMENTATION_MODEL` — no ejecutables sin añadir esos 5 campos.  
+Exps 54 y 59 no existen (ni en disco ni en git): números reservados al planear las fases que nunca se llegaron a correr, no son datos perdidos.  
 `.keras` de 17/18/22 son formato Keras 3.x (ZIP), incompatibles con `boneage_gpu` (Keras 2.10).
 
 ### Experimentos de exploración temprana, cerrados sin completar

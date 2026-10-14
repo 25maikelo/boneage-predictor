@@ -20,17 +20,19 @@ boneage-predictor/
 │   │   ├── 02_frame_and_zoom.py        ← Rotación y recorte
 │   │   ├── 03_histogram_equalization.py← CLAHE
 │   │   └── 04_segment_images.py        ← Segmentación en 4 regiones
-│   ├── models/
-│   │   ├── losses.py        ← Funciones de pérdida personalizadas
-│   │   └── fusion_utils.py  ← Capas de fusión con atención
 │   ├── utils/
+│   │   ├── losses.py        ← Funciones de pérdida personalizadas
+│   │   ├── fusion_utils.py  ← Capas de fusión con atención
 │   │   └── timing.py        ← Reporte de tiempos y logging a archivo
 │   ├── 05_dataset_analysis.py
-│   ├── 06_training.py
+│   ├── 06_training.py       ← 5 modos vía MODEL_TYPE, ver docs/design/arquitecturas.md
 │   ├── 07_validation.py
 │   ├── 08_mex_validation.py
-│   └── 09_performance_analysis.py
-├── slurm/                  ← Scripts de SLURM (00–09, un paso por script)
+│   ├── 09_performance_analysis.py
+│   ├── 10_age_range_analysis.py
+│   └── 11_paired_validation.py
+├── slurm/                  ← Scripts de SLURM (00–11, uno por paso de pipeline)
+├── scripts/                ← Utilidades sueltas: descarga/sync de datos, generación de reportes, tests manuales
 ├── experiments/
 │   └── NN/
 │       └── config.py       ← Hiperparámetros del experimento N
@@ -42,9 +44,14 @@ boneage-predictor/
 │   └── mex-validation/     ← Dataset de validación mexicano
 ├── models/                 ← (gitignored) Modelos pre-entrenados
 ├── logs/                   ← (gitignored) Logs de ejecución
+├── docs/                   ← Documentación del proyecto, ver docs/README.md
 ├── requirements.txt
 └── .gitignore
 ```
+
+> **Documentación completa**: este README cubre instalación y ejecución básica. Para
+> arquitecturas, resultados de experimentos, y el estado actual del proyecto, ver
+> [`docs/README.md`](docs/README.md).
 
 ---
 
@@ -62,6 +69,10 @@ boneage-predictor/
 | 07 | `src/07_validation.py --experiment N` | `data/validation/` + `experiments/N/models/` | Histograma de edades, pastel de sexo, tabla resumen MAE/tiempos, saliencias sobre muestras, dispersión real vs predicción | `experiments/N/validation/` |
 | 08 | `src/08_mex_validation.py --experiment N` | `data/mex-validation/` + `experiments/N/models/` | Histograma de edades, pastel de sexo, tabla resumen MAE, saliencias sobre muestras, dispersión real vs predicción | `experiments/N/mex-validation/` |
 | 09 | `src/09_performance_analysis.py --experiment N` | `experiments/N/models/` + `data/images/segmented/` | Saliencias sobre muestras del dataset, tabla comparativa (Loss/MAE train-val por modelo) | `experiments/N/evaluation/` |
+| 10 | `src/10_age_range_analysis.py --experiment N` | `data/validation/` + `data/mex-validation/` + `experiments/N/models/` | Error por rango de edad (bin configurable), sesgos sistemáticos | `experiments/N/age_range_analysis/` |
+| 11 | `src/11_paired_validation.py --experiments N1 N2 ...` | `experiments/N/validation/plot_data.json` (y/o `mex-validation/`) de varios experimentos | Pruebas pareadas (Wilcoxon + bootstrap, corrección de Holm) entre experimentos | Consola, o JSON con `--output` |
+
+Ver [`docs/planning/pipeline.md`](docs/planning/pipeline.md) para el detalle completo de cada script (entradas/salidas exactas, parámetros, comandos).
 
 ---
 
@@ -184,6 +195,12 @@ python src/08_mex_validation.py --experiment 26
 
 # Paso 9: Análisis de desempeño (tabla + saliencias)
 python src/09_performance_analysis.py --experiment 26
+
+# Paso 10: Análisis por rango de edad
+python src/10_age_range_analysis.py --experiment 26
+
+# Paso 11: Validación pareada contra otro experimento
+python src/11_paired_validation.py --experiments 26 37
 ```
 
 Cada script crea un log en `logs/<script_name>_YYYYMMDD_HHMMSS.log`.
@@ -203,6 +220,8 @@ sbatch slurm/06_training.slurm 26
 sbatch slurm/07_validation.slurm 26
 sbatch slurm/08_mex_validation.slurm 26
 sbatch slurm/09_performance_analysis.slurm 26
+sbatch slurm/10_age_range_analysis.slurm 26
+sbatch slurm/11_paired_validation.slurm --experiments 26 37
 ```
 
 ---
@@ -233,6 +252,7 @@ Variables clave:
 
 | Variable | Descripción |
 |---|---|
+| `MODEL_TYPE` | Modo de arquitectura: `backbone`, `simple_cnn`, `backbone_vectors`, `unified_cnn`, `whole_hand`. Ver [`docs/design/arquitecturas.md`](docs/design/arquitecturas.md) |
 | `IMAGE_SIZE` | Tamaño de entrada del modelo (px) |
 | `BASE_MODEL_CHOICE` | Backbone: `vgg16`, `densenet121`, `inceptionv3`, `resnet50` |
 | `LOSS_FUNCTION_NAME` | Pérdida: `attention_loss`, `dynamic_attention_loss`, `custom_mse_loss`, `custom_huber_loss` |

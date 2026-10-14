@@ -2,8 +2,8 @@
 
 ```
 00 → 01 → 02 → 03 → 04 → 05 → 06 → 07 → 09 → 10
-                                    ↓
-                                    08
+                                    ↓          ↓
+                                    08 ────────┴→ 11
 ```
 
 ---
@@ -221,6 +221,23 @@ Descompone el error por intervalo de edad e identifica sesgos sistemáticos por 
 
 ---
 
+### 11 · Validación pareada / ablación estadística
+**Script:**
+`src/11_paired_validation.py`
+
+**Uso:**
+`python src/11_paired_validation.py --experiments N1 N2 [N3 ...] [--source rsna|mex] [--test wilcoxon|bootstrap|both]`
+
+Compara dos o más experimentos sobre los mismos pacientes (Wilcoxon + bootstrap pareado, corrección de Holm). Ver [11_paired_validation.md](../scripts/11_paired_validation.md) para documentación completa.
+
+**Entrada:**
+`experiments/N/validation/plot_data.json`, `experiments/N/mex-validation/plot_data.json` (requiere haber corrido 07/08 primero)
+
+**Salida:**
+Tabla impresa en consola; JSON opcional con `--output`
+
+---
+
 ## Ejecución en Clúster (SLURM)
 
 ```bash
@@ -229,6 +246,7 @@ sbatch slurm/07_validation.slurm N      # validación estándar
 sbatch slurm/08_mex_validation.slurm N  # validación mexicana
 sbatch slurm/09_performance_analysis.slurm N
 sbatch slurm/10_age_range_analysis.slurm N 12 both  # análisis por rango de edad
+sbatch slurm/11_paired_validation.slurm --experiments N1 N2  # validación pareada
 
 bash scripts/quicktest.sh 99            # pipeline completo con datos mínimos
 ```

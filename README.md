@@ -238,6 +238,12 @@ Fuente única de verdad para todas las rutas del proyecto.
 Controla el entrenamiento del modelo U-Net (script 01).
 Edita este archivo para cambiar `EPOCHS`, `BATCH_SIZE`, `LEARNING_RATE`, etc.
 
+### Hiperparámetros del preprocesamiento: `config/preprocessing.py`
+
+Controla el recorte/rotación (script 02) y la ecualización CLAHE (script 03): kernel de blur,
+dilatación, tolerancia del ángulo, área mínima de recorte, `clipLimit`/`tileGridSize` de CLAHE,
+mezcla con la imagen original y ajuste final de contraste. Pensado para ablaciones futuras.
+
 ### Hiperparámetros por experimento: `experiments/<N>/config.py`
 
 Cada experimento tiene su propio archivo. Para crear uno nuevo:

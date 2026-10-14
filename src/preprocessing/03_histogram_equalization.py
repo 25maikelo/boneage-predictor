@@ -20,19 +20,23 @@ import cv2
 import numpy as np
 
 from config.paths import CROPPED_IMAGES_DIR, EQUALIZED_IMAGES_DIR
+from config.preprocessing import (
+    CLAHE_CLIP_LIMIT, CLAHE_TILE_GRID_SIZE, BLEND_CLAHE_WEIGHT,
+    FINAL_CONTRAST_ALPHA, FINAL_CONTRAST_BETA,
+)
 from src.utils.timing import report_timing, setup_logging
 
 START_TIME = time.time()
 
 
 def ecualizacion_clahe(img):
-    clahe = cv2.createCLAHE(clipLimit=4.0, tileGridSize=(8, 8))
+    clahe = cv2.createCLAHE(clipLimit=CLAHE_CLIP_LIMIT, tileGridSize=CLAHE_TILE_GRID_SIZE)
     eq = clahe.apply(img)
-    blended = cv2.addWeighted(img, 0.6, eq, 0.4, 0)
+    blended = cv2.addWeighted(img, 1 - BLEND_CLAHE_WEIGHT, eq, BLEND_CLAHE_WEIGHT, 0)
     # No usar cv2.convertScaleAbs aqui: toma valor absoluto en vez de recortar,
-    # asi que para blended*0.9-10 < 0 (todo el fondo oscuro, uint8 0-22) el
+    # asi que para blended*alpha+beta < 0 (todo el fondo oscuro, uint8 0-22) el
     # resultado se "refleja" en vez de saturar a 0, rompiendo la monotonia.
-    adjusted = blended.astype(np.float32) * 0.9 - 10
+    adjusted = blended.astype(np.float32) * FINAL_CONTRAST_ALPHA + FINAL_CONTRAST_BETA
     return np.clip(adjusted, 0, 255).astype(np.uint8)
 
 

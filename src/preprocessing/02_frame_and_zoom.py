@@ -21,6 +21,10 @@ import cv2
 import numpy as np
 
 from config.paths import RAW_IMAGES_DIR, CROPPED_IMAGES_DIR, IMAGES_DIR
+from config.preprocessing import (
+    GAUSSIAN_BLUR_KERNEL, DILATION_KERNEL_SIZE, DILATION_ITERATIONS,
+    ANGLE_BOUNDARY_TOLERANCE, MIN_CROP_AREA_RATIO,
+)
 from src.utils.timing import report_timing, setup_logging
 
 START_TIME = time.time()
@@ -37,13 +41,14 @@ def verificar_inversion(thresh):
     return thresh
 
 
-def rotar_y_recortar(image_path, output_path, kernel_size=(9, 9), dilation_iters=4):
+def rotar_y_recortar(image_path, output_path, kernel_size=DILATION_KERNEL_SIZE,
+                      dilation_iters=DILATION_ITERATIONS):
     img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
     if img is None:
         print(f"No se pudo cargar: {image_path}")
         return "no_load"
 
-    blur = cv2.GaussianBlur(img, (5, 5), 0)
+    blur = cv2.GaussianBlur(img, GAUSSIAN_BLUR_KERNEL, 0)
     _, thresh = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     thresh = verificar_inversion(thresh)
 
@@ -63,7 +68,7 @@ def rotar_y_recortar(image_path, output_path, kernel_size=(9, 9), dilation_iters
     # angle==90 es el valor que cv2.minAreaRect usa para un rectangulo ya
     # alineado a los ejes; en ese caso w_rect<h_rect NO indica una rotacion
     # real pendiente, y sumar 90 aqui introduce un giro de 90 grados espurio.
-    if w_rect < h_rect and abs(angle - 90) > 1.0:
+    if w_rect < h_rect and abs(angle - 90) > ANGLE_BOUNDARY_TOLERANCE:
         angle += 90
     if angle > 45:
         angle -= 90
@@ -95,7 +100,7 @@ def rotar_y_recortar(image_path, output_path, kernel_size=(9, 9), dilation_iters
         return "degenerate"
 
     cropped = rotated[y0:y1, x0:x1]
-    if cropped.size < 0.2 * img.size:
+    if cropped.size < MIN_CROP_AREA_RATIO * img.size:
         cv2.imwrite(output_path, img)
         return "discard_area"
 

@@ -216,5 +216,15 @@ documentación del pipeline con la configuración ganadora y su justificación f
   imágenes, verificado visualmente en los 4 casos conocidos. **Aplicado a producción.**
 - Reporte PDF generado y actualizado con ambos fixes:
   [`docs/results/preprocesamiento_diagnostico/reporte_corrimiento_pixeles.pdf`](../results/preprocesamiento_diagnostico/reporte_corrimiento_pixeles.pdf).
+- **Revisión adicional a pedido del usuario** ("revisa si hay más cosas que mejorar"): se
+  investigaron casos con fill ratio ≈0 que pasaban como `ok` sin activar ninguna salvaguarda;
+  resultó ser una limitación de la métrica de diagnóstico (re-umbralizar con Otsu un recorte ya
+  ajustado y de bajo contraste), no un bug del recorte en sí. Se revisó `04_segment_images.py`
+  con el mismo criterio que `02_frame_and_zoom.py` (recorte geométrico al bounding box del
+  segmento): sin bugs equivalentes, los límites ya estaban correctamente acotados.
+- **Hallazgo 6** (en `03_histogram_equalization.py`): `cv2.convertScaleAbs` usa valor absoluto en
+  vez de saturar, reflejando hacia arriba los tonos más oscuros (el fondo de la radiografía) en
+  vez de dejarlos en 0. Verificado en una imagen real; impacto sutil pero real (~3.3% de píxeles
+  difieren >3 niveles de gris). **Aplicado a producción.**
 - **Pendiente**: re-correr `02_frame_and_zoom.py` y `03_histogram_equalization.py` sobre el
-  dataset completo para que los datos en disco reflejen los tres fixes ya aplicados en código.
+  dataset completo para que los datos en disco reflejen los cuatro fixes ya aplicados en código.

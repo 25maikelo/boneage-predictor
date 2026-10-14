@@ -207,5 +207,14 @@ documentación del pipeline con la configuración ganadora y su justificación f
   recorte negativas y pierde contenido). Causa independiente del bajo contraste (hallazgo 2):
   afecta imágenes bien contrastadas donde la mano está lejos del centro. Fix de "canvas
   expandido" validado sobre 1,500 imágenes: reduce la tasa de `discard_area` de 5.6% a 2.1%
-  (63% menos descartes), sin regresiones detectadas en el resto de la distribución. Pendiente de
-  aplicar a producción.
+  (63% menos descartes), sin regresiones detectadas en el resto de la distribución. **Aplicado a
+  producción.**
+- **Hallazgo 5**: al revisar visualmente el hallazgo 4, se detectó que algunos casos quedaban
+  con la mano rotada de lado pese a estar bien alineados en el original. Causa: `cv2.minAreaRect`
+  devuelve `angle=90` como valor de frontera para rectángulos ya alineados; la lógica de
+  corrección lo interpretaba como "rotar 90°". Confirmado en 2.5–3.5% de muestras de 600–800
+  imágenes, verificado visualmente en los 4 casos conocidos. **Aplicado a producción.**
+- Reporte PDF generado y actualizado con ambos fixes:
+  [`docs/results/preprocesamiento_diagnostico/reporte_corrimiento_pixeles.pdf`](../results/preprocesamiento_diagnostico/reporte_corrimiento_pixeles.pdf).
+- **Pendiente**: re-correr `02_frame_and_zoom.py` y `03_histogram_equalization.py` sobre el
+  dataset completo para que los datos en disco reflejen los tres fixes ya aplicados en código.

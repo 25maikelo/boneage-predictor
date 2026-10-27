@@ -4,13 +4,13 @@ clip explicito aplicado en 03_histogram_equalization.py, sobre una imagen
 real.
 
 Uso:
-    python docs/results/preprocesamiento_diagnostico/scripts/comparar_convertscaleabs.py
+    python docs/results/doctorado/preprocesamiento_diagnostico/scripts/comparar_convertscaleabs.py
 """
 import os, sys
 
 PROJECT_ROOT = "/lustre/home/mlozano/boneage-predictor"
 sys.path.insert(0, PROJECT_ROOT)
-OUT_DIR = os.path.join(PROJECT_ROOT, "docs/results/preprocesamiento_diagnostico")
+OUT_DIR = os.path.join(PROJECT_ROOT, "docs/results/doctorado/preprocesamiento_diagnostico")
 
 import cv2
 import numpy as np

@@ -191,7 +191,7 @@ fusión para que la comparación sea controlada: fase 1 igual a la fase de segme
 todo el backbone descongelado a `LEARNING_RATE/10` (`FINE_TUNING_EPOCHS` épocas). Mismo split
 (`random_state=42`), mismo dataset balanceado, misma función de pérdida que el experimento de
 fusión de referencia. Ver experimento 60 y
-[`docs/results/experimentos_adicionales/analisis.md`](../results/experimentos_adicionales/analisis.md#15-ablación-insuficiente-falta-baseline-whole-hand)
+[`docs/results/maestria/experimentos_adicionales/analisis.md`](../results/maestria/experimentos_adicionales/analisis.md#15-ablación-insuficiente-falta-baseline-whole-hand)
 para el resultado (la segmentación aporta poco en validación interna pero significativamente bajo
 distribution shift externo).
 

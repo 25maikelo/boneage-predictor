@@ -8,13 +8,13 @@ Valida los dos proximos pasos propuestos en diagnostico.md, sobre el dataset com
    mejor el contorno).
 
 Uso:
-    python docs/results/preprocesamiento_diagnostico/scripts/validar_propuestas.py
+    python docs/results/doctorado/preprocesamiento_diagnostico/scripts/validar_propuestas.py
 """
 import os, sys, json, time
 
 PROJECT_ROOT = "/lustre/home/mlozano/boneage-predictor"
 sys.path.insert(0, PROJECT_ROOT)
-OUT_DIR = os.path.join(PROJECT_ROOT, "docs/results/preprocesamiento_diagnostico")
+OUT_DIR = os.path.join(PROJECT_ROOT, "docs/results/doctorado/preprocesamiento_diagnostico")
 
 import cv2
 import numpy as np

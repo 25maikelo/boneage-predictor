@@ -124,7 +124,7 @@ Filtra el CSV de entrenamiento para conservar solo imágenes con los 4 segmentos
 **Uso:**
 `python src/06_training.py --experiment N`
 
-Entrena 4 modelos de segmento (uno por región anatómica) con K-Fold CV, luego construye y entrena el modelo de fusión. Soporta cinco modos vía `MODEL_TYPE` (ver [arquitecturas.md](../design/arquitecturas.md) para el detalle de cada uno):
+Entrena 4 modelos de segmento (uno por región anatómica) con K-Fold CV, luego construye y entrena el modelo de fusión. Soporta cinco modos vía `MODEL_TYPE` (ver [arquitecturas.md](../arquitectura/arquitecturas.md) para el detalle de cada uno):
 
 - `"backbone"` — backbone preentrenado (VGG16, DenseNet121, InceptionV3, ResNet50)
 - `"simple_cnn"` — CNN desde cero con Flatten

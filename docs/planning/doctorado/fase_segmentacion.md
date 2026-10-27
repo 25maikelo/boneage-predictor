@@ -161,7 +161,7 @@ documentación del pipeline con la configuración ganadora y su justificación f
   condicional a lo que ese diagnóstico encuentre.
 - Inicia Etapa 2 (diagnóstico de fallos de `hand-detector_00`).
 - **Etapa 2 completa.** Diagnóstico en
-  [`docs/results/segmentacion_diagnostico/diagnostico.md`](../results/segmentacion_diagnostico/diagnostico.md).
+  [`docs/results/doctorado/segmentacion_diagnostico/diagnostico.md`](../../results/doctorado/segmentacion_diagnostico/diagnostico.md).
   Dos causas distintas, no una: (a) un subconjunto pequeño de imágenes (≈4–7% de las 76 de
   validación) con recorte/rotación defectuoso de `02_frame_and_zoom.py` (borde de placa
   visible) causa los fallos más severos, incluyendo un falso positivo alucinado sobre un
@@ -176,7 +176,7 @@ documentación del pipeline con la configuración ganadora y su justificación f
   ni de Dice/IoU. El preprocesamiento (02/03) y la segmentación (01/04) se tratan como líneas de
   trabajo separadas; no se retoma la idea de reentrenar el segmentador en esta etapa.
 - **Etapa 4 completa.** Diagnóstico en
-  [`docs/results/preprocesamiento_diagnostico/diagnostico.md`](../results/preprocesamiento_diagnostico/diagnostico.md).
+  [`docs/results/doctorado/preprocesamiento_diagnostico/diagnostico.md`](../../results/doctorado/preprocesamiento_diagnostico/diagnostico.md).
   Hallazgos: (a) el recorte deja en promedio 27% de fondo/borde residual (fill ratio medio
   0.730), con una cola de ~2–5% de imágenes donde el recorte falla casi por completo; (b) esos
   peores casos no son de rotación compleja, son de **contraste global bajo** que rompe el
@@ -186,7 +186,7 @@ documentación del pipeline con la configuración ganadora y su justificación f
   `clipLimit=4.0`. Próximos pasos propuestos (sin ejecutar todavía): probar `clipLimit=4.0` como
   nuevo default, y evaluar normalizar contraste antes del umbral de Otsu en el recorte.
 - **Revisión de literatura** sobre mejora de calidad radiográfica en
-  [`docs/results/preprocesamiento_diagnostico/revision_literatura.md`](../results/preprocesamiento_diagnostico/revision_literatura.md).
+  [`docs/results/doctorado/preprocesamiento_diagnostico/revision_literatura.md`](../../results/doctorado/preprocesamiento_diagnostico/revision_literatura.md).
   Identificó sustracción de fondo morfológica como alternativa a Otsu mejor fundamentada que
   normalizar contraste genérico, y el precedente de BoneXpert (rechazar imágenes de mala calidad
   en vez de forzarlas, tasa real de rechazo 2.3%, mismo orden de magnitud que la nuestra).
@@ -201,7 +201,7 @@ documentación del pipeline con la configuración ganadora y su justificación f
   seguir buscando un reemplazo automático de Otsu.
 - **`clipLimit=4.0` y el logging de salvaguardas ya se aplicaron a producción.**
 - **Nuevo hallazgo (hallazgo 4 de
-  [`preprocesamiento_diagnostico/diagnostico.md`](../results/preprocesamiento_diagnostico/diagnostico.md))**:
+  [`preprocesamiento_diagnostico/diagnostico.md`](../../results/doctorado/preprocesamiento_diagnostico/diagnostico.md))**:
   bug de corrimiento de píxeles en la rotación de `02_frame_and_zoom.py` (rota alrededor del
   centro de la imagen, no de la mano, con el mismo tamaño de canvas; produce coordenadas de
   recorte negativas y pierde contenido). Causa independiente del bajo contraste (hallazgo 2):
@@ -215,7 +215,7 @@ documentación del pipeline con la configuración ganadora y su justificación f
   corrección lo interpretaba como "rotar 90°". Confirmado en 2.5–3.5% de muestras de 600–800
   imágenes, verificado visualmente en los 4 casos conocidos. **Aplicado a producción.**
 - Reporte PDF generado y actualizado con ambos fixes:
-  [`docs/results/preprocesamiento_diagnostico/reporte_corrimiento_pixeles.pdf`](../results/preprocesamiento_diagnostico/reporte_corrimiento_pixeles.pdf).
+  [`docs/results/doctorado/preprocesamiento_diagnostico/reporte_corrimiento_pixeles.pdf`](../../results/doctorado/preprocesamiento_diagnostico/reporte_corrimiento_pixeles.pdf).
 - **Revisión adicional a pedido del usuario** ("revisa si hay más cosas que mejorar"): se
   investigaron casos con fill ratio ≈0 que pasaban como `ok` sin activar ninguna salvaguarda;
   resultó ser una limitación de la métrica de diagnóstico (re-umbralizar con Otsu un recorte ya

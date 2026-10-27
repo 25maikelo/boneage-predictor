@@ -42,5 +42,5 @@ python src/11_paired_validation.py --experiments 23 26 27 28 --output results/pa
 
 ### Notas
 
-- Es el script usado para las comparaciones pareadas de `docs/results/ablacion_backbones/` y de `docs/results/experimentos_adicionales/analisis.md` (comentarios #4/#7/#8 del revisor).
+- Es el script usado para las comparaciones pareadas de `docs/results/maestria/ablacion_backbones/` y de `docs/results/maestria/experimentos_adicionales/analisis.md` (comentarios #4/#7/#8 del revisor).
 - Si algún experimento no tiene `scatter.ids` en su `plot_data.json` (generado por versiones antiguas del script 07), hay que re-ejecutar 07/08 para ese experimento antes de poder emparejarlo.

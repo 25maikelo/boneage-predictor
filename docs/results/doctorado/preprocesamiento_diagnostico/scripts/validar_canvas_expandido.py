@@ -13,14 +13,14 @@ Mide, sobre una muestra del dataset completo:
   - fill ratio actual vs. con el fix, en la muestra completa
 
 Uso:
-    python docs/results/preprocesamiento_diagnostico/scripts/validar_canvas_expandido.py
+    python docs/results/doctorado/preprocesamiento_diagnostico/scripts/validar_canvas_expandido.py
 """
 import os, sys, json, random, time
 from collections import Counter
 
 PROJECT_ROOT = "/lustre/home/mlozano/boneage-predictor"
 sys.path.insert(0, PROJECT_ROOT)
-OUT_DIR = os.path.join(PROJECT_ROOT, "docs/results/preprocesamiento_diagnostico")
+OUT_DIR = os.path.join(PROJECT_ROOT, "docs/results/doctorado/preprocesamiento_diagnostico")
 
 import cv2
 import numpy as np

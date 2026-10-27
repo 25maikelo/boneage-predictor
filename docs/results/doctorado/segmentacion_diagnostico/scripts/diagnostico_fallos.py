@@ -6,7 +6,7 @@ conserva el Dice/IoU por imagen y por clase, identifica los peores casos por cla
 genera comparativas visuales (imagen, mascara real, mascara predicha) para esos casos.
 
 Uso:
-    python docs/results/segmentacion_diagnostico/scripts/diagnostico_fallos.py
+    python docs/results/doctorado/segmentacion_diagnostico/scripts/diagnostico_fallos.py
 """
 import os, sys, json, glob
 
@@ -16,7 +16,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 PROJECT_ROOT = "/lustre/home/mlozano/boneage-predictor"
 sys.path.insert(0, PROJECT_ROOT)
-OUT_DIR = os.path.join(PROJECT_ROOT, "docs/results/segmentacion_diagnostico")
+OUT_DIR = os.path.join(PROJECT_ROOT, "docs/results/doctorado/segmentacion_diagnostico")
 
 import cv2
 import numpy as np

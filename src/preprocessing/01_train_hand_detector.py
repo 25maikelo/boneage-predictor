@@ -787,7 +787,7 @@ def main():
     # ocurría porque AUG_BRIGHTNESS_RANGE solo se aplicaba al generador de imagen, nunca
     # al de máscara, lo que rompía la correspondencia imagen-máscara tras la primera
     # transformación geométrica y colapsaba el entrenamiento (ver
-    # docs/planning/fase_segmentacion.md, hallazgo #2). El brillo se aplica aparte, con
+    # docs/planning/doctorado/fase_segmentacion.md, hallazgo #2). El brillo se aplica aparte, con
     # su propio muestreo aleatorio, solo sobre el canal de imagen ya separado.
     n_img_channels = x_train.shape[-1]
 

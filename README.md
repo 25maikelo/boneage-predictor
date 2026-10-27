@@ -25,7 +25,7 @@ boneage-predictor/
 │   │   ├── fusion_utils.py  ← Capas de fusión con atención
 │   │   └── timing.py        ← Reporte de tiempos y logging a archivo
 │   ├── 05_dataset_analysis.py
-│   ├── 06_training.py       ← 5 modos vía MODEL_TYPE, ver docs/design/arquitecturas.md
+│   ├── 06_training.py       ← 5 modos vía MODEL_TYPE, ver docs/arquitectura/arquitecturas.md
 │   ├── 07_validation.py
 │   ├── 08_mex_validation.py
 │   ├── 09_performance_analysis.py
@@ -258,7 +258,7 @@ Variables clave:
 
 | Variable | Descripción |
 |---|---|
-| `MODEL_TYPE` | Modo de arquitectura: `backbone`, `simple_cnn`, `backbone_vectors`, `unified_cnn`, `whole_hand`. Ver [`docs/design/arquitecturas.md`](docs/design/arquitecturas.md) |
+| `MODEL_TYPE` | Modo de arquitectura: `backbone`, `simple_cnn`, `backbone_vectors`, `unified_cnn`, `whole_hand`. Ver [`docs/arquitectura/arquitecturas.md`](docs/arquitectura/arquitecturas.md) |
 | `IMAGE_SIZE` | Tamaño de entrada del modelo (px) |
 | `BASE_MODEL_CHOICE` | Backbone: `vgg16`, `densenet121`, `inceptionv3`, `resnet50` |
 | `LOSS_FUNCTION_NAME` | Pérdida: `attention_loss`, `dynamic_attention_loss`, `custom_mse_loss`, `custom_huber_loss` |

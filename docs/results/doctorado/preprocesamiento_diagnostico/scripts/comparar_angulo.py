@@ -4,13 +4,13 @@ hallazgo 5 de diagnostico.md) contra el fix aplicado en 02_frame_and_zoom.py,
 sobre los 4 casos conocidos del hallazgo 4.
 
 Uso:
-    python docs/results/preprocesamiento_diagnostico/scripts/comparar_angulo.py
+    python docs/results/doctorado/preprocesamiento_diagnostico/scripts/comparar_angulo.py
 """
 import os, sys
 
 PROJECT_ROOT = "/lustre/home/mlozano/boneage-predictor"
 sys.path.insert(0, PROJECT_ROOT)
-OUT_DIR = os.path.join(PROJECT_ROOT, "docs/results/preprocesamiento_diagnostico")
+OUT_DIR = os.path.join(PROJECT_ROOT, "docs/results/doctorado/preprocesamiento_diagnostico")
 
 import cv2
 import numpy as np

@@ -1,6 +1,6 @@
 # Diagnóstico de fallos: segmentación en producción (`hand-detector_00`)
 
-> Etapa 2 de [`fase_segmentacion.md`](../../planning/fase_segmentacion.md). Objetivo: caracterizar
+> Etapa 2 de [`fase_segmentacion.md`](../../../planning/doctorado/fase_segmentacion.md). Objetivo: caracterizar
 > dónde y por qué falla el modelo de segmentación realmente usado en el pipeline, antes de decidir
 > si vale la pena rehacer la grilla de arquitecturas o ablacionar el preprocesamiento.
 

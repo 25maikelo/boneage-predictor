@@ -1,7 +1,7 @@
 # Revisión de literatura: mejora de calidad de imagen radiográfica
 
 > Complementa [`diagnostico.md`](diagnostico.md) (Etapa 4 de
-> [`fase_segmentacion.md`](../../planning/fase_segmentacion.md)). Búsqueda bibliográfica sobre
+> [`fase_segmentacion.md`](../../../planning/doctorado/fase_segmentacion.md)). Búsqueda bibliográfica sobre
 > técnicas de mejora de calidad en radiografías, para contrastar las propuestas de
 > `diagnostico.md` contra lo reportado en la literatura antes de implementarlas.
 

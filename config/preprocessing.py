@@ -6,7 +6,7 @@ Configuración de los scripts de preprocesamiento:
 
 Centraliza los parámetros que antes estaban fijos dentro de cada función, para
 poder ablacionarlos sin editar el código del pipeline. Ver
-docs/results/preprocesamiento_diagnostico/diagnostico.md para el diagnóstico
+docs/results/doctorado/preprocesamiento_diagnostico/diagnostico.md para el diagnóstico
 que motivó varios de los valores por default actuales.
 """
 

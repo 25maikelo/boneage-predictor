@@ -37,4 +37,4 @@ Todos los parámetros numéricos viven en [`config/preprocessing.py`](../../conf
 
 - Tiempo aproximado: ~19 min (CPU).
 - No usa el modelo de segmentación (ese es el paso 04); es un recorte geométrico simple basado en contraste.
-- Ver [`docs/results/preprocesamiento_diagnostico/diagnostico.md`](../results/preprocesamiento_diagnostico/diagnostico.md) para el diagnóstico de fallos (bajo contraste, corrimiento de píxeles, rotación espuria) y los fixes aplicados.
+- Ver [`docs/results/doctorado/preprocesamiento_diagnostico/diagnostico.md`](../results/doctorado/preprocesamiento_diagnostico/diagnostico.md) para el diagnóstico de fallos (bajo contraste, corrimiento de píxeles, rotación espuria) y los fixes aplicados.

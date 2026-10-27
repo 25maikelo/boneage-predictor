@@ -14,14 +14,14 @@ SIN depender del segmentador ni de ningun modelo entrenado. Metricas propias de 
     variantes de clipLimit y tileGridSize.
 
 Uso:
-    python docs/results/preprocesamiento_diagnostico/scripts/auditoria_preprocesamiento.py
+    python docs/results/doctorado/preprocesamiento_diagnostico/scripts/auditoria_preprocesamiento.py
 """
 import os, sys, json, random
 from collections import Counter
 
 PROJECT_ROOT = "/lustre/home/mlozano/boneage-predictor"
 sys.path.insert(0, PROJECT_ROOT)
-OUT_DIR = os.path.join(PROJECT_ROOT, "docs/results/preprocesamiento_diagnostico")
+OUT_DIR = os.path.join(PROJECT_ROOT, "docs/results/doctorado/preprocesamiento_diagnostico")
 
 import cv2
 import numpy as np

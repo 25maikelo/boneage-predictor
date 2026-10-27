@@ -32,4 +32,4 @@ Todos los parámetros numéricos viven en [`config/preprocessing.py`](../../conf
 ### Notas
 
 - Tiempo aproximado: ~11 min (CPU).
-- `clipLimit=4.0` fue validado contra el default de OpenCV (2.0) sobre las 12,811 imágenes raw. Ver [`docs/results/preprocesamiento_diagnostico/diagnostico.md`](../results/preprocesamiento_diagnostico/diagnostico.md) para el diagnóstico completo.
+- `clipLimit=4.0` fue validado contra el default de OpenCV (2.0) sobre las 12,811 imágenes raw. Ver [`docs/results/doctorado/preprocesamiento_diagnostico/diagnostico.md`](../results/doctorado/preprocesamiento_diagnostico/diagnostico.md) para el diagnóstico completo.

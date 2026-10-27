@@ -1,6 +1,6 @@
 # Auditoría de preprocesamiento: `02_frame_and_zoom.py` y `03_histogram_equalization.py`
 
-> Etapa 4 de [`fase_segmentacion.md`](../../planning/fase_segmentacion.md). Evalúa la calidad
+> Etapa 4 de [`fase_segmentacion.md`](../../../planning/doctorado/fase_segmentacion.md). Evalúa la calidad
 > del preprocesamiento con métricas propias de la imagen (geometría del recorte, contraste,
 > entropía, saturación), sin depender de ningún modelo de segmentación ni de sus métricas.
 

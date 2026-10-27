@@ -1,7 +1,7 @@
 """
 Valida sustraccion de fondo morfologica (top-hat / "rolling ball") como alternativa a
 Otsu directo en 02_frame_and_zoom.py, sobre el dataset completo, sin modelo de
-segmentacion. Ver docs/results/preprocesamiento_diagnostico/revision_literatura.md
+segmentacion. Ver docs/results/doctorado/preprocesamiento_diagnostico/revision_literatura.md
 seccion 3: es el metodo documentado para iluminacion/contraste desparejo (vs. la
 propuesta mas simple de equalizeHist ya probada en validar_propuestas.py).
 
@@ -9,14 +9,14 @@ La imagen que se recorta sigue siendo la original sin alterar; la version con
 sustraccion de fondo solo se usa para detectar mejor el contorno.
 
 Uso:
-    python docs/results/preprocesamiento_diagnostico/scripts/validar_background_subtraction.py
+    python docs/results/doctorado/preprocesamiento_diagnostico/scripts/validar_background_subtraction.py
 """
 import os, sys, json, time
 from collections import Counter
 
 PROJECT_ROOT = "/lustre/home/mlozano/boneage-predictor"
 sys.path.insert(0, PROJECT_ROOT)
-OUT_DIR = os.path.join(PROJECT_ROOT, "docs/results/preprocesamiento_diagnostico")
+OUT_DIR = os.path.join(PROJECT_ROOT, "docs/results/doctorado/preprocesamiento_diagnostico")
 
 import cv2
 import numpy as np
